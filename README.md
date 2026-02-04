@@ -1,39 +1,19 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Ziwei Core (Dart)
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages). 
+**A high-performance, type-safe, and data-driven engine for Ziwei Dou Shu.**
+**高性能、强类型、数据驱动的紫微斗数排盘引擎。**
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages). 
--->
+> 🚧 **Status:** Under active development. Core architecture design phase.
+> **状态:** 开发中，处于核心架构设计阶段。
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+## Vision 
 
-## Features
+*   **Pure Dart:** Runs everywhere (Flutter/Web/Server).
+    *   **纯 Dart:** 跨平台，全端支持。
+*   **Data-Driven:** Rules are configurable, not hardcoded.
+    *   **数据驱动:** 规则配置化，杜绝硬编码。
+*   **Type Safe:** No magic strings.
+    *   **类型安全:** 强类型设计，无魔法字符串。
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
-```dart
-const like = 'sample';
-```
-
-## Additional information
-
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+---
+*Project initialized: 2026-02-04 19:48*
