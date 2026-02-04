@@ -1,7 +1,7 @@
 # Ziwei Core (Dart)
 
 **A high-performance, type-safe, and data-driven engine for Ziwei Dou Shu.**
-**高性能、强类型、数据驱动的紫微斗数排盘引擎。**
+**高性能、强类型、数据驱动的紫微斗数排盘引擎(Dart 库 / Library)。**
 
 > 🚧 **Status:** Under active development. Core architecture design phase.
 > **状态:** 开发中，处于核心架构设计阶段。
