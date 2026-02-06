@@ -1,6 +1,5 @@
 import 'dart:io'; // 用来读硬盘文件的
 import 'package:test/test.dart'; // 测试框架
-// 下面这两个 import 要根据你的实际路径改一下
 import 'package:ziwei_core/src/config/loader.dart'; 
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
