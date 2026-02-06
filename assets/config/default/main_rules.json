@@ -1,0 +1,6 @@
+{
+  "calendar": {
+    "split_rat_hour": false,
+    "leap_month_strategy": "split"
+  }
+}
