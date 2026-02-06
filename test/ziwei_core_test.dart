@@ -1,34 +1,26 @@
-import 'dart:io'; // 用来读硬盘文件的
-import 'package:test/test.dart'; // 测试框架
-import 'package:ziwei_core/src/config/loader.dart'; 
-import 'package:ziwei_core/src/enums/config_enums.dart';
+import 'dart:io';
+import 'package:test/test.dart';
+import 'package:ziwei_core/src/config/loader.dart';
+import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
+import 'package:ziwei_core/ziwei_core.dart'; // 引用统一出口
+// 或者: import 'package:ziwei_core/src/config/loader.dart';
+import 'package:ziwei_core/src/enums/config_enums.dart';
 
 void main() {
-  // 定义一个组
-  group('ConfigLoader 测试', () {
-    
-    test('能够读取并解析 main_rules.json', () {
-      // 1. 找到你的 JSON 文件 (路径是以项目根目录为起点的)
-      final file = File('assets/config/default/main_rules.json');
-      
-      // 检查一下文件在不在，不在的话打印路径方便排查
-      if (!file.existsSync()) {
-        fail('找不到文件: ${file.absolute.path}');
+  group('ConfigLoader 集成测试', () {
+    test('输出五虎遁结果', () {
+      // 模拟一个配置对象
+      const opts = CalendarOptions(wuHuDunBasedOn: Boundary.lunar);
+
+      // 创建时间
+      final date = ZiweiDate.fromSolar(DateTime(2026, 2, 6, 22), options: opts);
+      ZiWeiPlate plate = ZiWeiEngine.calculate(date);
+      print(plate.originMingIndex);
+      print(plate.bodyPalaceIndex);
+      for (var palace in plate.palaces) {
+        print('${palace.stem?.label}${palace.branch.label}');
       }
-      
-      // 2. 读取内容
-      final jsonStr = file.readAsStringSync();
-
-      // 3. 喂给你的 ConfigLoader
-      // 因为是 Strict 模式，如果解析出错这里会直接抛异常报错 (Test Failed)
-      final options = ConfigLoader.parse(jsonStr);
-      
-      var dt = DateTime(2002,1,1,23,00);
-
-      var d = ZiweiDate.fromSolar(dt, options: options);
-      print(d.toString());
-     
     });
   });
 }

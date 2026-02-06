@@ -5,25 +5,28 @@ import 'time_adapter.dart';
 class CalendarOptions {
   final bool splitRatHour; // 早晚子时
   final LeapMonthRule leapRule; // 闰月规则
-  
+  final Boundary wuHuDunBasedOn; //五虎遁按照农历还是节气
+
   const CalendarOptions({
-    this.splitRatHour = false, 
+    this.splitRatHour = false,
     //默认
-    this.leapRule = LeapMonthRule.splitAt15, 
+    this.leapRule = LeapMonthRule.splitAt15,
+    this.wuHuDunBasedOn = Boundary.lunar,
   });
 }
 
 class GanZhi {
   final TianGan gan;
   final DiZhi zhi;
-  
+
   const GanZhi(this.gan, this.zhi);
-  
+
   @override
-  String toString() => "${gan.name}${zhi.name}";
+  String toString() => "${gan.label}${zhi.label}";
 }
 
-class BaZi { //节气四柱八字
+class BaZi {
+  //节气四柱八字
   final GanZhi year;
   final GanZhi month;
   final GanZhi day;
@@ -40,12 +43,13 @@ class BaZi { //节气四柱八字
   String toString() => "$year $month $day $time";
 }
 
-class LunarDate {//农历日期
+class LunarDate {
+  //农历日期
   final int year;
   final int month;
   final int day;
   final int timeIndex; // 时辰索引 0-11
-  final bool isLeap;   // 是否闰月
+  final bool isLeap; // 是否闰月
 
   const LunarDate({
     required this.year,
@@ -56,22 +60,20 @@ class LunarDate {//农历日期
   });
 
   @override
-  String toString() => "$year年${isLeap?"闰":""}$month月$day日";
+  String toString() => "$year年${isLeap ? "闰" : ""}$month月$day日";
 }
-
 
 class ZiweiDate {
   final DateTime solar; // 阳历
   final LunarDate lunar; // 农历
-  final BaZi bazi;       // 八字
+  final BaZi bazi; // 八字
   final CalendarOptions options; // 历法选项
-
 
   const ZiweiDate({
     required this.solar,
     required this.lunar,
     required this.bazi,
-    required this.options, 
+    required this.options,
   });
 
   factory ZiweiDate.fromSolar(DateTime dt, {CalendarOptions? options}) {
@@ -79,15 +81,27 @@ class ZiweiDate {
     return TimeAdapter.fromSolar(dt, options: options);
   }
   // 2. Lunar 入口也改一下：
-  factory ZiweiDate.fromLunar(int year, int month, int day, int hourIndex, bool isLeap, {CalendarOptions? options}) {
+  factory ZiweiDate.fromLunar(
+    int year,
+    int month,
+    int day,
+    int hourIndex,
+    bool isLeap, {
+    CalendarOptions? options,
+  }) {
     // 把 options 透传给 Adapter
-    return TimeAdapter.fromLunar(year, month, day, hourIndex, isLeap, options: options);
+    return TimeAdapter.fromLunar(
+      year,
+      month,
+      day,
+      hourIndex,
+      isLeap,
+      options: options,
+    );
   }
-
 
   @override
   String toString() {
     return '阳: $solar\n阴: $lunar\n八: $bazi';
   }
-
 }
