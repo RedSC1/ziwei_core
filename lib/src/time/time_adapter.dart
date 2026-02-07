@@ -1,7 +1,7 @@
 // lib/src/time/ziwei_date_adapter.dart
 
 import 'package:lunar/calendar/Lunar.dart';
-import 'package:ziwei_core/src/enums/config_enums.dart';
+import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 class TimeAdapter {

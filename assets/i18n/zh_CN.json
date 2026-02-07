@@ -1,0 +1,25 @@
+{
+  "star_ziwei": "紫微",
+  "star_tianji": "天机",
+  "star_taiyang": "太阳",
+  "star_wuqu": "武曲",
+  "star_tiantong": "天同",
+  "star_lianzhen": "廉贞",
+  "star_tianfu": "天府",
+  "star_taiyin": "太阴",
+  "star_tanlang": "贪狼",
+  "star_jumen": "巨门",
+  "star_tianxiang": "天相",
+  "star_tianliang": "天梁",
+  "star_qisha": "七杀",
+  "star_pojun": "破军",
+
+  "level_miao": "庙",
+  "level_wang": "旺",
+  "level_de": "得",
+  "level_li": "利",
+  "level_ping": "平",
+  "level_bu": "不",  
+  "level_xian": "陷",
+  "level_none": "" 
+}

@@ -3,5 +3,15 @@
     "split_rat_hour": false,
     "leap_month_strategy": "split",
     "wu_hu_dun_boundary": "lunar"
+  },
+  "brightness_labels": {
+    "6": "level_miao", 
+    "5": "level_wang", 
+    "4": "level_de",   
+    "3": "level_li",   
+    "2": "level_ping", 
+    "1": "level_bu",   
+    "0": "level_xian", 
+    "-1": "level_none"
   }
 }

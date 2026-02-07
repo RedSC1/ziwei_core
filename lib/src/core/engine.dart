@@ -1,10 +1,13 @@
 import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/data/plate.dart';
+import 'package:ziwei_core/src/data/star.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
+import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
+import 'package:ziwei_core/src/core/placer.dart';
 
 class ZiWeiEngine {
-  static ZiWeiPlate calculate(ZiweiDate date) {
+  static ZiWeiPlate calculate(ZiweiDate date, List<StaticStar> stars) {
     //(0=子, 1=丑 ... 11=亥)
     List<Palace> palaces = List.generate(12, (i) => Palace(i));
 
@@ -53,6 +56,24 @@ class ZiWeiEngine {
       palaces[lifeIndex].stem!,
       palaces[lifeIndex].branch,
     );
+
+    //step4: 安星，
+    //大部分星曜都可以按照先查表+偏移的方式来计算
+    //1.计算紫微天府的位置
+    final (
+      int ziweiAnchor,
+      int tianfuAnchor,
+    ) = ZiweiAndTianfuPlacer.placeZiweiAndTianfu(
+      date.lunar.day,
+      elementBureau.number,
+    );
+
+    Map<String, int> anchorsMap = {
+      "ziwei": ziweiAnchor,
+      "tianfu": tianfuAnchor,
+    };
+    StarPlacer placer = StarPlacer(anchorsMap, palaces);
+    placer.placeAll(stars); // 👈 一键排盘！
 
     return ZiWeiPlate(
       palaces: palaces, // 这里面已经是带天干的了

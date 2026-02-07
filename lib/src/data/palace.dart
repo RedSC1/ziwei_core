@@ -1,4 +1,5 @@
-import '../enums/config_enums.dart';
+import 'package:ziwei_core/src/enums/gan_zhi.dart';
+
 import 'star.dart'; // 引用星星定义
 
 class Palace {
@@ -32,5 +33,9 @@ class Palace {
     String stemStr = stem?.label ?? "?"; // 如果没算出来显示?
     String branchStr = branch.label;
     return "[$stemStr$branchStr]: $stars";
+  }
+
+  bool hasStar(String key) {
+    return stars.any((star) => star.key == key);
   }
 }

@@ -1,5 +1,5 @@
 import 'package:ziwei_core/src/data/palace.dart';
-import 'package:ziwei_core/src/enums/config_enums.dart';
+import 'package:ziwei_core/src/enums/gan_zhi.dart';
 
 class ZiWeiPlate {
   final List<Palace> palaces;

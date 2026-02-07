@@ -1,4 +1,5 @@
 # Ziwei Core (Dart)
+![AI Content](https://img.shields.io/badge/AI_Content-99%25-blue?style=for-the-badge&logo=openai)
 
 **A high-performance, type-safe, and data-driven engine for Ziwei Dou Shu.**
 **高性能、强类型、数据驱动的紫微斗数排盘引擎(Dart 库 / Library)。**
@@ -13,7 +14,7 @@
 *   **Data-Driven:** Rules are configurable, not hardcoded.
     *   **数据驱动:** 规则配置化，杜绝硬编码。
 *   **Type Safe:** No magic strings.
-    *   **类型安全:** 强类型设计，无魔法字符串。
+    *   **类型安全:** 强类型设计
 
 ---
 *Project initialized: 2026-02-04 19:48*

@@ -1,0 +1,142 @@
+[
+    {
+        "key": "ziwei",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "ziwei",
+            "offset": 0
+        }
+    },
+    {
+        "key": "tianji",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "ziwei",
+            "offset": -1
+        }
+    },
+    {
+        "key": "taiyang",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "ziwei",
+            "offset": -3
+        }
+    },
+    {
+        "key": "wuqu",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "ziwei",
+            "offset": -4
+        }
+    },
+    {
+        "key": "tiantong",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "ziwei",
+            "offset": -5
+        }
+    },
+    {
+        "key": "lianzhen",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "ziwei",
+            "offset": -8
+        }
+    },
+    {
+        "key": "tianfu",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 0
+        }
+    },
+    {
+        "key": "taiyin",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 1
+        }
+    },
+    {
+        "key": "tanlang",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 2
+        }
+    },
+    {
+        "key": "jumen",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 3
+        }
+    },
+    {
+        "key": "tianxiang",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 4
+        }
+    },
+    {
+        "key": "tianliang",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 5
+        }
+    },
+    {
+        "key": "qisha",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 6
+        }
+    },
+    {
+        "key": "pojun",
+        "type": "major",
+        "tag": "",
+        "rule": {
+            "type": "anchor_offset",
+            "anchor": "tianfu",
+            "offset": 10
+        }
+    }
+]

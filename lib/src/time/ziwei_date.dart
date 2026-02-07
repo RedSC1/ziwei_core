@@ -1,5 +1,6 @@
 // 一个“干支”对儿（比如“甲子”就是一个 GanZhi 对象）
 import 'package:ziwei_core/src/enums/config_enums.dart';
+import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'time_adapter.dart';
 
 class CalendarOptions {
