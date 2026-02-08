@@ -1,4 +1,27 @@
 {
+
+  "role_life": "命宫",
+  "role_siblings": "兄弟",
+  "role_spouse": "夫妻",
+  "role_children": "子女",
+  "role_wealth": "财帛",
+  "role_health": "疾厄",
+  "role_travel": "迁移",
+  "role_friends": "交友",
+  "role_career": "官禄",
+  "role_property": "田宅",
+  "role_mental": "福德",
+  "role_parents": "父母",
+
+  "level_miao": "庙",
+  "level_wang": "旺",
+  "level_de": "得",
+  "level_li": "利",
+  "level_ping": "平",
+  "level_bu": "不",  
+  "level_xian": "陷",
+  "level_none": "",
+
   "star_ziwei": "紫微",
   "star_tianji": "天机",
   "star_taiyang": "太阳",
@@ -13,13 +36,19 @@
   "star_tianliang": "天梁",
   "star_qisha": "七杀",
   "star_pojun": "破军",
-
-  "level_miao": "庙",
-  "level_wang": "旺",
-  "level_de": "得",
-  "level_li": "利",
-  "level_ping": "平",
-  "level_bu": "不",  
-  "level_xian": "陷",
-  "level_none": "" 
+  "star_zuofu": "左辅",
+  "star_youbi": "右弼",
+  "star_wenchang": "文昌",
+  "star_wenqu": "文曲",
+  "star_tiankui": "天魁",
+  "star_tianyue": "天钺",
+  "star_lucun": "禄存",
+  "star_tianma": "天马",
+  "star_qingyang": "擎羊",
+  "star_tuoluo": "陀罗",
+  "star_huoxing": "火星",
+  "star_lingxing": "铃星",
+  "star_dikong": "地空",
+  "star_dijie": "地劫"
+  
 }

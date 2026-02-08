@@ -1,91 +1,86 @@
-import 'dart:convert'; // ✅ 必须加这个，不然 jsonDecode 报错
+import 'dart:convert';
 import 'dart:io';
 import 'package:test/test.dart';
 
-// 把没用的 import 清理一下，只留必要的
 import 'package:ziwei_core/src/config/loader.dart';
 import 'package:ziwei_core/src/core/engine.dart';
 import 'package:ziwei_core/src/data/star.dart';
-import 'package:ziwei_core/src/time/ziwei_date.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
+import 'package:ziwei_core/src/enums/scope.dart';
+import 'package:ziwei_core/src/time/ziwei_date.dart';
 
-// 测试专用辅助函数
 Future<CalendarOptions> loadAllConfigsForTest() async {
-  // 1. 读取规则 (Config)
+  // ... 代码同上 ...
   final rulesFile = File('assets/config/default/main_rules.json');
-  if (!rulesFile.existsSync()) throw Exception("❌ 找不到 main_rules.json");
-  final rulesStr = rulesFile.readAsStringSync();
-
-  // 这里 ConfigLoader 会解析 brightness_labels 到静态变量里
-  final options = ConfigLoader.parse(rulesStr);
-
-  // 2. 读取星星表 (Stars)
   final starsFile = File('assets/config/default/stars.json');
-  if (!starsFile.existsSync()) throw Exception("❌ 找不到 stars.json");
-  final starsStr = starsFile.readAsStringSync();
-
-  // 3. 读取亮度表 (Brightness)
   final brightnessFile = File('assets/config/default/brightness.json');
-  String brightnessStr = "{}";
-  if (brightnessFile.existsSync()) {
-    brightnessStr = brightnessFile.readAsStringSync();
+
+  if (!rulesFile.existsSync() || !starsFile.existsSync()) {
+    throw Exception("❌ 配置文件缺失！");
   }
 
-  // 4. 解析星星
-  ConfigLoader.parseStars(starsStr, brightnessStr);
+  // 1. 加载规则
+  final options = ConfigLoader.parse(rulesFile.readAsStringSync());
+
+  // 2. 加载星星和亮度
+  String brightnessStr = brightnessFile.existsSync()
+      ? brightnessFile.readAsStringSync()
+      : "{}";
+  ConfigLoader.parseStars(starsFile.readAsStringSync(), brightnessStr);
 
   return options;
 }
 
 void main() {
-  test('核心排盘 - 14主星验证', () async {
+  test('v0.0.2', () async {
     // 1. 加载配置
     final options = await loadAllConfigsForTest();
 
-    // 2. 手动加载 i18n 文件 (为了测试能打印汉字)
+    // 2. 加载翻译
     final i18nFile = File('assets/i18n/zh_CN.json');
     if (!i18nFile.existsSync()) throw Exception("❌ 找不到 zh_CN.json");
     final Map<String, dynamic> i18n = jsonDecode(i18nFile.readAsStringSync());
 
-    // 3. 准备时间
+    // 3. 设定时间
     var date = ZiweiDate.fromSolar(
-      DateTime(2026, 2, 4, 19, 18),
+      DateTime(2026, 2, 4, 19, 48),
       options: options,
     );
 
-    // 4. 排盘计算
+    // 4. 计算排盘
     var plate = ZiWeiEngine.calculate(date, ConfigLoader.stars);
 
-    // 5. 打印结果
-    print("\n====== 排盘结果 (${date.lunar.toString()}) ======");
-    print("五行局: ${plate.elementBureau.label}");
+    // 5. 打印报表
+    print("\n====== 🟣 排盘结果 (${date.lunar}) ======");
+    print("🎯 五行局: ${plate.elementBureau.label}");
 
-    // 找紫微星在哪
-    int ziweiIndex = plate.palaces.indexWhere((p) => p.hasStar('ziwei'));
-    print("紫微在: $ziweiIndex 宫");
+    // 遍历12宫 (我们需要 index 来反查角色)
+    for (int i = 0; i < 12; i++) {
+      var p = plate.palaces[i];
 
-    // 遍历打印每个宫位
-    for (var p in plate.palaces) {
+      // 🔥 核心修改：动态查询这一格是干嘛的 (查本命盘 Origin)
+      PalaceRole role = plate.getRole(ZiweiScope.origin, i);
+
+      // 查翻译: role_life -> "命宫"
+      String roleKey = "role_${role.name}";
+      String roleName = i18n[roleKey] ?? role.debugLabel; // 查不到就用默认label
+
+      // 处理星星信息
       var starsInfo = p.stars
           .map((s) {
-            // 1. 先把星星名字翻译出来
-            // 记得加上前缀 "star_" 去查字典
             String starName = i18n["star_${s.key}"] ?? s.key;
             if (s is StaticStar) {
               int level = s.getBrightness(p.branch);
-              String labelKey =
-                  ConfigLoader.brightnessLabels[level] ?? "level_none";
+              String labelKey = ConfigLoader.brightnessLabels[level] ?? "";
               String labelText = i18n[labelKey] ?? "";
-
-              // 输出中文名 + 中文亮度: 紫微(庙)
               return "$starName($labelText)";
             }
-            return starName; // 如果没亮度，就光显名字
+            return starName;
           })
           .join(", ");
 
-      // 打印：[寅] 丑 : ziwei(庙), tianfu(旺)
-      print("[${p.stem!.label}${p.branch.label}]: $starsInfo");
+      // 打印：[寅] (命宫) : 紫微(庙)...
+      print("[${p.stem?.label}${p.branch.label}] ($roleName) : $starsInfo");
     } // for循环结束
   });
 }

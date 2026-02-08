@@ -1,6 +1,7 @@
 // lib/src/time/ziwei_date_adapter.dart
 
 import 'package:lunar/calendar/Lunar.dart';
+import 'package:lunar/calendar/Solar.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
@@ -51,8 +52,21 @@ class TimeAdapter {
       timeIndex: DiZhi.fromName(eightChar.getTimeZhi()).index,
     );
 
+    var lt = Lunar.fromDate(date);
+    var prevJie = lt.getPrevJie(false);
+    var prevJieSolar = prevJie.getSolar();
+    var currentSolar = Solar.fromDate(date);
+
+    int daysSincePrevJie = currentSolar.subtract(prevJieSolar);
+
     // 4. 返回完整对象
-    return ZiweiDate(solar: date, lunar: myLunar, bazi: myBaZi, options: opt);
+    return ZiweiDate(
+      solar: date,
+      lunar: myLunar,
+      bazi: myBaZi,
+      options: opt,
+      solarDay: daysSincePrevJie,
+    );
   }
 
   /// 这里的 hourIndex 是 0-11 的数字

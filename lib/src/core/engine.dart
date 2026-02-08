@@ -69,10 +69,25 @@ class ZiWeiEngine {
     );
 
     Map<String, int> anchorsMap = {
+      //1.紫微天府锚点
       "ziwei": ziweiAnchor,
       "tianfu": tianfuAnchor,
+      "ming": lifeIndex,
+      "shen": bodyIndex,
+      // 2. 农历时间锚点 (0-based)
+      "lunar_month": date.lunar.month - 1,
+      "lunar_day": date.lunar.day - 1,
+      "lunar_hour": date.lunar.timeIndex,
+      // 3. 节气时间锚点 (0-based)
+      "solar_month": date.bazi.month.zhi.index - 2, // 寅=0
+      "solar_day": date.solarDay - 1,
+
+      // 4. 兼容旧名字 (默认用农历)
+      "month": date.lunar.month - 1,
+      "day": date.lunar.day - 1,
+      "hour": date.lunar.timeIndex,
     };
-    StarPlacer placer = StarPlacer(anchorsMap, palaces);
+    StarPlacer placer = StarPlacer(anchorsMap, palaces, date);
     placer.placeAll(stars); // 👈 一键排盘！
 
     return ZiWeiPlate(

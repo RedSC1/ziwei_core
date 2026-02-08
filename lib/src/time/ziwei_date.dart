@@ -69,12 +69,14 @@ class ZiweiDate {
   final LunarDate lunar; // 农历
   final BaZi bazi; // 八字
   final CalendarOptions options; // 历法选项
+  final int solarDay; //上个节令后第几天
 
   const ZiweiDate({
     required this.solar,
     required this.lunar,
     required this.bazi,
     required this.options,
+    required this.solarDay,
   });
 
   factory ZiweiDate.fromSolar(DateTime dt, {CalendarOptions? options}) {

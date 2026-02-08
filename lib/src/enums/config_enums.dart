@@ -4,7 +4,7 @@ enum LeapMonthRule {
   splitAt15, // 按15日切分 (变态版)
 }
 
-enum PalaceName {
+enum PalaceRole {
   life, // 命宫
   siblings, // 兄弟
   spouse, // 夫妻
@@ -19,7 +19,7 @@ enum PalaceName {
   parents; // 父母
 
   // 顺手写个中文翻译，方便之后打印
-  String get label {
+  String get debugLabel {
     switch (this) {
       case life:
         return '命宫';
@@ -47,7 +47,13 @@ enum PalaceName {
         return '父母';
     }
   }
+
+  int getIndex(int baseIndex) {
+    //用命宫位置算出这个宫位在哪个位置
+    return (baseIndex - index + 12) % 12;
+  }
 }
+
 enum Boundary {
   /// 以农历为界 [主流紫微]
   lunar,

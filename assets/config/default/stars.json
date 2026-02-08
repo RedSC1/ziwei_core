@@ -138,5 +138,208 @@
             "anchor": "tianfu",
             "offset": 10
         }
+    },
+
+
+
+  {
+    "key": "zuofu",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "anchor_offset",
+      "anchor": "month",
+      "boundary": "lunar",
+      "offset": 4, 
+      "direction": 1 
     }
+  },
+  {
+    "key": "youbi",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "anchor_offset",
+      "anchor": "month",
+      "boundary": "lunar",
+      "offset": 10, 
+      "direction": -1 
+    }
+  },
+  {
+    "key": "wenchang",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "anchor_offset",
+      "anchor": "hour",
+      "boundary": "lunar",
+      "offset": 10, 
+      "direction": -1 
+    }
+  },
+  {
+    "key": "wenqu",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "anchor_offset",
+      "anchor": "hour",
+      "boundary": "lunar",
+      "offset": 4, 
+      "direction": 1 
+    }
+  },
+  {
+    "key": "tiankui",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "table": {
+        "jia": 1, "yi": 0, "bing": 11, "ding": 11, "wu": 1, 
+        "ji": 0, "geng": 1, "xin": 2, "ren": 3, "gui": 3
+      }
+    }
+  },
+  {
+    "key": "tianyue",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "table": {
+        "jia": 7, "yi": 8, "bing": 9, "ding": 9, "wu": 7, 
+        "ji": 8, "geng": 7, "xin": 6, "ren": 5, "gui": 5
+      }
+    }
+  },
+ {
+    "key": "lucun",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 0,
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "tianma",
+    "type": "lucky",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_branch",
+      "boundary": "lunar",
+      "offset": 0,
+      "table":{
+        "yin": 8, "wu": 8, "xu": 8,
+        "shen": 2, "zi": 2, "chen": 2,
+        "si": 11, "you": 11, "chou": 11,
+        "hai": 5, "mao": 5, "wei": 5
+      }
+    }
+  },
+
+  {
+    "key": "qingyang",
+    "type": "bad",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 1, 
+      "table": { 
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "tuoluo",
+    "type": "bad",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": -1,
+      "table": { 
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0 
+      }
+    }
+  },
+  {
+    "key": "huoxing",
+    "type": "bad",
+    "tag": "",
+    "rule": {
+      "type": "lookup_offset",
+      "anchor": "year_branch",
+      "shift_anchor": "hour",
+      "boundary": "lunar",
+      "direction": 1,
+      "table": {
+        "yin": 1, "wu": 1, "xu": 1,
+        "shen": 2, "zi": 2, "chen": 2,
+        "si": 3, "you": 3, "chou": 3,
+        "hai": 9, "mao": 9, "wei": 9
+      }
+    }
+  },
+  {
+    "key": "lingxing",
+    "type": "bad",
+    "tag": "",
+    "rule": {
+      "type": "lookup_offset",
+      "anchor": "year_branch",
+      "shift_anchor": "hour",
+      "boundary": "lunar",
+      "direction": 1,
+      "table": {
+        "yin": 3, "wu": 3, "xu": 3,
+        "shen": 10, "zi": 10, "chen": 10,
+        "si": 10, "you": 10, "chou": 10,
+        "hai": 10, "mao": 10, "wei": 10
+      }
+    }
+  },
+  {
+    "key": "dikong",
+    "type": "bad",
+    "tag": "",
+    "rule": {
+      "type": "anchor_offset",
+      "anchor": "hour",
+      "boundary": "lunar",
+      "offset": 11, 
+      "direction": -1 
+    }
+  },
+  {
+    "key": "dijie",
+    "type": "bad",
+    "tag": "",
+    "rule": {
+      "type": "anchor_offset",
+      "anchor": "hour",
+      "boundary": "lunar",
+      "offset": 11, 
+      "direction": 1 
+    }
+  }
+ 
 ]
