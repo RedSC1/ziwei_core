@@ -5,11 +5,12 @@ import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 import 'package:ziwei_core/src/core/placer.dart';
+import 'package:ziwei_core/src/enums/consts.dart';
 
 class ZiWeiEngine {
   static ZiWeiPlate calculate(ZiweiDate date, List<StaticStar> stars) {
     //(0=子, 1=丑 ... 11=亥)
-    List<Palace> palaces = List.generate(12, (i) => Palace(i));
+    List<Palace> palaces = List.generate(ZiweiConsts.palaceCount, (i) => Palace(i));
 
     final calendarOptions = date.options; //获取日历选项
     int effectiveMonth =
@@ -26,40 +27,39 @@ class ZiWeiEngine {
           break;
       }
     }
-    // step1:安放命身宫
+    // step1: 安放命身宫
     final (int lifeIndex, int bodyIndex) = _calLifeAndBodyPalace(
       date,
       effectiveMonth,
     );
-    //step2: 五虎遁安放干支
+    // step2: 五虎遁安放干支
     // 1. 核心口诀：甲己之年丙作首...
     // 我们要算出“寅宫”（地支索引2）的天干是谁
     // TianGan.jia.index 是 0
 
-    final method = date.options.wuHuDunBasedOn; //获取配置，防止有变态流派五虎遁要按照节气算
+    final method = date.options.wuHuDunBasedOn; // 获取配置
     int yearGanIndex;
 
     if (method == Boundary.solar) {
-      // 1. 变态流派：按节气（立春）算
+      // 1. 节气流派 (Solar Term Sect)：按立春算
       // 直接取八字里的年干 (lunar库已经帮你算好了立春逻辑)
       yearGanIndex = date.bazi.year.gan.index;
     } else {
-      // 2. 主流流派：按春节（农历年）算
+      // 2. 农历流派 (Lunar Sect)：按春节算 (主流)
       int offset = (date.lunar.year - 4) % 10;
       yearGanIndex = offset < 0 ? offset + 10 : offset;
     }
     _assignPalaceStems(yearGanIndex, palaces);
 
-    //step3:定五行局
-
+    // step3: 定五行局
     FiveElementBureau elementBureau = _calculateBureau(
       palaces[lifeIndex].stem!,
       palaces[lifeIndex].branch,
     );
 
-    //step4: 安星，
-    //大部分星曜都可以按照先查表+偏移的方式来计算
-    //1.计算紫微天府的位置
+    // step4: 安星
+    // 大部分星曜都可以按照先查表+偏移的方式来计算
+    // 1.计算紫微天府的位置
     final (
       int ziweiAnchor,
       int tianfuAnchor,
@@ -69,7 +69,7 @@ class ZiWeiEngine {
     );
 
     Map<String, int> anchorsMap = {
-      //1.紫微天府锚点
+      // 1. 紫微天府锚点
       "ziwei": ziweiAnchor,
       "tianfu": tianfuAnchor,
       "ming": lifeIndex,
@@ -79,7 +79,7 @@ class ZiWeiEngine {
       "lunar_day": date.lunar.day - 1,
       "lunar_hour": date.lunar.timeIndex,
       // 3. 节气时间锚点 (0-based)
-      "solar_month": date.bazi.month.zhi.index - 2, // 寅=0
+      "solar_month": date.bazi.month.zhi.index - ZiweiConsts.yinIndex,
       "solar_day": date.solarDay - 1,
 
       // 4. 兼容旧名字 (默认用农历)
@@ -88,7 +88,7 @@ class ZiWeiEngine {
       "hour": date.lunar.timeIndex,
     };
     StarPlacer placer = StarPlacer(anchorsMap, palaces, date);
-    placer.placeAll(stars); // 👈 一键排盘！
+    placer.placeAll(stars);
 
     return ZiWeiPlate(
       palaces: palaces, // 这里面已经是带天干的了
@@ -99,13 +99,12 @@ class ZiWeiEngine {
   }
 
   static (int, int) _calLifeAndBodyPalace(ZiweiDate date, int effectiveMonth) {
-    const int yinOffset = 2; //寅宫位置锁死是2
     int monthOffset = effectiveMonth - 1; // 语义：相对于“正月”的偏移量
     int hourStep = date.lunar.timeIndex; // 子时=0
-    int lifeIndex = (yinOffset + monthOffset - hourStep) % 12;
+    int lifeIndex = (ZiweiConsts.yinIndex + monthOffset - hourStep) % 12;
     if (lifeIndex < 0) lifeIndex += 12;
-    //寅起正月，顺数至生月，顺数生时为身宫。
-    int bodyIndex = (yinOffset + monthOffset + hourStep) % 12;
+    // 寅起正月，顺数至生月，顺数生时为身宫。
+    int bodyIndex = (ZiweiConsts.yinIndex + monthOffset + hourStep) % 12;
     if (bodyIndex < 0) bodyIndex += 12;
     return (lifeIndex, bodyIndex);
   }
@@ -122,7 +121,7 @@ class ZiWeiEngine {
       // 按照寅宫(2)开始数
       // 这里的 i 代表从寅开始走的步数
       // 实际宫位索引 (0-11)
-      int palaceIndex = (2 + i) % 12;
+      int palaceIndex = (ZiweiConsts.yinIndex + i) % 12;
 
       // 计算宫干索引 (0-9)，超过10要回头
       int stemIndex = (startStemIndex + i) % 10;
@@ -133,7 +132,6 @@ class ZiWeiEngine {
   }
 
   static FiveElementBureau _calculateBureau(TianGan stem, DiZhi branch) {
-    //ai说可以这么算
     // 1. 天干系数 (每两个一组)
     // 甲乙=0, 丙丁=1, 戊己=2, 庚辛=3, 壬癸=4
     final stemScore = stem.index ~/ 2;
