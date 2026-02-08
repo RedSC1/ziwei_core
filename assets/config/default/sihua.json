@@ -1,0 +1,62 @@
+{
+  "jia": {
+    "lu": "lianzhen",
+    "quan": "pojun",
+    "ke": "wuqu",
+    "ji": "taiyang"
+  },
+  "yi": {
+    "lu": "tianji",
+    "quan": "tianliang",
+    "ke": "ziwei",
+    "ji": "taiyin"
+  },
+  "bing": {
+    "lu": "tiantong",
+    "quan": "tianji",
+    "ke": "wenchang",
+    "ji": "lianzhen"
+  },
+  "ding": {
+    "lu": "taiyin",
+    "quan": "tiantong",
+    "ke": "tianji",
+    "ji": "jumen"
+  },
+  "wu": {
+    "lu": "tanlang",
+    "quan": "taiyin",
+    "ke": "youbi",
+    "ji": "tianji"
+  },
+  "ji": {
+    "lu": "wuqu",
+    "quan": "tanlang",
+    "ke": "tianliang",
+    "ji": "wenqu"
+  },
+  "geng": {
+    "lu": "taiyang",
+    "quan": "wuqu",
+    "ke": "taiyin",
+    "ji": "tiantong"
+  },
+  "xin": {
+    "lu": "jumen",
+    "quan": "taiyang",
+    "ke": "wenqu",
+    "ji": "wenchang"
+  },
+  "ren": {
+    "lu": "tianliang",
+    "quan": "ziwei",
+    "ke": "zuofu",
+    "ji": "wuqu"
+  },
+  "gui": {
+    "lu": "pojun",
+    "quan": "jumen",
+    "ke": "taiyin",
+    "ji": "tanlang"
+  }
+}

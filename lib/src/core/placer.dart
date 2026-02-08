@@ -2,7 +2,7 @@ import 'package:ziwei_core/src/config/schemas/star_rule.dart';
 import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/data/star.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
+import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/enums/star_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
@@ -141,62 +141,24 @@ class StarPlacer {
   // 输入: "year_stem", Boundary.lunar
   // 输出: "jia" (甲)
   String _getAnchorValue(String anchorKey, Boundary boundary) {
-    // --- 1. 准备基础数据 ---
-    // 农历数据
-    int lunarYear = date.lunar.year;
-    int lunarMonth = date.lunar.month; // 1-12
-
-    // 八字数据 (节气数据)
-    var baziYear = date.bazi.year;
-    var baziMonth = date.bazi.month;
     switch (anchorKey) {
       // ====== 年干 (Year Stem) ======
       case 'year_stem':
-        if (boundary == Boundary.solar) {
-          return baziYear.gan.name; // 节气年干
-        } else {
-          // 农历年干: (year - 4) % 10
-          int idx = (lunarYear - 4) % 10;
-          if (idx < 0) idx += 10;
-          return TianGan.values[idx].name;
-        }
+        return date.getGanZhi(ZiweiScope.origin, b: boundary).gan.name;
+
       // ====== 年支 (Year Branch) ======
       case 'year_branch':
-        if (boundary == Boundary.solar) {
-          return baziYear.zhi.name; // 节气年支
-        } else {
-          // 农历年支: (year - 4) % 12
-          int idx = (lunarYear - 4) % 12;
-          if (idx < 0) idx += 12;
-          return DiZhi.values[idx].name;
-        }
+        return date.getGanZhi(ZiweiScope.origin, b: boundary).zhi.name;
+
       // ====== 月干 (Month Stem) ======
       case 'month_stem':
-        if (boundary == Boundary.solar) {
-          return baziMonth.gan.name; // 节气月干
-        } else {
-          // 农历月干: 需要用“五虎遁”推算！
-          // 1. 先算农历年干索引
-          int yIdx = (lunarYear - 4) % 10;
-          if (yIdx < 0) yIdx += 10;
+        return date.getGanZhi(ZiweiScope.month, b: boundary).gan.name;
 
-          // 2. 算出正月(寅)的天干: (年干%5)*2 + 2
-          int startStem = (yIdx % 5) * 2 + 2;
-
-          // 3. 推算当前月的天干: 起点 + (月-1)
-          int mStemIdx = (startStem + (lunarMonth - 1)) % 10;
-          return TianGan.values[mStemIdx].name;
-        }
       // ====== 月支 (Month Branch) ======
       case 'month_branch':
-        if (boundary == Boundary.solar) {
-          return baziMonth.zhi.name; // 节气月支
-        } else {
-          // 农历月支: 正月建寅(2)，二月建卯(3)...
-          // 公式: (月 + 1) % 12
-          int mZhiIdx = (lunarMonth + 1) % 12;
-          return DiZhi.values[mZhiIdx].name;
-        }
+        return date.getGanZhi(ZiweiScope.month, b: boundary).zhi.name;
+
+      // ... 日时逻辑 ...
       // ... 日时逻辑 ...
       // ====== 日 (Day) ======
 
@@ -227,23 +189,14 @@ class StarPlacer {
 
       // 2. 时干 (Hour Stem)
       case 'hour_stem':
-        if (boundary == Boundary.solar) {
-          return date.bazi.time.gan.name;
-        } else {
-          // 农历时干: 五鼠遁 (日干 -> 时干)
-          // 日干索引
-          int dIdx = date.bazi.day.gan.index;
-          // 时支索引
-          int hIdx = date.lunar.timeIndex;
-
-          // 公式: (日干%5)*2 + 时支
-          int hStemIdx = ((dIdx % 5) * 2 + hIdx) % 10;
-          return TianGan.values[hStemIdx].name;
-        }
+        // ✅ Refactored: 时干也统一用 ZiweiDate 算 (虽然 ZiweiDate 里没写 hourStem 方法，但 bazi 属性里有)
+        // 既然我们有 bazi.time.gan，直接用即可
+        // 注意：原代码的农历分支里手算了五鼠遁，其实 luanr 库算的八字里已经有了
+        return date.bazi.time.gan.name;
 
       // 3. 时支 (Hour Branch)
       case 'hour_branch':
-        return DiZhi.values[date.lunar.timeIndex].name;
+        return date.bazi.time.zhi.name;
     }
     return "";
   }
@@ -283,7 +236,8 @@ class StarPlacer {
           return idx < 0 ? idx + 12 : idx;
         } else {
           // 农历月：1-12 -> 0-11
-          return date.lunar.month - 1;
+          // ✅ Fix: 加上 .abs() 解决闰月(负数)崩溃问题
+          return date.lunar.month.abs() - 1;
         }
 
       case 'day':

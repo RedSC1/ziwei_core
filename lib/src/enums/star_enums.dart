@@ -1,3 +1,5 @@
+import 'package:ziwei_core/src/core/logger.dart';
+
 /// 星曜类型
 enum StarType {
   /// 14 主星 (紫微、天机...)
@@ -53,8 +55,31 @@ enum StarRuleType {
       // ... 以后加了别的再来补 ...
       default:
         // 如果遇到不认识的，最好报错或者给 unknown，看你的严厉程度
-        print("⚠️ 警告：未知的安星规则类型: $str");
+        ZiweiLogger.warn("⚠️ 警告：未知的安星规则类型: $str");
         return StarRuleType.unknown;
+    }
+  }
+}
+
+//四化类型
+enum SiHuaType {
+  lu, // 禄
+  quan, // 权
+  ke, // 科
+  ji; // 忌
+
+  static SiHuaType fromJson(String str) {
+    switch (str) {
+      case 'lu':
+        return SiHuaType.lu;
+      case 'quan':
+        return SiHuaType.quan;
+      case 'ke':
+        return SiHuaType.ke;
+      case 'ji':
+        return SiHuaType.ji;
+      default:
+        throw ArgumentError('未知的四化类型: $str');
     }
   }
 }

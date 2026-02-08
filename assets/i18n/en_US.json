@@ -1,0 +1,27 @@
+{
+  "role_life": "Life",
+  "role_siblings": "Siblings",
+  "role_spouse": "Spouse",
+  "role_children": "Children",
+  "role_wealth": "Wealth",
+  "role_health": "Health",
+  "role_travel": "Travel",
+  "role_friends": "Friends",
+  "role_career": "Career",
+  "role_property": "Property",
+  "role_mental": "Mental",
+  "role_parents": "Parents",
+
+  "level_miao": "Miao",
+  "level_wang": "Wang",
+  "level_de": "De",
+  "level_li": "Li",
+  "level_ping": "Ping",
+  "level_bu": "Bu",
+  "level_xian": "Xian",
+
+  "sihua_lu": "Lu",
+  "sihua_quan": "Quan",
+  "sihua_ke": "Ke",
+  "sihua_ji": "Ji"
+}

@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:ziwei_core/src/data/star.dart';
+import 'package:ziwei_core/src/enums/gan_zhi.dart';
+import 'package:ziwei_core/src/enums/star_enums.dart';
 
 import '../time/ziwei_date.dart';
 import '../enums/config_enums.dart';
@@ -8,6 +10,8 @@ import '../core/logger.dart';
 class ConfigLoader {
   static List<StaticStar> stars = [];
   static Map<int, String> brightnessLabels = {};
+
+  static Map<TianGan, Map<SiHuaType, String>> siHuaRules = {};
 
   static CalendarOptions parse(String? jsonStr) {
     if (jsonStr == null || jsonStr.trim().isEmpty) {
@@ -44,10 +48,15 @@ class ConfigLoader {
     final wuHuStr = _requireString(calMap, 'wu_hu_dun_boundary');
     final wuHuBoundary = _parseWuHuBoundary(wuHuStr);
 
+    // 5. 解析四化按照农历（默认）还是节气
+    final siHuaStr = _requireString(calMap, 'sihua_boundary');
+    final siHuaBoundary = _parseSiHuaBoundary(siHuaStr);
+
     return CalendarOptions(
       splitRatHour: splitRat,
       leapRule: leapRule,
       wuHuDunBasedOn: wuHuBoundary,
+      siHuaBasedOn: siHuaBoundary,
     );
   }
 
@@ -101,6 +110,17 @@ class ConfigLoader {
     }
   }
 
+  static Boundary _parseSiHuaBoundary(String str) {
+    switch (str) {
+      case 'lunar':
+        return Boundary.lunar;
+      case 'solar':
+        return Boundary.solar;
+      default:
+        throw ArgumentError('❌ Invalid sihua_boundary: $str');
+    }
+  }
+
   //以下是解析stars.json的代码
   // ✅ Parse stars list
   // ✅ New param: brightnessJson
@@ -118,7 +138,10 @@ class ConfigLoader {
         });
       }
     } catch (e) {
-      ZiweiLogger.warn("Brightness table parsing failed (will use defaults)", e);
+      ZiweiLogger.warn(
+        "Brightness table parsing failed (will use defaults)",
+        e,
+      );
     }
 
     // 2. Parse stars and inject brightness data
@@ -143,5 +166,31 @@ class ConfigLoader {
     }
   }
 
-  // ... 原有的 helper 方法 ...
+  // ✅ 解析四化规则 (rules_sihua.json)
+  static void parseSiHua(String jsonStr) {
+    if (jsonStr.trim().isEmpty) return;
+
+    try {
+      final Map<String, dynamic> raw = jsonDecode(jsonStr);
+      siHuaRules.clear();
+
+      raw.forEach((ganKey, rules) {
+        // ganKey: "jia", "yi"...
+        final gan = TianGan.fromName(ganKey);
+        if (rules is Map<String, dynamic>) {
+          final Map<SiHuaType, String> ruleMap = {};
+          rules.forEach((sihuaKey, starKey) {
+            // sihuaKey: "lu", "quan"...
+            // ✅遇到未知类型直接抛异常，不再吞掉
+            final type = SiHuaType.fromJson(sihuaKey);
+            ruleMap[type] = starKey.toString();
+          });
+          siHuaRules[gan] = ruleMap;
+        }
+      });
+      ZiweiLogger.info("Loaded SiHua rules for ${siHuaRules.length} stems");
+    } catch (e, s) {
+      ZiweiLogger.error("SiHua rules parsing failed", e, s);
+    }
+  }
 }

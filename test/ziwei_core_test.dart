@@ -14,6 +14,7 @@ Future<CalendarOptions> loadAllConfigsForTest() async {
   final rulesFile = File('assets/config/default/main_rules.json');
   final starsFile = File('assets/config/default/stars.json');
   final brightnessFile = File('assets/config/default/brightness.json');
+  final sihuaFile = File('assets/config/default/sihua.json'); // ✅ 新增
 
   if (!rulesFile.existsSync() || !starsFile.existsSync()) {
     throw Exception("❌ 配置文件缺失！");
@@ -27,6 +28,14 @@ Future<CalendarOptions> loadAllConfigsForTest() async {
       ? brightnessFile.readAsStringSync()
       : "{}";
   ConfigLoader.parseStars(starsFile.readAsStringSync(), brightnessStr);
+
+  // 3. ✅ 加载四化规则
+  if (sihuaFile.existsSync()) {
+    ConfigLoader.parseSiHua(sihuaFile.readAsStringSync());
+    print("✅ Test Loaded SiHua Rules: ${ConfigLoader.siHuaRules.length} stems");
+  } else {
+    print("❌ Error: SiHua file not found at ${sihuaFile.path}");
+  }
 
   return options;
 }
@@ -47,12 +56,19 @@ void main() {
       options: options,
     );
 
-    // 4. 计算排盘
-    var plate = ZiWeiEngine.calculate(date, ConfigLoader.stars);
+    // 4. 计算排盘 (✅ 修复调用参数)
+    var plate = ZiWeiEngine.calculate(
+      date,
+      ConfigLoader.stars,
+      ConfigLoader.siHuaRules,
+    );
 
     // 5. 打印报表
     print("\n====== 🟣 排盘结果 (${date.lunar}) ======");
     print("🎯 五行局: ${plate.elementBureau.label}");
+    print(
+      "✨ 生年四化: ${date.getGanZhi(ZiweiScope.origin)!.gan.name}干",
+    ); // 打印一下年干方便核对
 
     // 遍历12宫 (我们需要 index 来反查角色)
     for (int i = 0; i < 12; i++) {
@@ -70,16 +86,29 @@ void main() {
           .map((s) {
             String starName = i18n["star_${s.key}"] ?? s.key;
             if (s is StaticStar) {
+              // 1. 亮度
               int level = s.getBrightness(p.branch);
               String labelKey = ConfigLoader.brightnessLabels[level] ?? "";
               String labelText = i18n[labelKey] ?? "";
-              return "$starName($labelText)";
+
+              // 2. ✅ 四化 (查原局) - 动态 i18n 写法
+              String sihuaText = "";
+              if (s.siHuaBuff.containsKey(ZiweiScope.origin)) {
+                var type = s.siHuaBuff[ZiweiScope.origin]!;
+                // 拼接 key: sihua_lu, sihua_quan ...
+                String key = "sihua_${type.name}";
+                // 查表，查不到就显示默认 name
+                String label = i18n[key] ?? type.name;
+                sihuaText = "($label)";
+              }
+
+              return "$starName($labelText)$sihuaText";
             }
             return starName;
           })
           .join(", ");
 
-      // 打印：[寅] (命宫) : 紫微(庙)...
+      // 打印：[寅] (命宫) : 紫微(庙)(权)...
       print("[${p.stem?.label}${p.branch.label}] ($roleName) : $starsInfo");
     } // for循环结束
   });

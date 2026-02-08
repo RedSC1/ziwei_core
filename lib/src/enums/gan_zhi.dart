@@ -17,7 +17,10 @@ enum TianGan {
   }
 
   static TianGan fromName(String str) {
-    return TianGan.values.firstWhere((e) => e.label == str);
+    return TianGan.values.firstWhere(
+      (e) => e.name == str || e.label == str, // ✅ 支持拼音(jia) 和 中文(甲)
+      orElse: () => throw ArgumentError("Invalid TianGan: $str"),
+    );
   }
 }
 
@@ -55,7 +58,10 @@ enum DiZhi {
   }
 
   static DiZhi fromName(String str) {
-    return DiZhi.values.firstWhere((e) => e.label == str);
+    return DiZhi.values.firstWhere(
+      (e) => e.name == str || e.label == str, // ✅ 支持拼音(zi) 和 中文(子)
+      orElse: () => throw ArgumentError("Invalid DiZhi: $str"),
+    );
   }
 }
 enum FiveElementBureau {

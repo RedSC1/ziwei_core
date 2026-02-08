@@ -1,18 +1,21 @@
 // 一个“干支”对儿（比如“甲子”就是一个 GanZhi 对象）
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
+import 'package:ziwei_core/src/enums/scope.dart';
 import 'time_adapter.dart';
 
 class CalendarOptions {
   final bool splitRatHour; // 早晚子时
   final LeapMonthRule leapRule; // 闰月规则
   final Boundary wuHuDunBasedOn; //五虎遁按照农历还是节气
+  final Boundary siHuaBasedOn; //四化按照农历还是节气
 
   const CalendarOptions({
     this.splitRatHour = false,
     //默认
     this.leapRule = LeapMonthRule.splitAt15,
     this.wuHuDunBasedOn = Boundary.lunar,
+    this.siHuaBasedOn = Boundary.lunar,
   });
 }
 
@@ -106,5 +109,61 @@ class ZiweiDate {
   @override
   String toString() {
     return '阳: $solar\n阴: $lunar\n八: $bazi';
+  }
+
+  GanZhi getGanZhi(ZiweiScope scope, {Boundary? b}) {
+    Boundary boundary = b ?? options.siHuaBasedOn;
+    TianGan stem;
+    DiZhi branch;
+    switch (scope) {
+      case ZiweiScope.decade:
+      //to do
+      case ZiweiScope.origin:
+      case ZiweiScope.year:
+        if (boundary == Boundary.lunar) {
+          stem = TianGan.values[(lunar.year + 6) % 10];
+          int idx = (lunar.year - 4) % 12;
+          if (idx < 0) idx += 12;
+          branch = DiZhi.values[idx];
+          return GanZhi(stem, branch);
+        } else {
+          return bazi.year;
+        }
+      case ZiweiScope.month:
+        if (boundary == Boundary.lunar) {
+          int virtualMonth = lunar.month;
+          if (lunar.isLeap) {
+            switch (options.leapRule) {
+              case LeapMonthRule.asNext:
+                virtualMonth++;
+              case LeapMonthRule.splitAt15:
+                if (lunar.day > 15) {
+                  virtualMonth++;
+                }
+              default:
+                break;
+            }
+          }
+          // 农历月干: 需要用“五虎遁”推算！
+          // 1. 先算农历年干索引
+          int yIdx = (lunar.year - 4) % 10;
+          if (yIdx < 0) yIdx += 10;
+
+          // 2. 算出正月(寅)的天干: (年干%5)*2 + 2
+          int startStem = (yIdx % 5) * 2 + 2;
+
+          // 3. 推算当前月的天干: 起点 + (月-1)
+          int mStemIdx = (startStem + (virtualMonth - 1)) % 10;
+
+          int mZhiIdx = (virtualMonth + 1) % 12;
+          return GanZhi(TianGan.values[mStemIdx], DiZhi.values[mZhiIdx]);
+        } else {
+          return bazi.month;
+        }
+      case ZiweiScope.day:
+        return bazi.day;
+      case ZiweiScope.hour:
+        return bazi.time;
+    }
   }
 }

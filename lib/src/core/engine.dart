@@ -1,16 +1,26 @@
+import 'package:ziwei_core/src/core/decorator.dart';
 import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/data/star.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
+import 'package:ziwei_core/src/enums/scope.dart';
+import 'package:ziwei_core/src/enums/star_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 import 'package:ziwei_core/src/core/placer.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
 
 class ZiWeiEngine {
-  static ZiWeiPlate calculate(ZiweiDate date, List<StaticStar> stars) {
+  static ZiWeiPlate calculate(
+    ZiweiDate date,
+    List<StaticStar> stars,
+    Map<TianGan, Map<SiHuaType, String>> siHuaRules,
+  ) {
     //(0=子, 1=丑 ... 11=亥)
-    List<Palace> palaces = List.generate(ZiweiConsts.palaceCount, (i) => Palace(i));
+    List<Palace> palaces = List.generate(
+      ZiweiConsts.palaceCount,
+      (i) => Palace(i),
+    );
 
     final calendarOptions = date.options; //获取日历选项
     int effectiveMonth =
@@ -37,19 +47,13 @@ class ZiWeiEngine {
     // 我们要算出“寅宫”（地支索引2）的天干是谁
     // TianGan.jia.index 是 0
 
-    final method = date.options.wuHuDunBasedOn; // 获取配置
-    int yearGanIndex;
+    // ✅ Refactored: 使用 ZiweiDate.getGanZhi 统一获取年干
+    // 这里使用 wuHuDunBasedOn 配置
+    final yearGan = date
+        .getGanZhi(ZiweiScope.origin, b: date.options.wuHuDunBasedOn)
+        .gan;
 
-    if (method == Boundary.solar) {
-      // 1. 节气流派 (Solar Term Sect)：按立春算
-      // 直接取八字里的年干 (lunar库已经帮你算好了立春逻辑)
-      yearGanIndex = date.bazi.year.gan.index;
-    } else {
-      // 2. 农历流派 (Lunar Sect)：按春节算 (主流)
-      int offset = (date.lunar.year - 4) % 10;
-      yearGanIndex = offset < 0 ? offset + 10 : offset;
-    }
-    _assignPalaceStems(yearGanIndex, palaces);
+    _assignPalaceStems(yearGan.index, palaces);
 
     // step3: 定五行局
     FiveElementBureau elementBureau = _calculateBureau(
@@ -75,7 +79,7 @@ class ZiWeiEngine {
       "ming": lifeIndex,
       "shen": bodyIndex,
       // 2. 农历时间锚点 (0-based)
-      "lunar_month": date.lunar.month - 1,
+      "lunar_month": date.lunar.month.abs() - 1,
       "lunar_day": date.lunar.day - 1,
       "lunar_hour": date.lunar.timeIndex,
       // 3. 节气时间锚点 (0-based)
@@ -83,19 +87,29 @@ class ZiWeiEngine {
       "solar_day": date.solarDay - 1,
 
       // 4. 兼容旧名字 (默认用农历)
-      "month": date.lunar.month - 1,
+      "month": date.lunar.month.abs() - 1,
       "day": date.lunar.day - 1,
       "hour": date.lunar.timeIndex,
     };
     StarPlacer placer = StarPlacer(anchorsMap, palaces, date);
     placer.placeAll(stars);
 
-    return ZiWeiPlate(
+    ZiWeiPlate plate = ZiWeiPlate(
       palaces: palaces, // 这里面已经是带天干的了
       originMingIndex: lifeIndex, // 命宫位置
       bodyPalaceIndex: bodyIndex, // 身宫位置
       elementBureau: elementBureau, // 五行局
     );
+
+    //step5:安装生年四化
+    SiHuaDecorator.decorateByDate(
+      plate: plate,
+      date: date,
+      siHuaTable: siHuaRules, // 如果你选了方案 B (静态引用)
+      scope: ZiweiScope.origin,
+    );
+
+    return plate;
   }
 
   static (int, int) _calLifeAndBodyPalace(ZiweiDate date, int effectiveMonth) {

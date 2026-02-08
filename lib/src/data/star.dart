@@ -1,5 +1,6 @@
 import 'package:ziwei_core/src/config/schemas/star_rule.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
+import 'package:ziwei_core/src/enums/scope.dart';
 
 import '../enums/star_enums.dart';
 
@@ -19,17 +20,20 @@ class StaticStar extends Star {
   @override
   final StarType type;
 
+  Map<ZiweiScope, SiHuaType> siHuaBuff;
+
   // 特有属性：安星规则 (因为流曜不需要这个，它们靠流年算)
   // 注意：这个 Rule 类型你得在 schemas 里定义好
   final StarRule rule;
   final List<int> brightnessTable;
 
-  const StaticStar({
+  StaticStar({
     required this.key,
     required this.type,
     required this.rule,
     required this.brightnessTable,
-  });
+    Map<ZiweiScope, SiHuaType>? siHuaBuff,
+  }) : siHuaBuff = siHuaBuff ?? {};
 
   int getBrightness(DiZhi branch) {
     return brightnessTable[branch.index];
@@ -41,6 +45,7 @@ class StaticStar extends Star {
   ) {
     String key = json['key'];
     List<int> brightness = brightnessMap[key] ?? List.filled(12, 0);
+
     return StaticStar(
       // 1. 基础字段可以直接拿
       key: json['key'] as String,
