@@ -134,10 +134,11 @@ class TimeAdapter {
     lunarMonth = _monthNameToInt(monthName);
 
     // 4. 计算八字 (干支)
-    // 需要节气信息。ssqRes.zq 是中气表。
-    // zq[0]=冬至, zq[1]=小寒, zq[2]=大寒, zq[3]=立春 ...
-    // calcGanZhi 需要完整的 zq 列表。
-    final baziRes = calcGanZhi(currentJD, trueSolarJD - 2451545, ssqRes.zq);
+    // calcGanZhi(utJD, trueSolarJD)
+    // currentJD 是北京时间绝对 JD
+    // utJD (J2000相对) = currentJD - 8/24 - 2451545
+    final utJD = currentJD - 8.0 / 24.0 - 2451545.0;
+    final baziRes = calcGanZhi(utJD, trueSolarJD - 2451545.0);
 
     final bazi = BaZi(
       year: _parseGanZhi(baziRes.yearGanZhi),
