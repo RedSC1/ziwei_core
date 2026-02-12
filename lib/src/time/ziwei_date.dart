@@ -1,5 +1,6 @@
 // 一个“干支”对儿（比如“甲子”就是一个 GanZhi 对象）
 import 'package:ziwei_core/src/enums/config_enums.dart';
+import 'package:ziwei_core/src/enums/consts.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'time_adapter.dart';
@@ -9,6 +10,9 @@ class CalendarOptions {
   final LeapMonthRule leapRule; // 闰月规则
   final Boundary wuHuDunBasedOn; //五虎遁按照农历还是节气
   final Boundary siHuaBasedOn; //四化按照农历还是节气
+  // 童限规则：regular (一岁一宫顺行) vs special_skip (一命二财三疾厄...)
+  final ChildhoodRole childhoodRule;
+  final Boundary flowLimitBasedOn;
 
   const CalendarOptions({
     this.splitRatHour = false,
@@ -16,6 +20,8 @@ class CalendarOptions {
     this.leapRule = LeapMonthRule.splitAt15,
     this.wuHuDunBasedOn = Boundary.lunar,
     this.siHuaBasedOn = Boundary.lunar,
+    this.childhoodRule = ChildhoodRole.skip,
+    this.flowLimitBasedOn = Boundary.lunar,
   });
 }
 
@@ -73,6 +79,7 @@ class ZiweiDate {
   final BaZi bazi; // 八字
   final CalendarOptions options; // 历法选项
   final int solarDay; //上个节令后第几天
+  final Gender gender; // ✅ 新增：性别
 
   const ZiweiDate({
     required this.solar,
@@ -80,11 +87,16 @@ class ZiweiDate {
     required this.bazi,
     required this.options,
     required this.solarDay,
+    required this.gender,
   });
 
-  factory ZiweiDate.fromSolar(DateTime dt, {CalendarOptions? options}) {
+  factory ZiweiDate.fromSolar(
+    DateTime dt, {
+    CalendarOptions? options,
+    Gender gender = Gender.male,
+  }) {
     // 把 options 透传给 Adapter
-    return TimeAdapter.fromSolar(dt, options: options);
+    return TimeAdapter.fromSolar(dt, gender, options: options);
   }
   // 2. Lunar 入口也改一下：
   factory ZiweiDate.fromLunar(
@@ -94,6 +106,7 @@ class ZiweiDate {
     int hourIndex,
     bool isLeap, {
     CalendarOptions? options,
+    Gender gender = Gender.male,
   }) {
     // 把 options 透传给 Adapter
     return TimeAdapter.fromLunar(
@@ -102,6 +115,7 @@ class ZiweiDate {
       day,
       hourIndex,
       isLeap,
+      gender,
       options: options,
     );
   }
@@ -116,14 +130,11 @@ class ZiweiDate {
     TianGan stem;
     DiZhi branch;
     switch (scope) {
-      case ZiweiScope.decade:
-      //to do
       case ZiweiScope.origin:
       case ZiweiScope.year:
         if (boundary == Boundary.lunar) {
           stem = TianGan.values[(lunar.year + 6) % 10];
-          int idx = (lunar.year - 4) % 12;
-          if (idx < 0) idx += 12;
+          int idx = ZiweiConsts.fixIndex(lunar.year - 4);
           branch = DiZhi.values[idx];
           return GanZhi(stem, branch);
         } else {
@@ -164,6 +175,10 @@ class ZiweiDate {
         return bazi.day;
       case ZiweiScope.hour:
         return bazi.time;
+      case ZiweiScope.decade:
+        throw ArgumentError('请使用getFlowGanZhi()!!!');
+      case ZiweiScope.smallLimit:
+        throw ArgumentError('小限没有独立的干支，请使用流年干支或原局干支！');
     }
   }
 }

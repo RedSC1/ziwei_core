@@ -61,3 +61,7 @@ enum Boundary {
   /// 节气为界 [八字]
   solar,
 }
+
+enum Gender { male, female }
+
+enum ChildhoodRole { skip, regular }

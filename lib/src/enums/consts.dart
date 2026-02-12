@@ -16,4 +16,11 @@ class ZiweiConsts {
 
   /// 晚子时结束时间 (01:00)
   static const int lateRatHourEnd = 1;
+
+  /// 安全取模：将索引归入 [0, 12) 范围，处理负数情况
+  static int fixIndex(int index) {
+    int result = index % palaceCount;
+    if (result < 0) result += palaceCount;
+    return result;
+  }
 }

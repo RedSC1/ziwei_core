@@ -1,4 +1,5 @@
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
+import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 import 'star.dart'; // 引用星星定义
 
@@ -19,11 +20,26 @@ class Palace {
   // 创建时只需要指定它是第几个格子(index)，其他的后面填
   Palace(this.index, {this.stem});
 
+  GanZhi get ganzhi {
+    if (stem == null) {
+      throw Exception("还没排盘就算大运？？？");
+    }
+    return GanZhi(stem!, branch);
+  }
+
   // --- 辅助方法 ---
 
   // 往宫里安一颗星
   void addStar(Star star) {
     stars.add(star);
+  }
+
+  /// 🚀 深拷贝 (Deep Copy)
+  /// 用于大限/流年排盘，防止污染原盘
+  Palace clone() {
+    return Palace(index, stem: stem)
+      // 关键：让里面的每一颗星星都自我复制一份
+      ..stars = stars.map((s) => s.clone()).toList();
   }
 
   // 方便调试打印看结果，不仅看地支，还能看到里面的星星

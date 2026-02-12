@@ -5,4 +5,5 @@ enum ZiweiScope {
   month, // 流月
   day, // 流日
   hour, // 流时
+  smallLimit, // 小限
 }

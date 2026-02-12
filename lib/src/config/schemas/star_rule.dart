@@ -29,25 +29,30 @@ abstract class StarRule {
 class AnchorOffsetRule extends StarRule {
   final String anchorKey;
   final int offset;
-
-  // ✅ 新增：方向字段 (默认 1)
   final int direction;
+  // ✅ 补上 Boundary 字段
+  final Boundary boundary;
 
   AnchorOffsetRule({
     required this.anchorKey,
     required this.offset,
-    this.direction = 1, // 默认为顺行
+    this.direction = 1,
+    this.boundary = Boundary.lunar, // 默认为农历
   }) : super(StarRuleType.anchorOffset);
 
   factory AnchorOffsetRule.fromJson(Map<String, dynamic> json) {
+    // 解析 Boundary
+    final boundaryStr = json['boundary'] as String? ?? 'lunar';
+    final boundary = Boundary.values.firstWhere(
+      (e) => e.name == boundaryStr,
+      orElse: () => Boundary.lunar,
+    );
+
     return AnchorOffsetRule(
       anchorKey: json['anchor'] as String,
-
-      // 顺便把那个 double 转 int 的坑也填了
       offset: (json['offset'] as num?)?.toInt() ?? 0,
-
-      // ✅ 解析 direction
       direction: (json['direction'] as num?)?.toInt() ?? 1,
+      boundary: boundary, // ✅ 赋值
     );
   }
 }

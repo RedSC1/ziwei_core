@@ -52,7 +52,7 @@ void main() {
 
     // 3. 设定时间
     var date = ZiweiDate.fromSolar(
-      DateTime(2026, 2, 4, 19, 48),
+      DateTime(2003, 7, 29, 2, 36),
       options: options,
     );
 
@@ -67,7 +67,7 @@ void main() {
     print("\n====== 🟣 排盘结果 (${date.lunar}) ======");
     print("🎯 五行局: ${plate.elementBureau.label}");
     print(
-      "✨ 生年四化: ${date.getGanZhi(ZiweiScope.origin)!.gan.name}干",
+      "✨ 生年四化: ${date.getGanZhi(ZiweiScope.origin).gan.label}干",
     ); // 打印一下年干方便核对
 
     // 遍历12宫 (我们需要 index 来反查角色)
@@ -80,6 +80,15 @@ void main() {
       // 查翻译: role_life -> "命宫"
       String roleKey = "role_${role.name}";
       String roleName = i18n[roleKey] ?? role.debugLabel; // 查不到就用默认label
+
+      // ✅ 新增：检查是不是身宫
+      String bodyLabel = "";
+      if (i == plate.bodyPalaceIndex) {
+        String label = i18n["label_body_palace"] ?? "Body";
+        bodyLabel = "[$label]"; // 用方括号区分一下
+      }
+
+      // 处理星星信息
 
       // 处理星星信息
       var starsInfo = p.stars
@@ -102,14 +111,32 @@ void main() {
                 sihuaText = "($label)";
               }
 
+              // 3. ✅ 自化 (Self)
+              if (s.selfSiHua != null) {
+                String key = "sihua_${s.selfSiHua!.name}";
+                String label = i18n[key] ?? s.selfSiHua!.name;
+                String prefix = i18n["prefix_self"] ?? "Self-";
+                sihuaText += "[$prefix$label]";
+              }
+
+              // 4. ✅ 向心 (Centripetal)
+              if (s.centripetalSiHua != null) {
+                String key = "sihua_${s.centripetalSiHua!.name}";
+                String label = i18n[key] ?? s.centripetalSiHua!.name;
+                String prefix = i18n["prefix_centripetal"] ?? "Centripetal-";
+                sihuaText += "[$prefix$label]";
+              }
+
               return "$starName($labelText)$sihuaText";
             }
             return starName;
           })
           .join(", ");
 
-      // 打印：[寅] (命宫) : 紫微(庙)(权)...
-      print("[${p.stem?.label}${p.branch.label}] ($roleName) : $starsInfo");
+      // 打印：[寅] (命宫)[身宫] : 紫微(庙)(权)...
+      print(
+        "[${p.stem?.label}${p.branch.label}] ($roleName)$bodyLabel : $starsInfo",
+      );
     } // for循环结束
   });
 }

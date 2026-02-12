@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:ziwei_core/src/config/schemas/flow_definition.dart';
 import 'package:ziwei_core/src/data/star.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/star_enums.dart';
@@ -6,9 +7,12 @@ import 'package:ziwei_core/src/enums/star_enums.dart';
 import '../time/ziwei_date.dart';
 import '../enums/config_enums.dart';
 import '../core/logger.dart';
+import '../core/star_locator.dart'; // 引入 StarLocator
 
 class ConfigLoader {
   static List<StaticStar> stars = [];
+  static List<FlowDefinition> flowDefinitions = []; // 🔥 新增：流曜定义缓存
+
   static Map<int, String> brightnessLabels = {};
 
   static Map<TianGan, Map<SiHuaType, String>> siHuaRules = {};
@@ -46,17 +50,29 @@ class ConfigLoader {
 
     // 4. 解析五虎遁按照农历（默认）还是节气
     final wuHuStr = _requireString(calMap, 'wu_hu_dun_boundary');
-    final wuHuBoundary = _parseWuHuBoundary(wuHuStr);
+    final wuHuBoundary = _parseBoundary(wuHuStr, 'wu_hu_dun_boundary');
 
     // 5. 解析四化按照农历（默认）还是节气
     final siHuaStr = _requireString(calMap, 'sihua_boundary');
-    final siHuaBoundary = _parseSiHuaBoundary(siHuaStr);
+    final siHuaBoundary = _parseBoundary(siHuaStr, 'sihua_boundary');
 
+    //6.解析童限的计算规则
+    final childhoodStr = _requireString(calMap, 'childhood_decade');
+    final childhoodDecadeRule = _parseChildhoodDecadeRule(childhoodStr);
+
+    //大运流年流月按照阴历还是农历
+    final flowLimitstr = _requireString(calMap, 'flowLimit_boundary');
+    final flowLimitBoundary = _parseBoundary(
+      flowLimitstr,
+      'flowLimit_boundary',
+    );
     return CalendarOptions(
       splitRatHour: splitRat,
       leapRule: leapRule,
       wuHuDunBasedOn: wuHuBoundary,
       siHuaBasedOn: siHuaBoundary,
+      childhoodRule: childhoodDecadeRule,
+      flowLimitBasedOn: flowLimitBoundary,
     );
   }
 
@@ -99,25 +115,26 @@ class ConfigLoader {
     }
   }
 
-  static Boundary _parseWuHuBoundary(String str) {
+  static Boundary _parseBoundary(String str, String fieldName) {
     switch (str) {
       case 'lunar':
         return Boundary.lunar;
       case 'solar':
         return Boundary.solar;
       default:
-        throw ArgumentError('❌ Invalid wu_hu_dun_boundary: $str');
+        throw ArgumentError('Invalid $fieldName: $str');
     }
   }
 
-  static Boundary _parseSiHuaBoundary(String str) {
-    switch (str) {
-      case 'lunar':
-        return Boundary.lunar;
-      case 'solar':
-        return Boundary.solar;
+  //解析童限规则
+  static ChildhoodRole _parseChildhoodDecadeRule(String childhoodStr) {
+    switch (childhoodStr) {
+      case 'skip':
+        return ChildhoodRole.skip;
+      case 'regular':
+        return ChildhoodRole.regular;
       default:
-        throw ArgumentError('❌ Invalid sihua_boundary: $str');
+        throw ArgumentError('❌ Invalid childhood_decade: $childhoodStr');
     }
   }
 
@@ -159,6 +176,9 @@ class ConfigLoader {
       }).toList();
 
       ZiweiLogger.info("Loaded ${stars.length} stars (with brightness data)");
+
+      // 🔥 初始化 StarLocator 规则缓存
+      StarLocator.init(stars);
     } catch (e, s) {
       ZiweiLogger.error("Stars parsing failed", e, s);
       stars = [];
@@ -191,6 +211,20 @@ class ConfigLoader {
       ZiweiLogger.info("Loaded SiHua rules for ${siHuaRules.length} stems");
     } catch (e, s) {
       ZiweiLogger.error("SiHua rules parsing failed", e, s);
+    }
+  }
+
+  // ✅ 解析流曜定义 (flow_stars.json)
+  static void parseFlowStars(String jsonStr) {
+    if (jsonStr.trim().isEmpty) return;
+
+    try {
+      final List<dynamic> list = jsonDecode(jsonStr);
+      flowDefinitions = list.map((e) => FlowDefinition.fromJson(e)).toList();
+      ZiweiLogger.info("Loaded ${flowDefinitions.length} flow definitions");
+    } catch (e, s) {
+      ZiweiLogger.error("Flow definitions parsing failed", e, s);
+      flowDefinitions = [];
     }
   }
 }

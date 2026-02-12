@@ -11,8 +11,30 @@ enum StarType {
   /// 六煞星 (羊陀火铃空劫)
   bad,
 
-  /// 杂曜 (恩光天贵...)
+  /// 乙级星 (红鸾、天喜、天刑、天姚...)
+  minor,
+
+  /// ---------------------------
+  /// 丙级星 (杂曜/十二神)
+  /// ---------------------------
+
+  /// 博士十二神 (跟禄存)
+  boshi,
+
+  /// 岁建十二神 (跟太岁)
+  suijian,
+
+  ///将前十二神
+  jiangqian,
+
+  /// 长生十二神 (跟五行局)
+  changsheng,
+
+  /// 杂曜 (其他)
   other,
+
+  //流曜
+  flow,
 
   /// 默认兜底
   unknown;
@@ -51,6 +73,7 @@ enum StarRuleType {
       case 'lookup':
         return StarRuleType.lookup;
       case 'lookup_offset':
+      case 'lookup_shift': // ✅ 兼容这个写法
         return StarRuleType.lookupOffset;
       // ... 以后加了别的再来补 ...
       default:

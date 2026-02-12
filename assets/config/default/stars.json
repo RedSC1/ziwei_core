@@ -340,6 +340,69 @@
       "offset": 11, 
       "direction": 1 
     }
+  },
+  {
+    "key": "hongluan",
+    "type": "minor",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_branch",
+      "boundary": "lunar",
+      "offset": 0,
+      "table": {
+        "zi": 3,   "chou": 2, "yin": 1,  "mao": 0, 
+        "chen": 11, "si": 10, "wu": 9,   "wei": 8, 
+        "shen": 7,  "you": 6, "xu": 5,   "hai": 4
+      }
+    }
+  },
+  {
+    "key": "tianxi",
+    "type": "minor",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_branch",
+      "boundary": "lunar",
+      "offset": 0,
+      "table": {
+        "zi": 9,   "chou": 8, "yin": 7,  "mao": 6, 
+        "chen": 5,  "si": 4,  "wu": 3,   "wei": 2, 
+        "shen": 1,  "you": 0, "xu": 11,  "hai": 10
+      }
+    }
+  },
+  {
+    "key": "tianyao",
+    "type": "minor",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "month_branch",
+      "boundary": "lunar",
+      "offset": 0,
+      "table": {
+        "yin": 1,  "mao": 2,  "chen": 3,  "si": 4,
+        "wu": 5,   "wei": 6,  "shen": 7, "you": 8,
+        "xu": 9,   "hai": 10, "zi": 11,  "chou": 0
+      }
+    }
+  },
+  {
+    "key": "xianchi",
+    "type": "minor",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_branch",
+      "boundary": "lunar",
+      "offset": 0,
+      "table": {
+        "zi": 9,   "chou": 6, "yin": 3,  "mao": 0, 
+        "chen": 9, "si": 6,   "wu": 3,   "wei": 0, 
+        "shen": 9, "you": 6,  "xu": 3,   "hai": 0
+      }
+    }
   }
- 
 ]

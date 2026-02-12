@@ -10,6 +10,10 @@ abstract class Star {
   abstract final StarType type; // 类型 (major/bad...)
   // 统一的构造/工厂
   const Star();
+
+  /// 核心：原型模式 (Prototype Pattern)
+  /// 用于在大限/流年排盘时深拷贝对象，防止污染原盘数据
+  Star clone();
 }
 
 /// 2. 普通静态星 (14主星 + 吉煞 + 杂曜)
@@ -21,6 +25,8 @@ class StaticStar extends Star {
   final StarType type;
 
   Map<ZiweiScope, SiHuaType> siHuaBuff;
+  SiHuaType? selfSiHua;
+  SiHuaType? centripetalSiHua;
 
   // 特有属性：安星规则 (因为流曜不需要这个，它们靠流年算)
   // 注意：这个 Rule 类型你得在 schemas 里定义好
@@ -34,6 +40,21 @@ class StaticStar extends Star {
     required this.brightnessTable,
     Map<ZiweiScope, SiHuaType>? siHuaBuff,
   }) : siHuaBuff = siHuaBuff ?? {};
+
+  /// 🚀 深拷贝实现
+  @override
+  StaticStar clone() {
+    return StaticStar(
+      key: key,
+      type: type,
+      rule: rule, // Rule 是不可变配置，传引用即可
+      brightnessTable: brightnessTable, // 只读表，传引用即可
+      // 🔥 关键：Map 必须深拷贝！
+      siHuaBuff: Map.of(siHuaBuff),
+    )
+      ..selfSiHua = selfSiHua
+      ..centripetalSiHua = centripetalSiHua;
+  }
 
   int getBrightness(DiZhi branch) {
     return brightnessTable[branch.index];
@@ -78,6 +99,45 @@ class GodStar extends Star {
     required this.type,
     required this.groupName,
   });
+
+  @override
+  GodStar clone() {
+    // GodStar 目前属性都是 final 的，理论上不需要深拷贝
+    // 但为了接口统一，还是返回一个新对象比较保险
+    return GodStar(
+      key: key,
+      type: type,
+      groupName: groupName,
+    );
+  }
+}
+
+/// 4. 流曜 (Flow Stars)
+/// 比如：流年禄存、流年羊陀、流年魁钺
+/// 特点：位置随时间变，但有亮度属性
+class FlowStar extends Star {
+  @override
+  final String key; // "liu_lucun"
+  @override
+  final StarType type = StarType.flow; // 新增一个 flow 类型
+  
+  // 流曜也是有庙旺平陷的，直接复用原星的亮度表
+  // 比如流羊的亮度表 = 原盘擎羊的亮度表
+  final List<int> brightnessTable; 
+
+  FlowStar({
+    required this.key,
+    required this.brightnessTable,
+  });
+
+  int getBrightness(DiZhi branch) {
+    return brightnessTable[branch.index];
+  }
+
+  @override
+  FlowStar clone() {
+    return FlowStar(key: key, brightnessTable: brightnessTable);
+  }
 }
 
 // 流曜以后再加...

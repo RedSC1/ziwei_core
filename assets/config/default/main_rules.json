@@ -3,7 +3,9 @@
     "split_rat_hour": false,
     "leap_month_strategy": "split",
     "wu_hu_dun_boundary": "lunar",
-    "sihua_boundary": "lunar"
+    "sihua_boundary": "lunar",
+    "childhood_decade": "skip",
+    "flowLimit_boundary": "lunar"
   },
   "brightness_labels": {
     "6": "level_miao", 

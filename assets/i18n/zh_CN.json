@@ -50,11 +50,83 @@
   "star_lingxing": "铃星",
   "star_dikong": "地空",
   "star_dijie": "地劫",
+  "star_hongluan":"红鸾",
+  "star_tianxi": "天喜",
+  "star_tianyao": "天姚",
+  "star_xianchi": "咸池",
+
+  "star_flow_decade_lucun": "大禄",
+  "star_flow_year_lucun": "年禄",
+  "star_flow_month_lucun": "月禄",
+  "star_flow_day_lucun": "日禄",
+  "star_flow_hour_lucun": "时禄",
+  "star_flow_smallLimit_lucun": "小禄",
+
+  "star_flow_decade_tiankui": "大魁",
+  "star_flow_year_tiankui": "年魁",
+  "star_flow_month_tiankui": "月魁",
+  "star_flow_day_tiankui": "日魁",
+  "star_flow_hour_tiankui": "时魁",
+  "star_flow_smallLimit_tiankui": "小魁",
+
+  "star_flow_decade_tianyue": "大钺",
+  "star_flow_year_tianyue": "年钺",
+  "star_flow_month_tianyue": "月钺",
+  "star_flow_day_tianyue": "日钺",
+  "star_flow_hour_tianyue": "时钺",
+  "star_flow_smallLimit_tianyue": "小钺",
+
+  "star_flow_decade_wenchang": "大昌",
+  "star_flow_year_wenchang": "年昌",
+  "star_flow_month_wenchang": "月昌",
+  "star_flow_day_wenchang": "日昌",
+  "star_flow_hour_wenchang": "时昌",
+  "star_flow_smallLimit_wenchang": "小昌",
+
+  "star_flow_decade_wenqu": "大曲",
+  "star_flow_year_wenqu": "年曲",
+  "star_flow_month_wenqu": "月曲",
+  "star_flow_day_wenqu": "日曲",
+  "star_flow_hour_wenqu": "时曲",
+  "star_flow_smallLimit_wenqu": "小曲",
+
+  "star_flow_decade_qingyang": "大羊",
+  "star_flow_year_qingyang": "年羊",
+  "star_flow_month_qingyang": "月羊",
+  "star_flow_day_qingyang": "日羊",
+  "star_flow_hour_qingyang": "时羊",
+  "star_flow_smallLimit_qingyang": "小羊",
+
+  "star_flow_decade_tuoluo": "大陀",
+  "star_flow_year_tuoluo": "年陀",
+  "star_flow_month_tuoluo": "月陀",
+  "star_flow_day_tuoluo": "日陀",
+  "star_flow_hour_tuoluo": "时陀",
+  "star_flow_smallLimit_tuoluo": "小陀",
+
+  "star_flow_decade_hongluan": "大鸾",
+  "star_flow_year_hongluan": "年鸾",
+  "star_flow_month_hongluan": "月鸾",
+  "star_flow_day_hongluan": "日鸾",
+  "star_flow_hour_hongluan": "时鸾",
+  "star_flow_smallLimit_hongluan": "小鸾",
+
+  "star_flow_decade_tianxi": "大喜",
+  "star_flow_year_tianxi": "年喜",
+  "star_flow_month_tianxi": "月喜",
+  "star_flow_day_tianxi": "日喜",
+  "star_flow_hour_tianxi": "时喜",
+  "star_flow_smallLimit_tianxi": "小喜",
+
 
   "sihua_lu": "禄",
   "sihua_quan": "权",
   "sihua_ke": "科",
-  "sihua_ji": "忌"
+  "sihua_ji": "忌",
+  "prefix_self": "自化",
+  "prefix_centripetal": "向心",
+
+  "label_body_palace": "身宫"
 
   
 }

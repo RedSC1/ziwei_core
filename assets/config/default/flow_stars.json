@@ -1,0 +1,86 @@
+[
+  {
+    "key": "flow_lucun",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "table": {
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+  },
+  {
+    "key": "flow_tiankui",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "table": {
+        "jia": 1, "yi": 0, "bing": 11, "ding": 11, "wu": 1,
+        "ji": 0, "geng": 1, "xin": 6, "ren": 3, "gui": 3
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+  },
+  {
+    "key": "flow_tianyue",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "table": {
+        "jia": 7, "yi": 8, "bing": 9, "ding": 9, "wu": 7,
+        "ji": 8, "geng": 7, "xin": 2, "ren": 5, "gui": 5
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+  },
+  {
+    "key": "flow_wenchang",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "table": {
+        "jia": 5, "yi": 6, "bing": 8, "ding": 9, "wu": 8,
+        "ji": 9, "geng": 11, "xin": 0, "ren": 2, "gui": 3
+      }
+    },
+    "brightness": [5, 6, 0, 2, 5, 6, 0, 2, 5, 6, 0, 5]
+  },
+  {
+    "key": "flow_wenqu",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "table": {
+        "jia": 9, "yi": 8, "bing": 6, "ding": 5, "wu": 6,
+        "ji": 5, "geng": 3, "xin": 2, "ren": 0, "gui": 11
+      }
+    },
+    "brightness": [5, 6, 0, 2, 5, 6, 0, 2, 5, 6, 0, 5]
+  },
+  {
+    "key": "flow_qingyang",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "table": {
+        "jia": 3, "yi": 4, "bing": 6, "ding": 7, "wu": 6,
+        "ji": 7, "geng": 9, "xin": 10, "ren": 0, "gui": 1
+      }
+    },
+    "brightness": [0, 6, 0, 0, 6, 0, 0, 6, 0, 0, 6, 0]
+  },
+  {
+    "key": "flow_tuoluo",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "table": {
+        "jia": 1, "yi": 2, "bing": 4, "ding": 5, "wu": 4,
+        "ji": 5, "geng": 7, "xin": 8, "ren": 10, "gui": 11
+      }
+    },
+    "brightness": [0, 6, 0, 0, 6, 0, 0, 6, 0, 0, 6, 0]
+  }
+]

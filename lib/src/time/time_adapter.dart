@@ -2,11 +2,16 @@
 
 import 'package:lunar/calendar/Lunar.dart';
 import 'package:lunar/calendar/Solar.dart';
+import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 class TimeAdapter {
-  static ZiweiDate fromSolar(DateTime date, {CalendarOptions? options}) {
+  static ZiweiDate fromSolar(
+    DateTime date,
+    Gender gender, {
+    CalendarOptions? options,
+  }) {
     final opt = options ?? const CalendarOptions();
     //先判断是否区分早晚子时，如果不区分早晚子时，处理阴历日期的时候按照第二天处理
     var virtualDate = date;
@@ -57,6 +62,7 @@ class TimeAdapter {
     var prevJieSolar = prevJie.getSolar();
     var currentSolar = Solar.fromDate(date);
 
+    //计算上个节令的时间
     int daysSincePrevJie = currentSolar.subtract(prevJieSolar);
 
     // 4. 返回完整对象
@@ -66,6 +72,7 @@ class TimeAdapter {
       bazi: myBaZi,
       options: opt,
       solarDay: daysSincePrevJie,
+      gender: gender,
     );
   }
 
@@ -76,7 +83,8 @@ class TimeAdapter {
     int month,
     int day,
     int hourIndex,
-    bool isLeap, {
+    bool isLeap,
+    Gender gender, {
     CalendarOptions? options,
   }) {
     // 1. 处理闰月：Lunar库规定闰月一般用负数表示
@@ -111,6 +119,6 @@ class TimeAdapter {
     );
 
     // 6. 只要有了阳历，剩下的事就交给上面的 fromSolar 办！
-    return fromSolar(dt, options: options);
+    return fromSolar(dt, gender, options: options);
   }
 }

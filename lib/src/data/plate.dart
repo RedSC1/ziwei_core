@@ -2,14 +2,19 @@ import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
+import 'package:ziwei_core/src/enums/star_enums.dart';
+import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 class ZiWeiPlate {
   final List<Palace> palaces;
   final int originMingIndex;
   final int bodyPalaceIndex;
   final FiveElementBureau elementBureau;
+  final ZiweiDate date;
+  final Map<TianGan, Map<SiHuaType, String>> siHuaRules;
 
   int? decadeMingIndex;
+  int? smallLimitMingIndex;
   int? yearMingIndex;
   int? monthMingIndex;
   int? dayMingIndex;
@@ -19,7 +24,10 @@ class ZiWeiPlate {
     required this.originMingIndex,
     required this.bodyPalaceIndex,
     required this.elementBureau,
+    required this.date,
+    required this.siHuaRules,
     this.decadeMingIndex,
+    this.smallLimitMingIndex,
     this.yearMingIndex,
     this.monthMingIndex,
     this.dayMingIndex,
@@ -52,6 +60,33 @@ class ZiWeiPlate {
     return PalaceRole.values[offset];
   }
 
+  /// 🚀 深拷贝 (Deep Copy)
+  /// 生成一个完全独立的盘面副本，用于叠加流运（大限/流年）
+  ZiWeiPlate clone() {
+    return ZiWeiPlate(
+      // 1. 关键：所有宫位深拷贝 (Recursive Clone)
+      palaces: palaces.map((p) => p.clone()).toList(),
+
+      // 2. 基础数据复制 (值类型)
+      originMingIndex: originMingIndex,
+      bodyPalaceIndex: bodyPalaceIndex,
+      elementBureau: elementBureau,
+
+      // 3. 规则引用复制 (浅拷贝即可，因为规则是只读的)
+      siHuaRules: siHuaRules,
+
+      // 4. 状态指针复制
+      decadeMingIndex: decadeMingIndex,
+      smallLimitMingIndex: smallLimitMingIndex,
+      yearMingIndex: yearMingIndex,
+      monthMingIndex: monthMingIndex,
+      dayMingIndex: dayMingIndex,
+      hourMingIndex: hourMingIndex,
+
+      date: date,
+    );
+  }
+
   int _getMingIndex(ZiweiScope scope) {
     int? mingIndex;
     switch (scope) {
@@ -72,6 +107,9 @@ class ZiWeiPlate {
         break;
       case ZiweiScope.hour:
         mingIndex = hourMingIndex;
+        break;
+      case ZiweiScope.smallLimit:
+        mingIndex = smallLimitMingIndex;
         break;
     }
     if (mingIndex == null) {
