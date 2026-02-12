@@ -3,6 +3,9 @@ import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
+import 'package:ziwei_core/src/time/astro_date_time.dart';
+import 'package:ziwei_core/src/time/location.dart';
+
 import 'time_adapter.dart';
 
 class CalendarOptions {
@@ -74,7 +77,9 @@ class LunarDate {
 }
 
 class ZiweiDate {
-  final DateTime solar; // 阳历
+  final AstroDateTime solar; // 阳历（支持公元前）
+  final AstroDateTime? trueSolarTime; // 真太阳时（可选）
+  final Location location; // 地理位置
   final LunarDate lunar; // 农历
   final BaZi bazi; // 八字
   final CalendarOptions options; // 历法选项
@@ -83,6 +88,8 @@ class ZiweiDate {
 
   const ZiweiDate({
     required this.solar,
+    this.trueSolarTime,
+    required this.location,
     required this.lunar,
     required this.bazi,
     required this.options,
@@ -90,14 +97,33 @@ class ZiweiDate {
     required this.gender,
   });
 
+  /// 从阳历创建（支持 AstroDateTime 或 DateTime）。
+  ///
+  /// [dt] 输入时间。如果是 DateTime，会自动转为 AstroDateTime。
+  /// [location] 地理位置。如果不传，默认为北京。
   factory ZiweiDate.fromSolar(
-    DateTime dt, {
+    Object dt, {
     CalendarOptions? options,
     Gender gender = Gender.male,
+    Location? location,
   }) {
-    // 把 options 透传给 Adapter
-    return TimeAdapter.fromSolar(dt, gender, options: options);
+    AstroDateTime solar;
+    if (dt is AstroDateTime) {
+      solar = dt;
+    } else if (dt is DateTime) {
+      solar = AstroDateTime.fromDateTime(dt);
+    } else {
+      throw ArgumentError('dt must be AstroDateTime or DateTime');
+    }
+
+    return TimeAdapter.fromSolar(
+      solar,
+      gender,
+      options: options,
+      location: location,
+    );
   }
+
   // 2. Lunar 入口也改一下：
   factory ZiweiDate.fromLunar(
     int year,
@@ -107,6 +133,7 @@ class ZiweiDate {
     bool isLeap, {
     CalendarOptions? options,
     Gender gender = Gender.male,
+    Location? location,
   }) {
     // 把 options 透传给 Adapter
     return TimeAdapter.fromLunar(
@@ -117,6 +144,7 @@ class ZiweiDate {
       isLeap,
       gender,
       options: options,
+      location: location,
     );
   }
 
@@ -157,6 +185,24 @@ class ZiweiDate {
           }
           // 农历月干: 需要用“五虎遁”推算！
           // 1. 先算农历年干索引
+          // 修正负数年份模运算
+          int yearForGan = lunar.year;
+          if (yearForGan < 0) {
+            // 公元前年干推算？
+            // 公元前1年(0)是庚申(57)。
+            // 简单点：根据年干支推算。
+            // 但这里是“农历年”，不是“八字年”。
+            // 假设农历年干和八字年干一致（其实可能有偏差）。
+            // 更好的做法是：直接用 bazi.year 的天干作为基准！
+            // 但如果 boundary == lunar，我们要用农历年干。
+            // 农历年干公式：(year - 4) % 10 ?
+            // 4 AD 是甲子。
+            // -1 AD (BC 2) -> -5 -> 5 (己)
+            // 0 AD (BC 1) -> -4 -> 6 (庚)
+            // 1 AD -> -3 -> 7 (辛)
+            // 公式：(year - 4) % 10
+          }
+
           int yIdx = (lunar.year - 4) % 10;
           if (yIdx < 0) yIdx += 10;
 
