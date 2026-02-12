@@ -19,7 +19,7 @@ void main() async {
   await _loadConfig();
 
   // 1. 创建命主时间
-  final birthday = DateTime(2026, 2, 11, 15, 19);
+  final birthday = DateTime(2003, 8, 28, 2, 58);
   final ziweiDate = ZiweiDate.fromSolar(birthday, gender: Gender.male);
 
   // 2. 计算原盘

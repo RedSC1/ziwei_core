@@ -41,7 +41,6 @@ class TimeAdapter {
 
     // 2. 计算真太阳时
     final solarRes = calcTrueSolarTime(calcDate, loc);
-    print("TrueSolar: ${solarRes.trueSolarTime} at $loc");
     final trueSolar = solarRes.trueSolarTime;
     final trueSolarJD = trueSolar.toJulianDay();
     final currentJD = calcDate.toJulianDay(); // 使用调整后的时间（如果23点换日）计算农历
@@ -76,40 +75,37 @@ class TimeAdapter {
     final ssqRes = _ssq.calcY(calcDate.toJ2000());
 
     // 确定农历月和日
-    // 遍历 hs 数组，找到 currentJD 所在的区间
-    // hs[i] 是第 i 个月的初一 (0点? 还是朔点?)
-    // ssq.dart 注释: "日月合朔表(整日)"。
-    // 查看 ssq.dart 代码：
-    // D = Math.floor( ... + 0.5 )
-    // 返回的是整数 JD。
-    // 且 ssq.calc 中有 8/24 (时区修正)。
-    // 所以 hs[i] 是北京时间初一的 0 点 (或 12 点?)。
-    // ssq.calc 返回的是 JD (整数)。JD 通常从中午起算。
-    // 但 ssq 里的处理：`return D-2451545;`
-    // 寿星万年历的日历通常是从 0 点起算的民用日期。
-    // 所以 hs[i] 代表的是“第 i 个月初一的 00:00:00 (北京时间)”。
+    // 关键修正：hs 表里存的是初一当天的 12:00 (整数 JD)。
+    // 如果用户输入的是初一早上 (如 2:58)，直接比 JD 会比 hs 小，导致算成上个月。
+    // 计算日数时也会出现负数。
+    // 所以，必须用“当天 12:00”来定月和定日。
+    final checkDate = AstroDateTime(
+      calcDate.year,
+      calcDate.month,
+      calcDate.day,
+      12,
+      0,
+      0,
+    );
+    final checkJD = checkDate.toJ2000();
 
-    // 确认当前时间 currentJD (J2000相对) 落在哪个 hs 区间。
-    // currentJD 是带小数的。
-    // 比如初一 12:00, currentJD = hs[i] + 0.5.
-    // 如果 currentJD >= hs[i] 且 currentJD < hs[i+1] -> 第 i 个月。
-
+    // 确定月份
     int monthIndex = 0;
     for (int i = 0; i < 14; i++) {
-      if (ssqRes.hs[i + 1] > calcDate.toJ2000()) {
-        // 找到下一个初一比当前晚的
+      // 找到下一个初一比当前(12:00)晚的
+      // 如果 hs[i+1] > checkJD，说明 checkJD 还没到下个月，所以是第 i 个月
+      // 注意：如果是同一天 12:00，hs[i] == checkJD。
+      // hs[i+1] 肯定是几十天后，大于 checkJD。
+      if (ssqRes.hs[i + 1] > checkJD + 0.0001) {
+        // 加一点 epsilon 防止浮点误差
         monthIndex = i;
         break;
       }
     }
 
     // 计算农历日
-    // day = (currentJD - hs[monthIndex]).floor() + 1
-    // 比如 currentJD = hs[i] (初一 0点) -> day = 1.
-    // 比如 currentJD = hs[i] + 0.5 (初一 12点) -> day = 1.
-    // 比如 currentJD = hs[i] + 1.5 (初二 12点) -> day = 2.
-    // 必须用 floor，因为 JD 是浮点数。
-    int lunarDay = (calcDate.toJ2000() - ssqRes.hs[monthIndex]).floor() + 1;
+    // checkJD (12:00) - hs (12:00) = 整数天
+    int lunarDay = (checkJD - ssqRes.hs[monthIndex]).round() + 1;
 
     // 如果算出来是 0 或负数？（说明在 hs[0] 之前）
     // calcY 保证 hs[0] 是冬至附近的朔，通常在上一年 11 月。
