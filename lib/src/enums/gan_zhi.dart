@@ -16,6 +16,9 @@ enum TianGan {
     return labels[index];
   }
 
+  bool get isYang => index % 2 == 0;
+  bool get isYin => !isYang;
+
   static TianGan fromName(String str) {
     return TianGan.values.firstWhere(
       (e) => e.name == str || e.label == str, // ✅ 支持拼音(jia) 和 中文(甲)

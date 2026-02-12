@@ -84,33 +84,6 @@ class StaticStar extends Star {
   }
 }
 
-/// 3. 十二神 (博士、长生...)
-/// 它们是成组出现的，不需要 rule，只需要知道跟谁混
-class GodStar extends Star {
-  @override
-  final String key;
-  @override
-  final StarType type; // StarType.god
-
-  final String groupName; // "boshi_12"
-
-  const GodStar({
-    required this.key,
-    required this.type,
-    required this.groupName,
-  });
-
-  @override
-  GodStar clone() {
-    // GodStar 目前属性都是 final 的，理论上不需要深拷贝
-    // 但为了接口统一，还是返回一个新对象比较保险
-    return GodStar(
-      key: key,
-      type: type,
-      groupName: groupName,
-    );
-  }
-}
 
 /// 4. 流曜 (Flow Stars)
 /// 比如：流年禄存、流年羊陀、流年魁钺

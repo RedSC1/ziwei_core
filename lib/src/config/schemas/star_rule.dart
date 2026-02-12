@@ -29,14 +29,14 @@ abstract class StarRule {
 class AnchorOffsetRule extends StarRule {
   final String anchorKey;
   final int offset;
-  final int direction;
+  final StarDirection direction;
   // ✅ 补上 Boundary 字段
   final Boundary boundary;
 
   AnchorOffsetRule({
     required this.anchorKey,
     required this.offset,
-    this.direction = 1,
+    this.direction = StarDirection.shun,
     this.boundary = Boundary.lunar, // 默认为农历
   }) : super(StarRuleType.anchorOffset);
 
@@ -51,9 +51,19 @@ class AnchorOffsetRule extends StarRule {
     return AnchorOffsetRule(
       anchorKey: json['anchor'] as String,
       offset: (json['offset'] as num?)?.toInt() ?? 0,
-      direction: (json['direction'] as num?)?.toInt() ?? 1,
+      direction: _parseDirection(json['direction']),
       boundary: boundary, // ✅ 赋值
     );
+  }
+
+  static StarDirection _parseDirection(dynamic input) {
+    if (input is int) {
+      return input == -1 ? StarDirection.ni : StarDirection.shun;
+    } else if (input is String) {
+      if (input == 'gender_shun_ni') return StarDirection.genderShunNi;
+      if (input == 'ni') return StarDirection.ni;
+    }
+    return StarDirection.shun;
   }
 }
 
@@ -63,12 +73,14 @@ class LookupRule extends StarRule {
   final Map<String, int> table; // 查表数据
   final Boundary boundary; // 按什么历法查？(lunar/solar)
   final int offset; // 查完还要偏移多少？(默认0)
+  final StarDirection direction; // ✅ 新增：方向 (默认顺行)
 
   LookupRule({
     required this.anchorKey,
     required this.table,
     required this.boundary,
     this.offset = 0,
+    this.direction = StarDirection.shun,
   }) : super(StarRuleType.lookup);
 
   factory LookupRule.fromJson(Map<String, dynamic> json) {
@@ -88,6 +100,7 @@ class LookupRule extends StarRule {
       table: table,
       boundary: boundary,
       offset: (json['offset'] as int?) ?? 0, // 选填，默认0
+      direction: AnchorOffsetRule._parseDirection(json['direction']), // ✅ 解析方向
     );
   }
 }
@@ -98,7 +111,7 @@ class LookupShiftRule extends StarRule {
   final String shiftAnchorKey; // 第二锚点 (偏移用，比如 hour)
   final Map<String, int> table; // 查表数据
   final Boundary boundary; // 按什么历法查？
-  final int direction; // 偏移方向 (1顺 -1逆)
+  final StarDirection direction; // 偏移方向 (1顺 -1逆)
 
   LookupShiftRule({
     required this.anchorKey,
@@ -125,7 +138,7 @@ class LookupShiftRule extends StarRule {
       shiftAnchorKey: json['shift_anchor'] as String, // 必填
       table: table,
       boundary: boundary,
-      direction: (json['direction'] as int?) ?? 1, // 默认顺行
+      direction: AnchorOffsetRule._parseDirection(json['direction']),
     );
   }
 }

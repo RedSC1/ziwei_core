@@ -132,6 +132,8 @@ class ZiWeiEngine {
       "month": effectiveMonth - 1,
       "day": date.lunar.day - 1,
       "hour": date.lunar.timeIndex,
+      // === 用户元数据 (Metadata) ===
+      "gender": date.gender,
     };
 
     final ruleContext = RuleContext(contextData);
@@ -246,6 +248,8 @@ class ZiWeiEngine {
       "tianfu": plate.palaces.indexWhere((p) => p.hasStar("tianfu")),
       "ming": plate.originMingIndex,
       "body": plate.bodyPalaceIndex,
+      // 传递 Gender，供 gender_shun_ni 使用
+      "gender": plate.date.gender,
     };
 
     final flowContext = RuleContext(flowContextData);

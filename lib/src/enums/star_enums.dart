@@ -19,16 +19,16 @@ enum StarType {
   /// ---------------------------
 
   /// 博士十二神 (跟禄存)
-  boshi,
+  boshi12,
 
   /// 岁建十二神 (跟太岁)
-  suijian,
+  suijian12,
 
   ///将前十二神
-  jiangqian,
+  jiangqian12,
 
   /// 长生十二神 (跟五行局)
-  changsheng,
+  changsheng12,
 
   /// 杂曜 (其他)
   other,
@@ -106,3 +106,4 @@ enum SiHuaType {
     }
   }
 }
+enum StarDirection { shun, ni, genderShunNi }

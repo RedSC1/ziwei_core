@@ -404,5 +404,197 @@
         "shen": 9, "you": 6,  "xu": 3,   "hai": 0
       }
     }
+  },
+  {
+    "key": "boshi",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 0,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "lishi",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup", 
+      "anchor": "year_stem", 
+      "boundary": "lunar",     
+      "offset": 1,
+      "direction": "gender_shun_ni", 
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "qinglong",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 2,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "xiaohao",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 3,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "jiangjun",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 4,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "zoushu",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 5,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "feilian",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 6,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "xishen",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 7,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "bingfu",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 8,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "dahao",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 9,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "fubing",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 10,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
+  },
+  {
+    "key": "guanfu",
+    "type": "boshi12",
+    "tag": "",
+    "rule": {
+      "type": "lookup",
+      "anchor": "year_stem",
+      "boundary": "lunar",
+      "offset": 11,
+      "direction": "gender_shun_ni",
+      "table":{
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5, 
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    }
   }
 ]

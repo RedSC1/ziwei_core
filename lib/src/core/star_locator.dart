@@ -3,6 +3,8 @@ import 'package:ziwei_core/src/data/star.dart';
 import 'package:ziwei_core/src/core/logger.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
+import 'package:ziwei_core/src/enums/star_enums.dart'; // 引入 StarDirection
+import 'package:ziwei_core/src/enums/gan_zhi.dart'; // 引入 TianGan
 
 /// 规则上下文 (Rule Context)
 ///
@@ -128,6 +130,40 @@ class StarLocator {
     }
   }
 
+  // Helper: 解析方向 (顺/逆/性别顺逆)
+  static int _getDirectionMultiplier(
+      StarDirection dir, RuleContext ctx, Boundary? boundary) {
+    switch (dir) {
+      case StarDirection.shun:
+        return 1;
+      case StarDirection.ni:
+        return -1;
+      case StarDirection.genderShunNi:
+        // 1. 获取性别
+        final gender = ctx['gender'] as Gender?;
+        if (gender == null) return 1; // 兜底顺行
+
+        // 2. 获取当前上下文的年干 (用于定阴阳)
+        final stemKey = _resolveKey('year_stem', boundary);
+        final stemName = ctx[stemKey] as String?;
+        if (stemName == null) return 1;
+
+        try {
+          final stem = TianGan.fromName(stemName);
+          final isYangStem = stem.isYang;
+
+          // 3. 逻辑: 阳男阴女顺(1), 阴男阳女逆(-1)
+          // 这里的 "阳男" 意思是 Gender=Male 且 Stem=Yang
+          bool isShun = (gender == Gender.male && isYangStem) ||
+              (gender == Gender.female && !isYangStem);
+          return isShun ? 1 : -1;
+        } catch (e) {
+          ZiweiLogger.warn("Failed to parse stem for direction: $stemName");
+          return 1;
+        }
+    }
+  }
+
   // === 内部算法实现 ===
 
   static int _handleAnchorOffset(AnchorOffsetRule rule, RuleContext ctx) {
@@ -141,8 +177,28 @@ class StarLocator {
       return -1;
     }
 
-    // 3. 计算: offset + (anchor * direction)
-    int rawIndex = rule.offset + (anchorVal * rule.direction);
+    // 3. 计算方向乘数
+    int dirMult = _getDirectionMultiplier(rule.direction, ctx, rule.boundary);
+
+    // 4. 计算
+    // 🚑 紧急修复：区分“时间偏移”和“星曜偏移”
+    // - 文昌(逆时辰): 从固定点(Offset) 逆数 时辰(Anchor) -> Result = Offset + (Anchor * Dir)
+    // - 力士(逆星曜): 从星曜(Anchor) 逆数 固定点(Offset) -> Result = Anchor + (Offset * Dir)
+
+    bool isTimeAnchor = realKey.contains("month") ||
+                        realKey.contains("hour") ||
+                        realKey.contains("day") ||
+                        realKey.contains("year_index");
+
+    int rawIndex;
+    if (isTimeAnchor) {
+      // 时间作为变量(Shift)，Offset作为基准(Base)
+      rawIndex = rule.offset + (anchorVal * dirMult);
+    } else {
+      // 星曜作为基准(Base)，Offset作为变量(Shift)
+      rawIndex = anchorVal + (rule.offset * dirMult);
+    }
+
     return ZiweiConsts.fixIndex(rawIndex);
   }
 
@@ -158,7 +214,12 @@ class StarLocator {
     // 查表
     if (rule.table.containsKey(lookupKey)) {
       int baseIndex = rule.table[lookupKey]!;
-      return ZiweiConsts.fixIndex(baseIndex + rule.offset);
+
+      // ✅ 关键修复：应用方向乘数 (这样 gender_shun_ni 才能生效)
+      int dirMult = _getDirectionMultiplier(rule.direction, ctx, rule.boundary);
+
+      // 计算: base + (offset * direction)
+      return ZiweiConsts.fixIndex(baseIndex + (rule.offset * dirMult));
     }
     return -1;
   }
@@ -182,7 +243,11 @@ class StarLocator {
     }
     int startIndex = rule.table[lookupKey]!;
 
-    // 4. 计算
-    return ZiweiConsts.fixIndex(startIndex + (shiftVal * rule.direction));
+    // 4. 计算方向乘数
+    int dirMult = _getDirectionMultiplier(rule.direction, ctx, rule.boundary);
+
+    // 5. 计算
+    return ZiweiConsts.fixIndex(startIndex + (shiftVal * dirMult));
   }
 }
+

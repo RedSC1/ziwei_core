@@ -82,5 +82,185 @@
       }
     },
     "brightness": [0, 6, 0, 0, 6, 0, 0, 6, 0, 0, 6, 0]
+  },
+  {
+    "key": "flow_boshi",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 0,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_lishi",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 1,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_qinglong",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 2,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_xiaohao",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 3,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_jiangjun",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 4,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_zoushu",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 5,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_feilian",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 6,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_xishen",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 7,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_bingfu",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 8,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_dahao",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 9,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_fubing",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 10,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
+  },
+  {
+    "key": "flow_guanfu",           
+    "type": "boshi12",             
+    "rule": {
+      "type": "lookup",            
+      "anchor": "year_stem",       
+      "offset": 11,                  
+      "direction": "gender_shun_ni",
+      "table": {                    
+        "jia": 2, "yi": 3, "bing": 5, "ding": 6, "wu": 5,
+        "ji": 6, "geng": 8, "xin": 9, "ren": 11, "gui": 0
+      }
+    },
+    "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1] 
   }
 ]
