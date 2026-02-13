@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:test/test.dart';
-import 'package:ziwei_core/src/sxwnl/solar_lunar_pos.dart';
-import 'package:ziwei_core/src/sxwnl/math_utils.dart';
+import 'package:sxwnl_dart/src/sxwnl/solar_lunar_pos.dart';
+import 'package:sxwnl_dart/src/sxwnl/math_utils.dart';
 
 void main() {
   // ==================== 地球黄经 ====================

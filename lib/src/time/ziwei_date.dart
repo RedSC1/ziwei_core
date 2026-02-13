@@ -3,8 +3,7 @@ import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
-import 'package:ziwei_core/src/time/astro_date_time.dart';
-import 'package:ziwei_core/src/time/location.dart';
+import 'package:sxwnl_dart/sxwnl_dart.dart';
 
 import 'time_adapter.dart';
 

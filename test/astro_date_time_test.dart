@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
-import 'package:ziwei_core/src/time/astro_date_time.dart';
-import 'package:ziwei_core/src/time/location.dart';
+import 'package:sxwnl_dart/src/astro_date_time.dart';
+import 'package:sxwnl_dart/src/location.dart';
 
 void main() {
   group('Location', () {

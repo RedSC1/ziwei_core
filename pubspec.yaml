@@ -9,6 +9,8 @@ environment:
 # Add regular dependencies here.
 dependencies:
   tuple: ^2.0.2
+  sxwnl_dart:
+    path: ../sxwnl_dart
   # path: ^1.9.0
 
 dev_dependencies:

@@ -1,7 +1,6 @@
+import 'package:sxwnl_dart/sxwnl_dart.dart';
 import 'package:test/test.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
-import 'package:ziwei_core/src/time/astro_date_time.dart';
-import 'package:ziwei_core/src/time/location.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 void main() {
