@@ -1,4 +1,4 @@
-import 'package:sxwnl_dart/sxwnl_dart.dart';
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
@@ -68,7 +68,10 @@ class TimeAdapter {
     // 这正是我们需要的。
     // (只要 ssq 内部和外部对时间的定义一致即可)
 
-    final ssqRes = _ssq.calcY(calcDate.toJ2000());
+    final ssqRes = _ssq.calcY(
+      calcDate.toJ2000(),
+      enableHistoricalRules: opt.enableHistorical,
+    );
 
     // 确定农历月和日
     // 关键修正：hs 表里存的是初一当天的 12:00 (整数 JD)。

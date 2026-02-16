@@ -89,6 +89,7 @@ class ZiWeiEngine {
       // [Index] 用于数值计算 (e.g. month offset)
       "lunar_year_index": date.lunar.year, // e.g. 2024
       "lunar_month": effectiveMonth - 1, // 0-based
+      "effective_month": effectiveMonth - 1, // 用于 anchor_offset 规则
       "lunar_day": date.lunar.day - 1,
       "lunar_hour": date.lunar.timeIndex,
       // [String] 用于查表 (e.g. year stem lookup)

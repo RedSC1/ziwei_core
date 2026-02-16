@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'package:ziwei_core/src/config/loader.dart';
 import 'package:ziwei_core/src/core/engine.dart';
 import 'package:ziwei_core/src/data/limit.dart';
@@ -19,7 +20,7 @@ void main() async {
   await _loadConfig();
 
   // 1. 创建命主时间
-  final birthday = DateTime(2003, 8, 28, 2, 58);
+  final birthday = AstroDateTime(-105, 6, 16, 11, 30);
   final ziweiDate = ZiweiDate.fromSolar(birthday, gender: Gender.male);
 
   // 2. 计算原盘
@@ -30,11 +31,11 @@ void main() async {
   );
 
   // 3. 时光穿梭到 2026 年
-  final context = TimeMachine.travel(basePlate, year: 2026);
+  final context = TimeMachine.travel(basePlate, year: -100);
   final dynamicPlate = ZiWeiEngine.calculateDynamic(context);
 
   // 4. 打印头部信息
-  print('\n=== 🔮 2026 流年大限盘验证 🔮 ===');
+  print('\n=== 🔮 流年大限盘验证 🔮 ===');
   print(
     '📅 原局: ${ziweiDate.bazi.year.gan.label}${ziweiDate.bazi.year.zhi.label}年 (${birthday.year})',
   );
@@ -42,10 +43,12 @@ void main() async {
     '⏳ 大限: ${context.decade!.ganzhi.gan.label}${context.decade!.ganzhi.zhi.label} [${context.decade!.startTime}-${context.decade!.endTime}岁]',
   );
   print(
-    '🐎 流年: ${context.year!.ganzhi.gan.label}${context.year!.ganzhi.zhi.label} (2026)',
+    '🐎 流年: ${context.year!.ganzhi.gan.label}${context.year!.ganzhi.zhi.label} ',
   );
   print('🎯 五行局: ${_getBureauName(basePlate.elementBureau)}');
-  print('✨ 生年四化: ${ziweiDate.bazi.year.gan.label}干\n');
+  print('✨ 生年四化: ${ziweiDate.bazi.year.gan.label}干');
+  print('📋 八字: ${ziweiDate.bazi}');
+  print('');
 
   // 5. 遍历打印 12 宫
   // 从子宫(0)开始打印到亥宫(11)
@@ -95,6 +98,10 @@ void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
           sb.write(
             "(${_t("sihua_${star.siHuaBuff[ZiweiScope.origin]!.name}")})",
           );
+        }
+        // 向心四化
+        if (star.centripetalSiHua != null) {
+          sb.write("[向心${_t("sihua_${star.centripetalSiHua!.name}")}]");
         }
         // 自化
         if (star.selfSiHua != null) {

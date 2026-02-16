@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:test/test.dart';
-import 'package:sxwnl_dart/src/sxwnl/delta_t.dart';
-import 'package:sxwnl_dart/src/sxwnl/math_utils.dart';
-import 'package:sxwnl_dart/src/sxwnl/nutation.dart';
+import 'package:sxwnl_spa_dart/src/sxwnl/delta_t.dart';
+import 'package:sxwnl_spa_dart/src/sxwnl/math_utils.dart';
+import 'package:sxwnl_spa_dart/src/sxwnl/nutation.dart';
 
 void main() {
   // ==================== math_utils ====================

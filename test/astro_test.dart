@@ -1,4 +1,4 @@
-import 'package:sxwnl_dart/sxwnl_dart.dart';
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'package:test/test.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';

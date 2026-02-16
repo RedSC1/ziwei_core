@@ -3,7 +3,7 @@ import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
 import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
-import 'package:sxwnl_dart/sxwnl_dart.dart';
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 
 import 'time_adapter.dart';
 
@@ -15,6 +15,7 @@ class CalendarOptions {
   // 童限规则：regular (一岁一宫顺行) vs special_skip (一命二财三疾厄...)
   final ChildhoodRole childhoodRule;
   final Boundary flowLimitBasedOn;
+  final bool enableHistorical; // 是否启用特殊历法（建子月/建丑月等历史历法调整）
 
   const CalendarOptions({
     this.splitRatHour = false,
@@ -24,6 +25,7 @@ class CalendarOptions {
     this.siHuaBasedOn = Boundary.lunar,
     this.childhoodRule = ChildhoodRole.skip,
     this.flowLimitBasedOn = Boundary.lunar,
+    this.enableHistorical = true, // 默认启用，与文墨天机一致
   });
 }
 

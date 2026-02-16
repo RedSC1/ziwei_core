@@ -120,26 +120,36 @@ class Decade extends FlowLimit {
 
   /// 获取“有效出生年” (Effective Birth Year)
   ///
-  /// 这是紫微斗数排盘的基准年份。
-  /// - 农历流派：直接返回农历年。
-  /// - 节气流派：如果在立春前出生，算作上一年。
+  /// 获取紫微斗数排盘的基准年份。
+  ///
+  /// - 农历流派 (flowLimitBasedOn = Boundary.lunar): 直接返回农历年
+  /// - 节气流派 (flowLimitBasedOn = Boundary.solar): 按立春算，在立春前出生算上一年
+  ///
+  /// 算法原理：
+  /// 通过对比"公历年对应的地支"和"八字实际地支"来判断是否在立春前。
+  /// - 假设2026年对应地支"巳"(index=6)
+  /// - 如果出生在立春前，八字年支是2025年的"辰"(index=5)
+  /// - 两者不一致，说明在立春前，返回 solarYear - 1
+  ///
+  /// 注意：此算法基于儒略日计算八字，不依赖农历月份，因此在特殊历法时期（如新莽、武则天）
+  /// 也能正确判断立春边界。
   static int getEffectiveBirthYear(ZiWeiPlate plate) {
     if (plate.date.options.flowLimitBasedOn == Boundary.lunar) {
-      // 农历流派：基准是农历年 (比如 2026)
+      // 农历流派：基准是农历年
       return plate.date.lunar.year;
     } else {
-      // 节气流派：看立春
+      // 节气流派：通过八字年支判断立春
       int solarYear = plate.date.solar.year;
 
-      // 1. 算出公历年对应的标准地支索引 (2026 -> 6)
+      // 1. 算出公历年对应的标准地支索引 (2026 -> 6，即"巳")
       int standardBranchIndex = ZiweiConsts.fixIndex(solarYear - 4);
 
-      // 2. 获取八字实际地支索引
+      // 2. 获取八字实际地支索引（基于儒略日计算，不受历法影响）
       int baziBranchIndex = plate.date.bazi.year.zhi.index;
 
-      // 3. 对暗号
+      // 3. 对比：如果不一致，说明在立春前
       if (standardBranchIndex != baziBranchIndex) {
-        // 对不上 (通常是立春前)，说明还在上一年
+        // 还在上一年（立春前）
         return solarYear - 1;
       } else {
         return solarYear;

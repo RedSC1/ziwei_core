@@ -66,6 +66,10 @@ class ConfigLoader {
       flowLimitstr,
       'flowLimit_boundary',
     );
+
+    // 是否启用特殊历法（建子月/建丑月等历史历法调整）
+    final enableHistorical = _requireBool(calMap, 'enable_historical');
+
     return CalendarOptions(
       splitRatHour: splitRat,
       leapRule: leapRule,
@@ -73,6 +77,7 @@ class ConfigLoader {
       siHuaBasedOn: siHuaBoundary,
       childhoodRule: childhoodDecadeRule,
       flowLimitBasedOn: flowLimitBoundary,
+      enableHistorical: enableHistorical,
     );
   }
 

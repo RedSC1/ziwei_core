@@ -18,8 +18,8 @@ Map<String, String> _i18nMap = {};
 void main() async {
   await _loadConfig();
 
-  // 1. 创建命主时间 (1990年出生，方便看大运)
-  final birthday = DateTime(1990, 7, 29, 2, 23);
+  // 1. 创建命主时间
+  final birthday = DateTime(-105, 6, 16, 11, 30);
   final ziweiDate = ZiweiDate.fromSolar(birthday, gender: Gender.male);
 
   // 2. 计算原盘
@@ -30,14 +30,14 @@ void main() async {
     ConfigLoader.siHuaRules,
   );
 
-  // 3. 时光穿梭到 2026 年 (丙午年)
-  // 1990生，2026年虚岁约 37岁
-  print('🚀 启动时光机前往 2026 (丙午年)...');
-  final context = TimeMachine.travel(basePlate, year: 2026);
+  
+  //print('🚀 启动时光机前往 2026 (丙午年)...');
+  final fy = -100;
+  final context = TimeMachine.travel(basePlate, year: fy);
   final dynamicPlate = ZiWeiEngine.calculateDynamic(context);
 
   // 4. 打印头部信息
-  print('\n=== 🔮 2026 全维流运验证 🔮 ===');
+  print('\n=== 🔮 全维流运验证 🔮 ===');
   print(
     '📅 生日: ${birthday.toString()} (${ziweiDate.bazi.year.gan.label}${ziweiDate.bazi.year.zhi.label}命)',
   );
@@ -56,7 +56,7 @@ void main() async {
 
   if (context.hasYear) {
     print(
-      '🐎 流年: ${context.year!.ganzhi.gan.label}${context.year!.ganzhi.zhi.label} (2026) (流年四化: ${_getSiHuaString(context.year!.ganzhi.gan)})',
+      '🐎 流年: ${context.year!.ganzhi.gan.label}${context.year!.ganzhi.zhi.label} ($fy) (流年四化: ${_getSiHuaString(context.year!.ganzhi.gan)})',
     );
   }
 

@@ -5,7 +5,8 @@
     "wu_hu_dun_boundary": "lunar",
     "sihua_boundary": "lunar",
     "childhood_decade": "skip",
-    "flowLimit_boundary": "lunar"
+    "flowLimit_boundary": "lunar",
+    "enable_historical": true
   },
   "brightness_labels": {
     "6": "level_miao", 

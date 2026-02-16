@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'dart:io';
 import 'package:test/test.dart';
 
@@ -50,9 +51,9 @@ void main() {
     if (!i18nFile.existsSync()) throw Exception("❌ 找不到 zh_CN.json");
     final Map<String, dynamic> i18n = jsonDecode(i18nFile.readAsStringSync());
 
-    // 3. 设定时间
+    // 3. 设定时间 - 公元23年12月2日12点 (新莽历法结束)
     var date = ZiweiDate.fromSolar(
-      DateTime(2003, 7, 29, 2, 36),
+      AstroDateTime(23, 12, 2, 12, 0),
       options: options,
     );
 
