@@ -1,8 +1,8 @@
+import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
@@ -136,7 +136,7 @@ class Decade extends FlowLimit {
   static int getEffectiveBirthYear(ZiWeiPlate plate) {
     if (plate.date.options.flowLimitBasedOn == Boundary.lunar) {
       // 农历流派：基准是农历年
-      return plate.date.lunar.year;
+      return plate.date.lunar.lunarYear;
     } else {
       // 节气流派：通过八字年支判断立春
       int solarYear = plate.date.solar.year;
@@ -202,7 +202,7 @@ class FlowMonth extends FlowLimit {
     // 规则：流年命宫起，逆数生月，顺数生时
     // (注意：这里用的是农历生月和生时索引)
     int birthMonth = plate.date.lunar.month;
-    int birthTimeIndex = plate.date.lunar.timeIndex;
+    int birthTimeIndex = plate.date.timeIndex;
 
     // 逆数月: - (month - 1)
     // 顺数时: + (time - 0) -> 子时是0，如果不减1的话...

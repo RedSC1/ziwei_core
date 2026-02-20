@@ -1,6 +1,6 @@
+import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/data/star.dart';
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/star_enums.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 

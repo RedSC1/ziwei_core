@@ -1,3 +1,5 @@
+export 'package:bazi_core/src/models/enums.dart' show Gender;
+
 enum LeapMonthRule {
   asPrevious, // 算作本月 (闰四月 = 四月)
   asNext, // 算作下月 (闰四月 = 五月)
@@ -61,7 +63,5 @@ enum Boundary {
   /// 节气为界 [八字]
   solar,
 }
-
-enum Gender { male, female }
 
 enum ChildhoodRole { skip, regular }

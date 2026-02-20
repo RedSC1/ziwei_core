@@ -1,6 +1,8 @@
+import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/src/data/palace.dart';
+import 'package:ziwei_core/src/enums/basic.dart';
+
 import 'package:ziwei_core/src/enums/config_enums.dart';
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/enums/star_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';

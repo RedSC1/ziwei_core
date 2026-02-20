@@ -1,11 +1,13 @@
 // 一个“干支”对儿（比如“甲子”就是一个 GanZhi 对象）
+import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
-import 'package:ziwei_core/src/enums/consts.dart';
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 
 import 'time_adapter.dart';
+
+export 'package:bazi_core/src/models/gan_zhi.dart';
+export 'package:bazi_core/src/models/lunar_date.dart';
 
 class CalendarOptions {
   final bool splitRatHour; // 早晚子时
@@ -29,54 +31,6 @@ class CalendarOptions {
   });
 }
 
-class GanZhi {
-  final TianGan gan;
-  final DiZhi zhi;
-
-  const GanZhi(this.gan, this.zhi);
-
-  @override
-  String toString() => "${gan.label}${zhi.label}";
-}
-
-class BaZi {
-  //节气四柱八字
-  final GanZhi year;
-  final GanZhi month;
-  final GanZhi day;
-  final GanZhi time;
-
-  const BaZi({
-    required this.year,
-    required this.month,
-    required this.day,
-    required this.time,
-  });
-
-  @override
-  String toString() => "$year $month $day $time";
-}
-
-class LunarDate {
-  //农历日期
-  final int year;
-  final int month;
-  final int day;
-  final int timeIndex; // 时辰索引 0-11
-  final bool isLeap; // 是否闰月
-
-  const LunarDate({
-    required this.year,
-    required this.month,
-    required this.day,
-    required this.timeIndex,
-    this.isLeap = false,
-  });
-
-  @override
-  String toString() => "$year年${isLeap ? "闰" : ""}$month月$day日";
-}
-
 class ZiweiDate {
   final AstroDateTime solar; // 阳历（支持公元前）
   final AstroDateTime? trueSolarTime; // 真太阳时（可选）
@@ -86,6 +40,9 @@ class ZiweiDate {
   final CalendarOptions options; // 历法选项
   final int solarDay; //上个节令后第几天
   final Gender gender; // ✅ 新增：性别
+
+  // 兼容旧版 getter：时辰索引
+  int get timeIndex => bazi.time.zhi.index;
 
   const ZiweiDate({
     required this.solar,
@@ -130,7 +87,9 @@ class ZiweiDate {
     int year,
     int month,
     int day,
-    int hourIndex,
+    int hour,
+    int minute,
+    int second,
     bool isLeap, {
     CalendarOptions? options,
     Gender gender = Gender.male,
@@ -141,7 +100,9 @@ class ZiweiDate {
       year,
       month,
       day,
-      hourIndex,
+      hour,
+      minute,
+      second,
       isLeap,
       gender,
       options: options,
@@ -156,16 +117,22 @@ class ZiweiDate {
 
   GanZhi getGanZhi(ZiweiScope scope, {Boundary? b}) {
     Boundary boundary = b ?? options.siHuaBasedOn;
-    TianGan stem;
-    DiZhi branch;
     switch (scope) {
       case ZiweiScope.origin:
       case ZiweiScope.year:
         if (boundary == Boundary.lunar) {
-          stem = TianGan.values[(lunar.year + 6) % 10];
-          int idx = ZiweiConsts.fixIndex(lunar.year - 4);
-          branch = DiZhi.values[idx];
-          return GanZhi(stem, branch);
+          // 1. 计算年干 (Year Stem)
+          // 公元4年是甲(0)，公式：(year - 4) % 10
+          // 必须处理公元前(负数)的情况
+          int stemIndex = (lunar.lunarYear - 4) % 10;
+          if (stemIndex < 0) stemIndex += 10; // 核心修复：防止负数索引
+
+          // 2. 计算年支 (Year Branch)
+          // 公元4年是子(0)，公式：(year - 4) % 12
+          int branchIndex = (lunar.lunarYear - 4) % 12;
+          if (branchIndex < 0) branchIndex += 12; // 核心修复
+
+          return GanZhi(TianGan.values[stemIndex], DiZhi.values[branchIndex]);
         } else {
           return bazi.year;
         }
@@ -187,24 +154,7 @@ class ZiweiDate {
           // 农历月干: 需要用“五虎遁”推算！
           // 1. 先算农历年干索引
           // 修正负数年份模运算
-          int yearForGan = lunar.year;
-          if (yearForGan < 0) {
-            // 公元前年干推算？
-            // 公元前1年(0)是庚申(57)。
-            // 简单点：根据年干支推算。
-            // 但这里是“农历年”，不是“八字年”。
-            // 假设农历年干和八字年干一致（其实可能有偏差）。
-            // 更好的做法是：直接用 bazi.year 的天干作为基准！
-            // 但如果 boundary == lunar，我们要用农历年干。
-            // 农历年干公式：(year - 4) % 10 ?
-            // 4 AD 是甲子。
-            // -1 AD (BC 2) -> -5 -> 5 (己)
-            // 0 AD (BC 1) -> -4 -> 6 (庚)
-            // 1 AD -> -3 -> 7 (辛)
-            // 公式：(year - 4) % 10
-          }
-
-          int yIdx = (lunar.year - 4) % 10;
+          int yIdx = (lunar.lunarYear - 4) % 10;
           if (yIdx < 0) yIdx += 10;
 
           // 2. 算出正月(寅)的天干: (年干%5)*2 + 2

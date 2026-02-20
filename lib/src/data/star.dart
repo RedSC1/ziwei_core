@@ -1,5 +1,5 @@
+import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/src/config/schemas/star_rule.dart';
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 
 import '../enums/star_enums.dart';
@@ -45,13 +45,13 @@ class StaticStar extends Star {
   @override
   StaticStar clone() {
     return StaticStar(
-      key: key,
-      type: type,
-      rule: rule, // Rule 是不可变配置，传引用即可
-      brightnessTable: brightnessTable, // 只读表，传引用即可
-      // 🔥 关键：Map 必须深拷贝！
-      siHuaBuff: Map.of(siHuaBuff),
-    )
+        key: key,
+        type: type,
+        rule: rule, // Rule 是不可变配置，传引用即可
+        brightnessTable: brightnessTable, // 只读表，传引用即可
+        // 🔥 关键：Map 必须深拷贝！
+        siHuaBuff: Map.of(siHuaBuff),
+      )
       ..selfSiHua = selfSiHua
       ..centripetalSiHua = centripetalSiHua;
   }
@@ -84,23 +84,26 @@ class StaticStar extends Star {
   }
 }
 
-
 /// 4. 流曜 (Flow Stars)
 /// 比如：流年禄存、流年羊陀、流年魁钺
 /// 特点：位置随时间变，但有亮度属性
 class FlowStar extends Star {
   @override
-  final String key; // "liu_lucun"
+  final String key; // "flow_year_lucun"
   @override
   final StarType type = StarType.flow; // 新增一个 flow 类型
-  
+
+  // 新增 scope 字段，方便后续逻辑判断
+  final ZiweiScope scope;
+
   // 流曜也是有庙旺平陷的，直接复用原星的亮度表
   // 比如流羊的亮度表 = 原盘擎羊的亮度表
-  final List<int> brightnessTable; 
+  final List<int> brightnessTable;
 
   FlowStar({
     required this.key,
     required this.brightnessTable,
+    required this.scope,
   });
 
   int getBrightness(DiZhi branch) {
@@ -109,7 +112,7 @@ class FlowStar extends Star {
 
   @override
   FlowStar clone() {
-    return FlowStar(key: key, brightnessTable: brightnessTable);
+    return FlowStar(key: key, brightnessTable: brightnessTable, scope: scope);
   }
 }
 

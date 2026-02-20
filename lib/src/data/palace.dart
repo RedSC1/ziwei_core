@@ -1,4 +1,4 @@
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
+import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 import 'star.dart'; // 引用星星定义
@@ -19,6 +19,10 @@ class Palace {
   // --- 构造函数 ---
   // 创建时只需要指定它是第几个格子(index)，其他的后面填
   Palace(this.index, {this.stem});
+
+  factory Palace.fromDiZhi(DiZhi branch, {TianGan? stem}) {
+    return Palace(branch.index, stem: stem);
+  }
 
   GanZhi get ganzhi {
     if (stem == null) {

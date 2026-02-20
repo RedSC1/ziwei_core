@@ -1,54 +1,60 @@
-import 'package:ziwei_core/src/config/loader.dart'; // 引入Loader
+import 'package:ziwei_core/src/config/loader.dart';
+import 'package:ziwei_core/src/core/logger.dart';
+import 'package:ziwei_core/src/core/placer.dart';
+import 'package:ziwei_core/src/core/sihua_decorator.dart';
+import 'package:ziwei_core/src/core/star_locator.dart';
 import 'package:ziwei_core/src/data/limit.dart';
 import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/data/star.dart';
-import 'package:ziwei_core/src/enums/config_enums.dart';
-import 'package:ziwei_core/src/enums/gan_zhi.dart';
-import 'package:ziwei_core/src/enums/scope.dart';
-import 'package:ziwei_core/src/enums/star_enums.dart';
-import 'package:ziwei_core/src/time/ziwei_date.dart';
-import 'package:ziwei_core/src/core/placer.dart';
-import 'package:ziwei_core/src/core/star_locator.dart';
-import 'package:ziwei_core/src/core/sihua_decorator.dart';
+import 'package:ziwei_core/src/enums/basic.dart';
+import 'package:ziwei_core/src/enums/config_enums.dart'; // import gender
 import 'package:ziwei_core/src/enums/consts.dart';
+import 'package:ziwei_core/src/enums/scope.dart';
+import 'package:ziwei_core/src/time/ziwei_date.dart';
 
-class ZiWeiEngine {
-  static ZiWeiPlate calculate(
-    ZiweiDate date,
-    List<StaticStar> stars,
-    Map<TianGan, Map<SiHuaType, String>> siHuaRules,
-  ) {
-    //(0=子, 1=丑 ... 11=亥)
+class ZiweiEngine {
+  /// 1. 排本命盘
+  static ZiWeiPlate calculate(ZiweiDate date) {
+    ZiweiLogger.info("正在排盘: ${date.solar}...");
+
+    // 1-1. 安十二宫 (地支位置是固定的)
     List<Palace> palaces = List.generate(
       ZiweiConsts.palaceCount,
-      (i) => Palace(i),
+      (i) => Palace.fromDiZhi(DiZhi.values[i]),
     );
 
     final calendarOptions = date.options; //获取日历选项
-    int effectiveMonth =
-        date.lunar.month; //effectiveMonth是指实际计算的月份，会因为闰月的处理方式不一样
+
+    // 1-2. 安命身宫
+    // ⚠️ 传入农历月和时辰索引 (基于 LunarDate 取值)
+    // 修正：从 ZiweiDate.lunar 获取 month 和 timeIndex
+    // BaziCore.LunarDate has month, but we need timeIndex.
+    // ZiweiDate has a getter for it.
+    int effectiveMonth = date.lunar.month;
     if (date.lunar.isLeap) {
+      // 闰月处理规则 (Leap Rule) - 仅用于定命身宫
       switch (calendarOptions.leapRule) {
         case LeapMonthRule.asNext:
           effectiveMonth++;
           break;
-        case LeapMonthRule.asPrevious:
-          break;
         case LeapMonthRule.splitAt15:
           effectiveMonth += date.lunar.day > 15 ? 1 : 0;
           break;
+        default:
+          break;
       }
     }
+
     // step1: 安放命身宫
     final (int lifeIndex, int bodyIndex) = _calLifeAndBodyPalace(
       date,
       effectiveMonth,
     );
+
     // step2: 五虎遁安放干支
     // 1. 核心口诀：甲己之年丙作首...
     // 我们要算出“寅宫”（地支索引2）的天干是谁
-    // TianGan.jia.index 是 0
 
     // ✅ Refactored: 使用 ZiweiDate.getGanZhi 统一获取年干
     // 这里使用 wuHuDunBasedOn 配置
@@ -59,13 +65,17 @@ class ZiWeiEngine {
     _assignPalaceStems(yearGan.index, palaces);
 
     // step3: 定五行局
+    // 注意：命宫干支 now populated
     FiveElementBureau elementBureau = _calculateBureau(
       palaces[lifeIndex].stem!,
       palaces[lifeIndex].branch,
     );
 
+    ZiweiLogger.info(
+      "命宫: ${palaces[lifeIndex].branch.label}, 五行局: ${elementBureau.label}",
+     );
+
     // step4: 安星
-    // 大部分星曜都可以按照先查表+偏移的方式来计算
     // 1.计算紫微天府的位置
     final (
       int ziweiAnchor,
@@ -77,21 +87,20 @@ class ZiWeiEngine {
 
     // 2. 构建规则上下文 (RuleContext)
     // 所有的星曜定位都依赖这个上下文
-    // 核心思想：Context 只负责提供“全量数据”，具体的取用逻辑(Lunar/Solar)由 StarLocator 根据 JSON 规则决定
     final contextData = {
       // === 核心锚点 (Indices) ===
       "ziwei": ziweiAnchor,
       "tianfu": tianfuAnchor,
-      "ming": lifeIndex,
+      "ming": lifeIndex, // Ming Index
       "body": bodyIndex,
       "shen": bodyIndex, // Alias
       // === 农历数据源 (Lunar Source) ===
       // [Index] 用于数值计算 (e.g. month offset)
-      "lunar_year_index": date.lunar.year, // e.g. 2024
+      "lunar_year_index": date.lunar.lunarYear, // e.g. 2024
       "lunar_month": effectiveMonth - 1, // 0-based
       "effective_month": effectiveMonth - 1, // 用于 anchor_offset 规则
       "lunar_day": date.lunar.day - 1,
-      "lunar_hour": date.lunar.timeIndex,
+      "lunar_hour": date.timeIndex, // Using getter from ZiweiDate
       // [String] 用于查表 (e.g. year stem lookup)
       "lunar_year_stem": date
           .getGanZhi(ZiweiScope.year, b: Boundary.lunar)
@@ -115,7 +124,7 @@ class ZiWeiEngine {
       "solar_year_index": date.bazi.year.zhi.index,
       "solar_month": date.bazi.month.zhi.index - ZiweiConsts.yinIndex, // 寅=0
       "solar_day": date.solarDay - 1,
-      "solar_hour": date.lunar.timeIndex, // 时辰通常通用
+      "solar_hour": date.timeIndex, // 时辰通常通用
       // [String]
       "solar_year_stem": date.bazi.year.gan.name,
       "solar_year_branch": date.bazi.year.zhi.name,
@@ -132,29 +141,36 @@ class ZiWeiEngine {
           .name,
       "month": effectiveMonth - 1,
       "day": date.lunar.day - 1,
-      "hour": date.lunar.timeIndex,
+      "hour": date.timeIndex,
       // === 用户元数据 (Metadata) ===
-      "gender": date.gender,
+      "gender": date.gender.name, // Use name string for context
     };
 
     final ruleContext = RuleContext(contextData);
 
     // 3. 执行安星
+    // We need to pass the ruleContext to the Placer
     StarPlacer placer = StarPlacer(ruleContext, palaces, date);
-    placer.placeAll(stars);
+    placer.placeAll(ConfigLoader.stars); // Use loaded stars
 
-    ZiWeiPlate plate = ZiWeiPlate(
-      palaces: palaces, // 这里面已经是带天干的了
-      originMingIndex: lifeIndex, // 命宫位置
-      bodyPalaceIndex: bodyIndex, // 身宫位置
-      elementBureau: elementBureau, // 五行局
-      date: date, //birthDate
-      siHuaRules: siHuaRules,
+    // 1-4. 初始化盘面数据结构
+    final plate = ZiWeiPlate(
+      palaces: palaces,
+      originMingIndex: lifeIndex,
+      bodyPalaceIndex: bodyIndex,
+      elementBureau: elementBureau,//五行局
+      date: date,
+      siHuaRules: ConfigLoader.siHuaRules,
+      // 初始化状态机
+      yearMingIndex: null,
+      monthMingIndex: null,
+      dayMingIndex: null,
+      hourMingIndex: null,
     );
 
-    //step5:安装生年四化&&向心四化
+    // step5:安装生年四化&&向心四化
     // 原来的 decorateByDate 被废弃了，统一集成到 decorateBase 里
-    SiHuaDecorator.decorateBase(plate, siHuaRules);
+    SiHuaDecorator.decorateBase(plate, ConfigLoader.siHuaRules);
 
     return plate;
   }
@@ -162,21 +178,14 @@ class ZiWeiEngine {
   /// 动态计算 (Time Travel)
   ///
   /// 根据传入的 [LimitContext] (时间胶囊)，在原盘的基础上叠加运限。
-  /// 包含：
-  /// 1. 设置各层级的命宫位置 (Ming Index)
-  /// 2. 叠加四化 (Si Hua)
-  /// 3. 叠加流曜 (Flow Stars) - TODO
+  /// 返回一个【全新克隆】的动态盘面，绝对不污染原盘。
   static ZiWeiPlate calculateDynamic(LimitContext context) {
     // 1. 克隆原盘 (Parallel Universe)
     ZiWeiPlate dynamicPlate = context.plate.clone();
 
     // 2. 依次应用各层级 (Layer by Layer)
-    // 每一层都需要：
-    // a. 设置命宫索引 (Set Ming Index)
-    // b. 触发该层级的四化/流星 (Apply Decorators)
-
     // === 大限 (Decade) ===
-    if (context.hasDecade) {
+    if (context.decade != null) {
       dynamicPlate.decadeMingIndex = context.decade!.index;
       _applyLimit(dynamicPlate, context.decade!, ZiweiScope.decade);
     }
@@ -184,37 +193,36 @@ class ZiWeiEngine {
     // === 小限 (Small Limit) ===
     if (context.smallLimit != null) {
       dynamicPlate.smallLimitMingIndex = context.smallLimit!.index;
-      // 启用小限四化 (根据小限宫干)
       _applyLimit(dynamicPlate, context.smallLimit!, ZiweiScope.smallLimit);
     }
 
     // === 流年 (Year) ===
-    if (context.hasYear) {
+    if (context.year != null) {
       dynamicPlate.yearMingIndex = context.year!.index;
       _applyLimit(dynamicPlate, context.year!, ZiweiScope.year);
     }
 
     // === 流月 (Month) ===
-    if (context.hasMonth) {
+    if (context.month != null) {
       dynamicPlate.monthMingIndex = context.month!.index;
       _applyLimit(dynamicPlate, context.month!, ZiweiScope.month);
     }
 
     // === 流日 (Day) ===
-    if (context.hasDay) {
+    if (context.day != null) {
       dynamicPlate.dayMingIndex = context.day!.index;
       _applyLimit(dynamicPlate, context.day!, ZiweiScope.day);
     }
 
     // === 流时 (Hour) ===
-    if (context.hasHour) {
+    if (context.hour != null) {
       dynamicPlate.hourMingIndex = context.hour!.index;
       _applyLimit(dynamicPlate, context.hour!, ZiweiScope.hour);
     }
 
+    // 3. 直接返回这块渲染好的全新克隆盘！不碰 context！
     return dynamicPlate;
   }
-
   static void _applyLimit(ZiWeiPlate plate, FlowLimit limit, ZiweiScope scope) {
     // 1. 安放四化 (Flying Si Hua)
     // 使用 limit.ganzhi.gan (时间天干) 查表
@@ -250,7 +258,7 @@ class ZiWeiEngine {
       "ming": plate.originMingIndex,
       "body": plate.bodyPalaceIndex,
       // 传递 Gender，供 gender_shun_ni 使用
-      "gender": plate.date.gender,
+      "gender": plate.date.gender.name,
     };
 
     final flowContext = RuleContext(flowContextData);
@@ -273,6 +281,7 @@ class ZiWeiEngine {
         final flowStar = FlowStar(
           key: finalKey,
           brightnessTable: def.brightness, // 直接使用独立的亮度表
+          scope: scope, // Pass the scope down
         );
 
         plate.palaces[index].addStar(flowStar);
@@ -282,7 +291,7 @@ class ZiWeiEngine {
 
   static (int, int) _calLifeAndBodyPalace(ZiweiDate date, int effectiveMonth) {
     int monthOffset = effectiveMonth - 1; // 语义：相对于“正月”的偏移量
-    int hourStep = date.lunar.timeIndex; // 子时=0
+    int hourStep = date.timeIndex; // 子时=0, from getter
     int lifeIndex = ZiweiConsts.fixIndex(
       ZiweiConsts.yinIndex + monthOffset - hourStep,
     );
