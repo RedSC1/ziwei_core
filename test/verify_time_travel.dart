@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:ziwei_core/ziwei_core.dart'; // 确保导入了所有核心组件
+import 'package:ziwei_core/ziwei_core.dart'; 
 
 // 简单的 i18n 缓存
 Map<String, String> _i18nMap = {};
 
 void main() async {
-  // 🚩 1. 接住这张“逻辑灵魂”说明书
+  // 🚩 1. 加载规则
   final options = await _loadConfig();
 
   final birthday = DateTime(2003, 8, 28, 2, 30);
@@ -15,25 +15,25 @@ void main() async {
   final ziweiDate = ZiweiDate.fromSolar(
     birthday, 
     gender: Gender.male,
-    options: options, // 🚀 关键：注入主规则，否则计算结果会跑偏
+    options: options, 
   );
 
   // 3. 计算原盘
   print('🧱 正在安星布盘...');
   final basePlate = ZiweiEngine.calculate(ziweiDate);
 
-  // 4. 时光穿梭：设定流年目标
+  // 4. 时光穿梭
   final fy = 2026; 
   print('🚀 启动时光机前往 $fy 年...');
   final context = TimeMachine.travel(basePlate, year: fy);
   final dynamicPlate = ZiweiEngine.calculateDynamic(context);
 
-  // 5. 打印盘头摘要
+  // 5. 打印摘要
   _printHeader(ziweiDate, context, basePlate, fy);
 
   print('----------------------------------------------------------------');
 
-  // 6. 遍历打印 12 宫
+  // 6. 遍历 12 宫
   for (int i = 0; i < 12; i++) {
     _printPalaceInfo(dynamicPlate, dynamicPlate.palaces[i]);
   }
@@ -42,7 +42,8 @@ void main() async {
 // --- 核心打印函数 ---
 
 void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
-  final ganzhi = "[${palace.stem!.label}${palace.branch.label}]";
+  // ✅ 修正：stem 可能为 null，使用安全调用
+  final ganzhi = "[${palace.stem?.label ?? ''}${palace.branch.label}]";
 
   // 1. 组合宫职信息
   final roles = <String>[];
@@ -53,10 +54,10 @@ void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
 
   String roleStr = "(${roles.join("/")})";
 
-  // 2. 处理星曜输出
-  final starsOutput = palace.stars.map((s) {
+  // 🔥 核心重构修复：stars 现在是 Map，必须使用 allStars 摊平后才能 map()
+  final starsOutput = palace.allStars.map((s) {
     final sb = StringBuffer();
-    sb.write(_t("star_${s.key}")); // 汉化星名
+    sb.write(_t("star_${s.key}")); 
 
     // 亮度计算
     int bLevel = -1;
@@ -89,7 +90,6 @@ void _printHeader(ZiweiDate date, LimitContext ctx, ZiWeiPlate plate, int fy) {
   print('\n=== 🔮 Ziwei Core 全维验证报告 🔮 ===');
   print('📅 公历生日: ${date.solar}');
   
-  // 八字这里的 year 也是 GanZhi 对象，所以也要分别取 label
   final yGZ = date.bazi.year;
   print('📋 判定八字: ${yGZ.gan.label}${yGZ.zhi.label} ... (完整八字: ${date.bazi})');
   print('🎯 五行局: ${_getBureauLabel(plate.elementBureau)}');
@@ -110,8 +110,8 @@ void _printHeader(ZiweiDate date, LimitContext ctx, ZiWeiPlate plate, int fy) {
   }
 }
 
+// 加载配置
 Future<CalendarOptions> _loadConfig() async {
-  // 加载原始 JSON
   final starsJson = await File('assets/config/default/stars.json').readAsString();
   final brightnessJson = await File('assets/config/default/brightness.json').readAsString();
   final sihuaJson = await File('assets/config/default/sihua.json').readAsString();
@@ -119,13 +119,11 @@ Future<CalendarOptions> _loadConfig() async {
   final mainRulesJson = await File('assets/config/default/main_rules.json').readAsString();
   final i18nJson = await File('assets/i18n/zh_CN.json').readAsString();
 
-  // 1. 初始化静态配置库
   _i18nMap = Map<String, String>.from(jsonDecode(i18nJson));
   ConfigLoader.parseStars(starsJson, brightnessJson);
   ConfigLoader.parseSiHua(sihuaJson);
   ConfigLoader.parseFlowStars(flowJson);
 
-  // 2. 🚩 关键：解析并返回主规则对象
   return ConfigLoader.parse(mainRulesJson);
 }
 

@@ -74,7 +74,8 @@ void main() async {
 // --- 辅助打印函数 ---
 
 void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
-  final ganzhi = "[${palace.stem!.label}${palace.branch.label}]";
+  // ✅ 修正 Null 安全调用
+  final ganzhi = "[${palace.stem?.label ?? ''}${palace.branch.label}]";
 
   // 🚩 多维叠宫信息 (大/小/年/月/日/时)
   final roles = <String>[];
@@ -90,8 +91,8 @@ void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
 
   final roleStr = "(${roles.join("/")})";
 
-  // 提取所有星曜 (包含静态星和流曜)
-  final starsOutput = palace.stars.map((star) {
+  // 🔥 核心重构：使用 .allStars 代替原本的 Map 类型 stars
+  final starsOutput = palace.allStars.map((star) {
     final sb = StringBuffer();
     
     // 1. 名字汉化
@@ -136,6 +137,7 @@ void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
   print("$ganzhi ${roleStr.padRight(50)} : $starsOutput");
 }
 
+// ... 剩下的辅助函数 (_loadConfig, _t, _getBrightnessLabel 等) 保持不变 ...
 // --- 配置加载与翻译 ---
 
 Future<CalendarOptions> _loadConfig() async {
