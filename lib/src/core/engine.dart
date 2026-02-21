@@ -108,6 +108,32 @@ class ZiweiEngine {
       elementBureau.number,
     );
 
+    final solarYear = date.getGanZhi(ZiweiScope.year, b:Boundary.solar);
+    final lunarYear = date.getGanZhi(ZiweiScope.year, b:Boundary.lunar);
+    final solarKongWang = solarYear.getKongWang();
+    final lunarKongWang = lunarYear.getKongWang();
+
+// 🔥 新增：解析命主与身主 
+    // ==========================================
+    String? mingZhuKey;
+    if (ConfigLoader.mingZhuRule != null) {
+      // 命主核心逻辑：查命宫(lifeIndex)所在的宫位
+      mingZhuKey = ConfigLoader.mingZhuRule!.table[lifeIndex];
+    }
+
+    String? shenZhuKey;
+    if (ConfigLoader.shenZhuRule != null) {
+      // 身主核心逻辑：根据 JSON 里的 boundary，自动选农历年支还是节气年支！
+      int yearZhiIndex;
+      if (ConfigLoader.shenZhuRule!.boundary == Boundary.lunar) {
+        yearZhiIndex = lunarYear.zhi.index;
+      } else {
+        yearZhiIndex = solarYear.zhi.index;
+      }
+      shenZhuKey = ConfigLoader.shenZhuRule!.table[yearZhiIndex];
+    }
+    // ==========================================
+
     // 2. 构建规则上下文 (RuleContext)
     // 所有的星曜定位都依赖这个上下文
     final contextData = {
@@ -142,7 +168,8 @@ class ZiweiEngine {
           .getGanZhi(ZiweiScope.month, b: Boundary.lunar)
           .zhi
           .name,
-
+      "lunar_zheng_kong": lunarKongWang[0].index,
+      "lunar_fu_kong": lunarKongWang[1].index,
       // === 节气/八字数据源 (Solar/Bazi Source) ===
       // [Index]
       "solar_year_index": date.bazi.year.zhi.index,
@@ -155,6 +182,8 @@ class ZiweiEngine {
       "solar_month_stem": date.bazi.month.gan.name,
       "solar_month_branch": date.bazi.month.zhi.name,
 
+      "solar_zheng_kong": solarKongWang[0].index,
+      "solar_fu_kong": solarKongWang[1].index,
       // === 默认/兼容键 (Default Keys) ===
       // 大部分传统星曜默认使用农历，这里提供 fallback
       // 这样 JSON 里如果没写 boundary，或者 key 写的是 "year_stem"，默认能取到农历数据
@@ -187,6 +216,10 @@ class ZiweiEngine {
       siHuaRules: ConfigLoader.siHuaRules,
       effective_month: effectiveMonth,
       effective_year: effectiveYear,
+
+      mingZhu: mingZhuKey, 
+      shenZhu: shenZhuKey,
+
       // 初始化状态机
       yearMingIndex: null,
       monthMingIndex: null,
@@ -291,12 +324,17 @@ class ZiweiEngine {
 
     // 3. 遍历定义，直接使用独立规则生成流曜
     for (var def in ConfigLoader.flowDefinitions) {
-      // 🔥 核心变更：不再查 Key，而是直接把 JSON 里定义的 Rule 扔给 Locator 算
-      int index = StarLocator.locateByRule(def.rule, flowContext);
+      // 类型改为 int?，因为 locateByRule 现在可能返回 null 了
+      int? rawIndex = StarLocator.locateByRule(def.rule, flowContext);
 
-      if (index >= 0 && index < 12) {
+      //判断逻辑从“范围判断”改为“非空判断”
+      // 只要不是 null，就代表规则算出了结果（哪怕结果是 -1 或 13）
+      if (rawIndex != null) {
+        
+        //使用 fixIndex 修正索引，把负数或溢出数字转回 0-11
+        int finalIndex = ZiweiConsts.fixIndex(rawIndex);
+
         // 动态生成 Key: flow_lucun -> flow_year_lucun
-        // 这样可以区分流年、流月、流日
         String finalKey = def.key;
         if (finalKey.startsWith("flow_")) {
           finalKey = finalKey.replaceFirst("flow_", "flow_${scope.name}_");
@@ -306,11 +344,16 @@ class ZiweiEngine {
 
         final flowStar = FlowStar(
           key: finalKey,
-          brightnessTable: def.brightness, // 直接使用独立的亮度表
-          scope: scope, // Pass the scope down
+          brightnessTable: def.brightness,
+          scope: scope, 
         );
 
-        plate.palaces[index].addStar(flowStar);
+        //使用修正后的 finalIndex 塞入宫位
+        plate.palaces[finalIndex].addStar(flowStar);
+        
+      } else {
+        // 如果是 null，说明该流曜在此作用域（比如某流月）下不适用或计算失败
+        // ZiweiLogger.warn("流曜 ${def.key} 在 ${scope.name} 级别计算失败，跳过");
       }
     }
   }

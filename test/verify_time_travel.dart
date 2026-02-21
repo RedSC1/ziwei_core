@@ -94,6 +94,11 @@ void _printHeader(ZiweiDate date, LimitContext ctx, ZiWeiPlate plate, int fy) {
   print('📋 判定八字: ${yGZ.gan.label}${yGZ.zhi.label} ... (完整八字: ${date.bazi})');
   print('🎯 五行局: ${_getBureauLabel(plate.elementBureau)}');
   
+  // 🔥 新增：打印命身主 (带语言包翻译和非空保护)
+  final mzStr = plate.mingZhu != null ? _t("star_${plate.mingZhu}") : "未知";
+  final szStr = plate.shenZhu != null ? _t("star_${plate.shenZhu}") : "未知";
+  print('👑 命主: $mzStr  |  🛡️ 身主: $szStr');
+  
   if (ctx.hasDecade) {
     final gz = ctx.decade!.ganzhi;
     print('⏳ 大限: ${gz.gan.label}${gz.zhi.label} [${ctx.decade!.startTime}-${ctx.decade!.endTime}岁] (${_getSiHuaStr(gz.gan)})');
@@ -109,7 +114,7 @@ void _printHeader(ZiweiDate date, LimitContext ctx, ZiWeiPlate plate, int fy) {
     print('🐎 流年: ${gz.gan.label}${gz.zhi.label} ($fy) (${_getSiHuaStr(gz.gan)})');
   }
 }
-
+// 加载配置
 // 加载配置
 Future<CalendarOptions> _loadConfig() async {
   final starsJson = await File('assets/config/default/stars.json').readAsString();
@@ -118,11 +123,17 @@ Future<CalendarOptions> _loadConfig() async {
   final flowJson = await File('assets/config/default/flow_stars.json').readAsString();
   final mainRulesJson = await File('assets/config/default/main_rules.json').readAsString();
   final i18nJson = await File('assets/i18n/zh_CN.json').readAsString();
+  
+  // 🔥 新增：读取命主身主规则
+  final mastersJson = await File('assets/config/default/masters.json').readAsString();
 
   _i18nMap = Map<String, String>.from(jsonDecode(i18nJson));
   ConfigLoader.parseStars(starsJson, brightnessJson);
   ConfigLoader.parseSiHua(sihuaJson);
   ConfigLoader.parseFlowStars(flowJson);
+  
+  // 🔥 新增：解析命主身主规则
+  ConfigLoader.parseMasters(mastersJson);
 
   return ConfigLoader.parse(mainRulesJson);
 }

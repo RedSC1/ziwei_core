@@ -51,12 +51,23 @@ class StarPlacer {
   }
 
   void placeStar(StaticStar star) {
-    // 核心逻辑委托给 StarLocator
-    int targetIndex = StarLocator.locate(star.key, context);
+    // 1. 核心逻辑委托给 StarLocator (现在返回的是 int?)
+    final int? rawIndex = StarLocator.locate(star.key, context);
 
-    // 如果算出来了 (-1 表示规则没找到或计算失败)
-    if (targetIndex >= 0 && targetIndex < 12) {
-      palaces[targetIndex].addStar(star);
+    // 2. 先判断是不是 null (代表规则缺失或计算彻底失败)
+    if (rawIndex != null) {
+      
+      // 3只要不是 null，哪怕是 -1, -5, 13
+      // 都统统交给 fixIndex 修正回 0-11 的合法宫位索引
+      final int finalIndex = ZiweiConsts.fixIndex(rawIndex);
+      
+      palaces[finalIndex].addStar(star);
+      
+      // Optional: 调试的时候可以看看它最后落在了哪
+      // print("${star.key} raw: $rawIndex -> fixed: $finalIndex");
+    } else {
+      // 如果是 null，这颗星就安安静静地不出现在盘上
+      // ZiweiLogger.warn("星曜 ${star.key} 计算失败，跳过安星");
     }
   }
 }

@@ -21,7 +21,7 @@ void main() async {
   final globalOptions = await _loadConfig();
 
   // 2. 创建命主时间 (2025-08-16 23:30 晚子时测试)
-  final birthday = AstroDateTime(2025, 8, 28, 2, 30);
+  final birthday = AstroDateTime(2003, 8, 28, 2, 30);
   final ziweiDate = ZiweiDate.fromSolar(
     birthday, 
     gender: Gender.male, 

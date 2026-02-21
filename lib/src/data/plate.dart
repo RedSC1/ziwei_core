@@ -17,6 +17,9 @@ class ZiWeiPlate {
   final int effective_month;
   final int effective_year;
 
+  final String? mingZhu; 
+  final String? shenZhu; 
+
   int? decadeMingIndex;
   int? smallLimitMingIndex;
   int? yearMingIndex;
@@ -32,6 +35,10 @@ class ZiWeiPlate {
     required this.siHuaRules,
     required this.effective_month,
     required this.effective_year,
+
+    required this.mingZhu,
+    required this.shenZhu,
+
     this.decadeMingIndex,
     this.smallLimitMingIndex,
     this.yearMingIndex,
@@ -83,6 +90,9 @@ class ZiWeiPlate {
       siHuaRules: siHuaRules,
       effective_month: effective_month,
       effective_year: effective_year,
+
+      mingZhu: mingZhu,
+      shenZhu: shenZhu,
 
       // 4. 状态指针复制
       decadeMingIndex: decadeMingIndex,

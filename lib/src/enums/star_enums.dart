@@ -62,6 +62,10 @@ enum StarRuleType {
   // 先看表再偏移
   lookupOffset,
 
+  pipeline, // 🔥 新增：流水线大本营，专门搞三台八座这种需要组合的
+
+  constant, // 🔥 新增：纯数字微调组件
+
   /// 默认/未知
   unknown;
 
@@ -73,11 +77,15 @@ enum StarRuleType {
       case 'lookup':
         return StarRuleType.lookup;
       case 'lookup_offset':
-      case 'lookup_shift': // ✅ 兼容这个写法
+      case 'lookup_shift': 
         return StarRuleType.lookupOffset;
-      // ... 以后加了别的再来补 ...
+        
+      case 'pipeline':
+        return StarRuleType.pipeline;
+      case 'constant':
+        return StarRuleType.constant;
+        
       default:
-        // 如果遇到不认识的，最好报错或者给 unknown，看你的严厉程度
         ZiweiLogger.warn("⚠️ 警告：未知的安星规则类型: $str");
         return StarRuleType.unknown;
     }

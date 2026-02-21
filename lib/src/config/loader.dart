@@ -9,6 +9,15 @@ import '../enums/config_enums.dart'; // Import enums locally
 import 'schemas/flow_definition.dart';
 import '../core/star_locator.dart'; // 引入 StarLocator
 
+
+//用于缓存命主身主规则的数据结构
+class MasterRule {
+  final Boundary boundary;
+  final Map<int, String> table;
+
+  MasterRule(this.boundary, this.table);
+}
+
 class ConfigLoader {
   static List<StaticStar> stars = [];
   static List<FlowDefinition> flowDefinitions = []; // 🔥 新增：流曜定义缓存
@@ -16,6 +25,9 @@ class ConfigLoader {
   static Map<int, String> brightnessLabels = {};
 
   static Map<TianGan, Map<SiHuaType, String>> siHuaRules = {};
+
+  static MasterRule? mingZhuRule;
+  static MasterRule? shenZhuRule;
 
   static CalendarOptions parse(String? jsonStr) {
     if (jsonStr == null || jsonStr.trim().isEmpty) {
@@ -230,6 +242,42 @@ class ConfigLoader {
     } catch (e, s) {
       ZiweiLogger.error("Flow definitions parsing failed", e, s);
       flowDefinitions = [];
+    }
+  }
+
+  static void parseMasters(String jsonStr) {
+    if (jsonStr.trim().isEmpty) return;
+
+    try {
+      final Map<String, dynamic> raw = jsonDecode(jsonStr);
+
+      // 解析命主
+      if (raw.containsKey('ming_zhu')) {
+        final mz = raw['ming_zhu'];
+        final boundary = _parseBoundary(mz['boundary'] ?? 'lunar', 'ming_zhu boundary');
+        final Map<int, String> table = {};
+        (mz['table'] as Map<String, dynamic>).forEach((k, v) {
+          table[int.parse(k)] = v.toString();
+        });
+        mingZhuRule = MasterRule(boundary, table);
+      }
+
+      // 解析身主
+      if (raw.containsKey('shen_zhu')) {
+        final sz = raw['shen_zhu'];
+        final boundary = _parseBoundary(sz['boundary'] ?? 'lunar', 'shen_zhu boundary');
+        final Map<int, String> table = {};
+        (sz['table'] as Map<String, dynamic>).forEach((k, v) {
+          table[int.parse(k)] = v.toString();
+        });
+        shenZhuRule = MasterRule(boundary, table);
+      }
+
+      ZiweiLogger.info("Loaded Masters: MingZhu=${mingZhuRule?.table.length ?? 0}, ShenZhu=${shenZhuRule?.table.length ?? 0}");
+    } catch (e, s) {
+      ZiweiLogger.error("Masters parsing failed", e, s);
+      mingZhuRule = null;
+      shenZhuRule = null;
     }
   }
 }

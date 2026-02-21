@@ -9,7 +9,6 @@ abstract class StarRule {
 
   // 工厂模式：根据 JSON 里的 "type" 字段，自动变成具体的规则对象
   factory StarRule.fromJson(Map<String, dynamic> json) {
-    // 记得去 StarRuleType 里写好 fromJson 转换
     final type = StarRuleType.fromJson(json['type']);
 
     switch (type) {
@@ -19,6 +18,11 @@ abstract class StarRule {
         return LookupRule.fromJson(json);
       case StarRuleType.lookupOffset:
         return LookupShiftRule.fromJson(json);
+      // 🔥新增规则
+      case StarRuleType.pipeline:
+        return PipelineRule.fromJson(json);
+      case StarRuleType.constant:
+        return ConstantRule.fromJson(json);
       default:
         throw UnimplementedError("未知的规则类型: $type");
     }
@@ -139,6 +143,48 @@ class LookupShiftRule extends StarRule {
       table: table,
       boundary: boundary,
       direction: AnchorOffsetRule._parseDirection(json['direction']),
+    );
+  }
+}
+//规则D直接偏移
+class ConstantRule extends StarRule {
+  final int value;
+
+  ConstantRule({required this.value}) : super(StarRuleType.constant);
+
+  factory ConstantRule.fromJson(Map<String, dynamic> json) {
+    return ConstantRule(
+      value: (json['value'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+//规则E流水线规则，是ABCD类型的排列组合
+class PipelineRule extends StarRule {
+  final List<StarRule> steps; // 🔥 里面全是继承自 StarRule 的兄弟姐妹
+  final Boundary boundary;
+
+  PipelineRule({
+    required this.steps,
+    required this.boundary,
+  }) : super(StarRuleType.pipeline);
+
+  factory PipelineRule.fromJson(Map<String, dynamic> json) {
+    final boundaryStr = json['boundary'] as String? ?? 'lunar';
+    final boundary = Boundary.values.firstWhere(
+      (e) => e.name == boundaryStr,
+      orElse: () => Boundary.lunar,
+    );
+
+    // 🚀 神仙套娃：递归解析 steps 里的每一个规则
+    final stepsJson = json['steps'] as List<dynamic>? ?? [];
+    final parsedSteps = stepsJson.map((stepJson) {
+      return StarRule.fromJson(stepJson as Map<String, dynamic>);
+    }).toList();
+
+    return PipelineRule(
+      steps: parsedSteps,
+      boundary: boundary,
     );
   }
 }

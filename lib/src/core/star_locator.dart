@@ -47,31 +47,60 @@ class StarLocator {
   }
 
   /// 核心计算方法 (通过 Key 查找缓存规则)
-  static int locate(String starKey, RuleContext ctx) {
+  /// 🔥 改动点：从 int 变成 int?，从 -1 变成 null
+  static int? locate(String starKey, RuleContext ctx) {
     final rule = _rules[starKey];
+    
+    // 如果规则表里压根没登记这颗星，直接给 null，不耽误后面算数
     if (rule == null) {
-      return -1;
+      // ZiweiLogger.warn("未找到星曜规则: $starKey");
+      return null; 
     }
+    
+    // 这里的 locateByRule 现在也返回 int? 了，完美对接
     return locateByRule(rule, ctx);
   }
 
   /// 🔥 新增：直接根据规则对象计算 (用于流曜等动态规则)
-  static int locateByRule(StarRule rule, RuleContext ctx) {
+  static int? locateByRule(StarRule rule, RuleContext ctx) {
     try {
-      // 1. 根据规则类型分发
-      if (rule is AnchorOffsetRule) {
+      if (rule is PipelineRule) {
+        return _handlePipeline(rule, ctx);  // 走流水线
+      } else if (rule is AnchorOffsetRule) {
         return _handleAnchorOffset(rule, ctx);
       } else if (rule is LookupRule) {
         return _handleLookup(rule, ctx);
       } else if (rule is LookupShiftRule) {
         return _handleLookupShift(rule, ctx);
+      } else if (rule is ConstantRule) {
+        return rule.value;                  // 🔥 遇到常数，直接吐出数字！
       } else {
-        return -1;
+        return null;
       }
     } catch (e) {
       ZiweiLogger.error("Failed to locate by rule: $rule", e);
-      return -1;
+      return null;
     }
+  }
+
+  // 🔥 流水线累加器：不管你塞了什么规则，全部算出来加在一起，最后取模
+  static int? _handlePipeline(PipelineRule rule, RuleContext ctx) {
+    int totalIndex = 0;
+
+    for (var subRule in rule.steps) {
+      int? stepResult = locateByRule(subRule, ctx); // 递归调用上面的 locateByRule
+
+      //print("Step result: $stepResult"); 
+
+      if (stepResult == null) return null; // 出错拉闸
+      
+      totalIndex += stepResult;
+
+      
+    }
+
+    // 终极防溢出取模
+    return ZiweiConsts.fixIndex(totalIndex); 
   }
 
   // 🛠️ 智能 Key 映射器 (Smart Key Mapper)
@@ -81,51 +110,37 @@ class StarLocator {
     // 1. 如果明确指定了 Solar (节气盘)
     if (boundary == Boundary.solar) {
       switch (rawKey) {
-        case "month":
-          return "solar_month";
+        case "month": return "solar_month";
         case "day":
-        case "day_number":
-          return "solar_day";
-        case "hour":
-          return "solar_hour";
-        case "year_stem":
-          return "solar_year_stem";
-        case "year_branch":
-          return "solar_year_branch";
-        case "month_stem":
-          return "solar_month_stem";
-        case "month_branch":
-          return "solar_month_branch";
-        case "year": // 年份索引
-          return "solar_year_index";
-        default:
-          return rawKey;
+        case "day_number": return "solar_day";
+        case "hour": return "solar_hour";
+        case "year_stem": return "solar_year_stem";
+        case "year_branch": return "solar_year_branch";
+        case "month_stem": return "solar_month_stem";
+        case "month_branch": return "solar_month_branch";
+        case "year": return "solar_year_index";
+        case "zheng_kong": return "solar_zheng_kong";
+        case "fu_kong": return "solar_fu_kong";
+        
+        default: return rawKey;
       }
     }
 
     // 2. 如果明确指定 Lunar 或 Default (农历盘)
-    // 默认情况 (boundary == null) 也走这里，因为大部分星星是农历星
     switch (rawKey) {
-      case "month":
-        // ⚠️ 农历安星核心逻辑：通常使用“有效月份”(处理过闰月规则的)
-        return "effective_month";
+      case "month": return "effective_month";
       case "day":
-      case "day_number":
-        return "lunar_day";
-      case "hour":
-        return "lunar_hour";
-      case "year_stem":
-        return "lunar_year_stem";
-      case "year_branch":
-        return "lunar_year_branch";
-      case "month_stem":
-        return "lunar_month_stem";
-      case "month_branch":
-        return "lunar_month_branch";
-      case "year":
-        return "lunar_year_index";
+      case "day_number": return "lunar_day";
+      case "hour": return "lunar_hour";
+      case "year_stem": return "lunar_year_stem";
+      case "year_branch": return "lunar_year_branch";
+      case "month_stem": return "lunar_month_stem";
+      case "month_branch": return "lunar_month_branch";
+      case "year": return "lunar_year_index";
+      case "zheng_kong": return "lunar_zheng_kong";
+      case "fu_kong": return "lunar_fu_kong";
+
       default:
-        // 其他如 "ziwei", "ming", "tianfu" 保持原样
         return rawKey;
     }
   }
@@ -202,7 +217,8 @@ class StarLocator {
         realKey.contains("month") ||
         realKey.contains("hour") ||
         realKey.contains("day") ||
-        realKey.contains("year_index");
+        realKey.contains("year_index")||
+        realKey.contains("year");
 
     int rawIndex;
     if (isTimeAnchor) {

@@ -458,7 +458,7 @@
     "brightness": [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
   },
   {
-    "key": "flow_dahao_suijian12",
+    "key": "flow_suipo_suijian12",
     "type": "suijian12",
     "rule": {
       "type": "lookup",

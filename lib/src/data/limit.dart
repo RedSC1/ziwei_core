@@ -4,7 +4,6 @@ import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
-import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 abstract class FlowLimit {
   GanZhi get ganzhi;
@@ -66,8 +65,6 @@ class Decade extends FlowLimit {
       int virtualAge = year - Decade.getEffectiveBirthYear(plate) + 1;
       return Decade.createChildhood(virtualAge, plate); 
     }
-
-    // 2. 💥 修正：计算大限序号
     // 加上 1，确保起运后的第一个十年对应 Index 1
     int decadeIndex = ((year - startDecadeYear) ~/ 10) + 1;
     
