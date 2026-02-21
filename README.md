@@ -31,7 +31,7 @@ void main() async {
 
   // 2. 提供一个地球时间点（公历）与性别
   final birthday = AstroDateTime(2026, 2, 4, 19, 48);
-  final ziweiDate = ZiweiDate.fromSolar(
+  final ziweiDate = ZiweiDate.fromSolar(//使用公历时间创建紫微盘
     birthday,
     gender: Gender.male,
     options: ruleset.calendarOptions, 
@@ -40,7 +40,7 @@ void main() async {
   // 3. 一键出盘
   final plate = ZiweiEngine.calculate(ziweiDate, ruleset);
 
-  print('判定八字: ${ziweiDate.bazi}');
+  print('节气八字: ${ziweiDate.bazi}');
   print('命主: ${plate.mingZhu} | 身主: ${plate.shenZhu}');
   
   // 极简访问各个宫位
@@ -50,9 +50,9 @@ void main() async {
 }
 ```
 
-### 2. 时光机（自动算大限、流年、流日、流时）
+### 2. 时光机（算大限、流年、流月、流日、流时）
 
-让 `ZiweiLimitManager` 替你接管错综复杂的纪年流运图层和时辰干支推算：
+使用`ZiweiLimitManager` 管理大限、流年、流月、流日、流时盘：
 
 ```dart
 // 将底盘交给状态管理器
@@ -66,21 +66,22 @@ ZiWeiPlate monthPlate = manager.dynamicPlate;
 print("今年当月的流月命宫在地支: ${monthPlate.monthMingPalace?.branch}");
 
 // ------------------------------------------
-// 📅 高阶应用：直接根据现实时间戳推算复合四层流运 (流年+流月+流日+流时)
+// 📅 直接根据现实时间戳推算复合四层流运 (流年+流月+流日+流时)
 manager.setPhysicalDate(DateTime.now());
 
 // UI触发：用户点击了“下一时辰”
 manager.nextHour(); 
 
-// 取盘渲染，底层自动处理五鼠遁和早晚子跨日切分！
+// 取盘渲染，底层自动处理五鼠遁和早晚子跨日切分
 ZiWeiPlate currentPlate = manager.dynamicPlate;
+// 这里子时被切分为了23：00-00：00和0：00到1：00
 ```
 
 ---
 
-## 🛠 高级功能：JSON 安星钩子 (Smart Patching)
+## 🛠 高级功能：JSON 规则注入 (Smart Patching)
 
-你想单独改变某一颗星星的规则，再也不用 Fork 整个仓库，只需要这样注入一段局部 JSON：
+你可以通过注入一段局部 JSON，来改变某一颗星星的规则：
 
 ```dart
 String myCustomStarsJson = '''
@@ -104,24 +105,62 @@ final newRuleset = ConfigLoader.overrideWith(
 );
 ```
 
-> **健壮性保障**: 框架集成了极其严格的 Validation。如果你的 JSON 出现哪怕一个拼写错误 (`typ` / `rule` 缺失)，代码将瞬间报错 `FormatException: Stars JSON error: Star "ziwei" is missing the required field "type"`，帮你快速定位语法错误！
+### 修改历法法则 (main_rules.json)
 
+不仅是星星，你还可以通过注入 `mainRulesJson` 实时覆盖引擎最底层的运作机制，比如开启早晚子时、修改五虎遁和四化的界限基准等：
+
+```dart
+String myCalendarConfig = '''
+{
+  "calendar": {
+    "split_rat_hour": false, // 热重载：强制全局关闭早晚子区分
+    "leap_month_strategy": "split_by_15th" // 切换闰月算法为：月中剥离法
+  }
+}
+''';
+
+final customCalendarRuleset = ConfigLoader.overrideWith(
+  baseRuleset: ConfigLoader.getDefault(),
+  mainRulesJson: myCalendarConfig, 
+);
+```
 ---
 
 ## 🏛 核心架构图解
 
 ```mermaid
 graph TD
-    A[DateTime / Solar] --> B(TimeAdapter);
-    B -->|Lunar / Bazi Parsing| C(ZiweiDate);
+    A1[sxwnl_spa_dart<br/>高精度天文算法] --> B(TimeAdapter);
+    A2[bazi_core<br/>干支八字引擎] --> B;
+    B -->|四柱/农历推算| C(ZiweiDate);
     Z[ConfigLoader / Ruleset JSONs] --> D;
     C --> D[ZiweiEngine];
     D --> E(ZiWeiPlate);
     E --> F[ZiweiLimitManager];
-    T2[Physical DateTime Stepper] --> F;
+    T2[Physical AstroDateTime Stepper] --> F;
     F -->|calculateDynamic| G((Dynamic Plate with Flow Stars / Sihua));
 ```
 
+## ⚖️ 开发者说明 (Developer Notes)
+
+由于紫微斗数流派众多、古籍记载差异及个人精力有限，本项目需说明以下几点：
+
+- 算法考证：关于星曜亮度（庙旺利陷）及部分辅助星曜的安放算法，目前主要参考了主流术数网站及 AI 辅助校验，尚未能对所有古籍（如《全书》、《全集》等）进行一一比对。
+- 测试覆盖：虽然我们编写了自动化测试用例，但由于命盘组合多达数十万种，目前尚无法完全覆盖所有极端或罕见的历法情况。
+- 欢迎指正：若你在使用过程中发现排盘结果与预期不符、规则有误或有更好的建议，请务必在 Issues 中指出。你的每一份反馈都是让 Ziwei Core 变得更精准的关键。
+
+## 🚀 待完善与未来规划 (Roadmap)
+
+- [ ] **API 文档升级**：增加更详尽的 DartDoc 注释与在线文档链接。
+- [ ] **多流派深度支持**：实现中州派、飞星派等派别的排盘逻辑和排盘算法。
+- [ ] **多流派配置预设**：内置更多主流派别的四化与亮度规则集。
+- [ ] **多语言支持 (i18n)**：支持星曜、宫位名的多语种切换。
+- [ ] **自动化测试扩容**：引入更多历史名人盘例进行算法鲁棒性对撞。
+
+## ⚠️ 免责声明 (Disclaimer)
+
+本库仅供历法研究与天文推演使用。作者不对任何基于本库计算结果的预测、决策或行为承担任何法律责任。请理性对待命理逻辑，尊重科学，生活掌握在自己手中。
+
 ## 📜 协议 (License)
 
-Ziwei Core 采用 MIT 开源协议。如果你觉得这个强大的宇宙模拟引擎帮到了你，请给一个 ⭐ 吧！
+Ziwei Core 采用 MIT 开源协议。如果你觉得帮到了你，请给一个 ⭐ 吧！
