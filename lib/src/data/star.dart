@@ -64,21 +64,37 @@ class StaticStar extends Star {
     Map<String, dynamic> json,
     Map<String, List<int>> brightnessMap,
   ) {
-    String key = json['key'];
+    if (!json.containsKey('key')) {
+      throw FormatException(
+        'Stars JSON error: Missing required field "key" in configuration. Raw data: $json',
+      );
+    }
+
+    final String key = json['key'] as String;
+
+    if (!json.containsKey('type')) {
+      throw FormatException(
+        'Stars JSON error: Star "$key" is missing the required field "type".',
+      );
+    }
+
+    if (!json.containsKey('rule')) {
+      throw FormatException(
+        'Stars JSON error: Star "$key" is missing the placement "rule" object.',
+      );
+    }
+
     List<int> brightness = brightnessMap[key] ?? List.filled(12, 0);
 
     return StaticStar(
-      // 1. 基础字段可以直接拿
-      key: json['key'] as String,
-
-      // 2. 枚举转换 (假设你在 StarType 里写了 fromJson，或者用 firstWhere)
-      // 如果没写 helper，这里可以临时手写：
-      type: StarType.values.firstWhere((e) => e.name == json['type']),
-
-      // 3. 规则对象递归解析
+      key: key,
+      type: StarType.values.firstWhere(
+        (e) => e.name == json['type'],
+        orElse: () => throw FormatException(
+          'Stars JSON error: Star "$key" has an invalid type "${json['type']}". Valid types: ${StarType.values.map((e) => e.name).toList()}',
+        ),
+      ),
       rule: StarRule.fromJson(json['rule'] as Map<String, dynamic>),
-
-      // 4. 列表强转 (List<dynamic> -> List<int>)
       brightnessTable: brightness,
     );
   }

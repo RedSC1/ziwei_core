@@ -1,4 +1,4 @@
-import 'package:ziwei_core/src/config/loader.dart';
+import 'package:ziwei_core/src/config/ruleset.dart';
 import 'package:ziwei_core/src/core/logger.dart';
 import 'package:ziwei_core/src/core/placer.dart';
 import 'package:ziwei_core/src/core/sihua_decorator.dart';
@@ -15,7 +15,7 @@ import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 class ZiweiEngine {
   /// 1. 排本命盘
-  static ZiWeiPlate calculate(ZiweiDate date) {
+  static ZiWeiPlate calculate(ZiweiDate date, ZiweiRuleset ruleset) {
     ZiweiLogger.info("正在排盘: ${date.solar}...");
 
     // 1-1. 安十二宫 (地支位置是固定的)
@@ -52,19 +52,19 @@ class ZiweiEngine {
           shouldAsNext = date.lunar.day > 15;
           break;
         case LeapMonthRule.asPrevious:
-        //default:
-          shouldAsNext = false; 
+          //default:
+          shouldAsNext = false;
           break;
       }
 
       // 3. 跨年进位
       if (shouldAsNext) {
-        effectiveMonth++; 
-        
+        effectiveMonth++;
+
         // 进位拦截：13 变正月，年份 +1
         if (effectiveMonth > 12) {
-          effectiveMonth = 1;  
-          effectiveYear++;     
+          effectiveMonth = 1;
+          effectiveYear++;
         }
       }
     }
@@ -96,7 +96,7 @@ class ZiweiEngine {
 
     ZiweiLogger.info(
       "命宫: ${palaces[lifeIndex].branch.label}, 五行局: ${elementBureau.label}",
-     );
+    );
 
     // step4: 安星
     // 1.计算紫微天府的位置
@@ -108,29 +108,29 @@ class ZiweiEngine {
       elementBureau.number,
     );
 
-    final solarYear = date.getGanZhi(ZiweiScope.year, b:Boundary.solar);
-    final lunarYear = date.getGanZhi(ZiweiScope.year, b:Boundary.lunar);
+    final solarYear = date.getGanZhi(ZiweiScope.year, b: Boundary.solar);
+    final lunarYear = date.getGanZhi(ZiweiScope.year, b: Boundary.lunar);
     final solarKongWang = solarYear.getKongWang();
     final lunarKongWang = lunarYear.getKongWang();
 
-// 🔥 新增：解析命主与身主 
+    // 🔥 新增：解析命主与身主
     // ==========================================
     String? mingZhuKey;
-    if (ConfigLoader.mingZhuRule != null) {
+    if (ruleset.mingZhuRule != null) {
       // 命主核心逻辑：查命宫(lifeIndex)所在的宫位
-      mingZhuKey = ConfigLoader.mingZhuRule!.table[lifeIndex];
+      mingZhuKey = ruleset.mingZhuRule!.table[lifeIndex];
     }
 
     String? shenZhuKey;
-    if (ConfigLoader.shenZhuRule != null) {
+    if (ruleset.shenZhuRule != null) {
       // 身主核心逻辑：根据 JSON 里的 boundary，自动选农历年支还是节气年支！
       int yearZhiIndex;
-      if (ConfigLoader.shenZhuRule!.boundary == Boundary.lunar) {
+      if (ruleset.shenZhuRule!.boundary == Boundary.lunar) {
         yearZhiIndex = lunarYear.zhi.index;
       } else {
         yearZhiIndex = solarYear.zhi.index;
       }
-      shenZhuKey = ConfigLoader.shenZhuRule!.table[yearZhiIndex];
+      shenZhuKey = ruleset.shenZhuRule!.table[yearZhiIndex];
     }
     // ==========================================
 
@@ -143,7 +143,7 @@ class ZiweiEngine {
       "ming": lifeIndex, // Ming Index
       "body": bodyIndex,
       "shen": bodyIndex, // Alias
-      "wuxingjv": elementBureau.name,//water2,wood3....
+      "wuxingjv": elementBureau.name, //water2,wood3....
       // === 农历数据源 (Lunar Source) ===
       // [Index] 用于数值计算 (e.g. month offset)
       "lunar_year_index": effectiveYear, // e.g. 2024
@@ -199,25 +199,25 @@ class ZiweiEngine {
       "gender": date.gender.name, // Use name string for context
     };
 
-    final ruleContext = RuleContext(contextData);
+    final ruleContext = RuleContext(contextData, ruleset);
 
     // 3. 执行安星
     // We need to pass the ruleContext to the Placer
     StarPlacer placer = StarPlacer(ruleContext, palaces, date);
-    placer.placeAll(ConfigLoader.stars); // Use loaded stars
+    placer.placeAll(ruleset.stars); // Use loaded stars
 
     // 1-4. 初始化盘面数据结构
     final plate = ZiWeiPlate(
       palaces: palaces,
       originMingIndex: lifeIndex,
       bodyPalaceIndex: bodyIndex,
-      elementBureau: elementBureau,//五行局
+      elementBureau: elementBureau, //五行局
       date: date,
-      siHuaRules: ConfigLoader.siHuaRules,
+      ruleset: ruleset,
       effective_month: effectiveMonth,
       effective_year: effectiveYear,
 
-      mingZhu: mingZhuKey, 
+      mingZhu: mingZhuKey,
       shenZhu: shenZhuKey,
 
       // 初始化状态机
@@ -229,7 +229,7 @@ class ZiweiEngine {
 
     // step5:安装生年四化&&向心四化
     // 原来的 decorateByDate 被废弃了，统一集成到 decorateBase 里
-    SiHuaDecorator.decorateBase(plate, ConfigLoader.siHuaRules);
+    SiHuaDecorator.decorateBase(plate, ruleset.siHuaRules);
 
     return plate;
   }
@@ -282,19 +282,20 @@ class ZiweiEngine {
     // 3. 直接返回这块渲染好的全新克隆盘！不碰 context！
     return dynamicPlate;
   }
+
   static void _applyLimit(ZiWeiPlate plate, FlowLimit limit, ZiweiScope scope) {
     // 1. 安放四化 (Flying Si Hua)
     // 使用 limit.ganzhi.gan (时间天干) 查表
     SiHuaDecorator.decorateByStem(
       plate: plate,
       stem: limit.ganzhi.gan,
-      siHuaTable: plate.siHuaRules, // 使用盘内自带的规则
+      siHuaTable: plate.ruleset.siHuaRules, // 使用盘内自带的规则
       scope: scope,
     );
 
     // 2. 安放流曜 (Flow Stars)
     // 核心思想：构建一个“谎言 Context”，把 limit 的干支伪装成 year_stem
-    if (ConfigLoader.flowDefinitions.isEmpty) return;
+    if (plate.ruleset.flowDefinitions.isEmpty) return;
 
     final flowContextData = {
       // === 伪装时间 (Time Masquerade) ===
@@ -320,17 +321,16 @@ class ZiweiEngine {
       "gender": plate.date.gender.name,
     };
 
-    final flowContext = RuleContext(flowContextData);
+    final flowContext = RuleContext(flowContextData, plate.ruleset);
 
     // 3. 遍历定义，直接使用独立规则生成流曜
-    for (var def in ConfigLoader.flowDefinitions) {
+    for (var def in plate.ruleset.flowDefinitions) {
       // 类型改为 int?，因为 locateByRule 现在可能返回 null 了
       int? rawIndex = StarLocator.locateByRule(def.rule, flowContext);
 
       //判断逻辑从“范围判断”改为“非空判断”
       // 只要不是 null，就代表规则算出了结果（哪怕结果是 -1 或 13）
       if (rawIndex != null) {
-        
         //使用 fixIndex 修正索引，把负数或溢出数字转回 0-11
         int finalIndex = ZiweiConsts.fixIndex(rawIndex);
 
@@ -345,12 +345,11 @@ class ZiweiEngine {
         final flowStar = FlowStar(
           key: finalKey,
           brightnessTable: def.brightness,
-          scope: scope, 
+          scope: scope,
         );
 
         //使用修正后的 finalIndex 塞入宫位
         plate.palaces[finalIndex].addStar(flowStar);
-        
       } else {
         // 如果是 null，说明该流曜在此作用域（比如某流月）下不适用或计算失败
         // ZiweiLogger.warn("流曜 ${def.key} 在 ${scope.name} 级别计算失败，跳过");

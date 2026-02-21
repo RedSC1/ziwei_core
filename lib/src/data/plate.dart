@@ -1,11 +1,10 @@
-import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/src/data/palace.dart';
 import 'package:ziwei_core/src/enums/basic.dart';
 
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
-import 'package:ziwei_core/src/enums/star_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
+import 'package:ziwei_core/src/config/ruleset.dart';
 
 class ZiWeiPlate {
   final List<Palace> palaces;
@@ -13,12 +12,12 @@ class ZiWeiPlate {
   final int bodyPalaceIndex;
   final FiveElementBureau elementBureau;
   final ZiweiDate date;
-  final Map<TianGan, Map<SiHuaType, String>> siHuaRules;
+  final ZiweiRuleset ruleset;
   final int effective_month;
   final int effective_year;
 
-  final String? mingZhu; 
-  final String? shenZhu; 
+  final String? mingZhu;
+  final String? shenZhu;
 
   int? decadeMingIndex;
   int? smallLimitMingIndex;
@@ -26,13 +25,57 @@ class ZiWeiPlate {
   int? monthMingIndex;
   int? dayMingIndex;
   int? hourMingIndex;
+
+  // ==========================================
+  // 🌟 UI 渲染专属：宫位快捷 Getter (1.0.0 语法糖)
+  // 快速获取各个流层的“命宫”实体，免去每次查询
+  // ==========================================
+
+  /// 获取[原局命宫]实体对象
+  Palace get originMingPalace =>
+      palaces.firstWhere((p) => p.index == originMingIndex);
+
+  /// 获取[身宫]实体对象
+  Palace get bodyPalace =>
+      palaces.firstWhere((p) => p.index == bodyPalaceIndex);
+
+  /// 如果当前有大限流运，快速获取[大限命宫]实体对象；否则返回 null
+  Palace? get decadeMingPalace => decadeMingIndex != null
+      ? palaces.firstWhere((p) => p.index == decadeMingIndex)
+      : null;
+
+  /// 如果当前有小限，快速获取[小限命宫]实体对象；否则返回 null
+  Palace? get smallLimitMingPalace => smallLimitMingIndex != null
+      ? palaces.firstWhere((p) => p.index == smallLimitMingIndex)
+      : null;
+
+  /// 如果当前有流年流运，快速获取[流年命宫]实体对象；否则返回 null
+  Palace? get yearMingPalace => yearMingIndex != null
+      ? palaces.firstWhere((p) => p.index == yearMingIndex)
+      : null;
+
+  /// 如果当前有特定流月，快速获取[流月命宫]实体对象；否则返回 null
+  Palace? get monthMingPalace => monthMingIndex != null
+      ? palaces.firstWhere((p) => p.index == monthMingIndex)
+      : null;
+
+  /// 如果当前有推演到流日，快速获取[流日命宫]实体对象；否则返回 null
+  Palace? get dayMingPalace => dayMingIndex != null
+      ? palaces.firstWhere((p) => p.index == dayMingIndex)
+      : null;
+
+  /// 如果当前有推演到流时，快速获取[流时命宫]实体对象；否则返回 null
+  Palace? get hourMingPalace => hourMingIndex != null
+      ? palaces.firstWhere((p) => p.index == hourMingIndex)
+      : null;
+
   ZiWeiPlate({
     required this.palaces,
     required this.originMingIndex,
     required this.bodyPalaceIndex,
     required this.elementBureau,
     required this.date,
-    required this.siHuaRules,
+    required this.ruleset,
     required this.effective_month,
     required this.effective_year,
 
@@ -45,7 +88,6 @@ class ZiWeiPlate {
     this.monthMingIndex,
     this.dayMingIndex,
     this.hourMingIndex,
-   
   });
 
   /// 核心查询方法：获取某一层级、某一角色的宫位
@@ -87,7 +129,7 @@ class ZiWeiPlate {
       elementBureau: elementBureau,
 
       // 3. 规则引用复制 (浅拷贝即可，因为规则是只读的)
-      siHuaRules: siHuaRules,
+      ruleset: ruleset,
       effective_month: effective_month,
       effective_year: effective_year,
 

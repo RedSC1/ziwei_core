@@ -1,4 +1,3 @@
-// 🚀 Export main entry points
 import 'dart:convert';
 import 'package:ziwei_core/src/core/logger.dart';
 import 'package:ziwei_core/src/data/star.dart';
@@ -7,10 +6,9 @@ import 'package:ziwei_core/src/enums/star_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart'; // Import for CalendarOptions
 import '../enums/config_enums.dart'; // Import enums locally
 import 'schemas/flow_definition.dart';
-import '../core/star_locator.dart'; // 引入 StarLocator
+import 'ruleset.dart';
+import 'default_jsons.dart';
 
-
-//用于缓存命主身主规则的数据结构
 class MasterRule {
   final Boundary boundary;
   final Map<int, String> table;
@@ -19,18 +17,317 @@ class MasterRule {
 }
 
 class ConfigLoader {
-  static List<StaticStar> stars = [];
-  static List<FlowDefinition> flowDefinitions = []; // 🔥 新增：流曜定义缓存
+  /// 获取自带的默认排盘规则集
+  static ZiweiRuleset getDefault() {
+    return createRuleset(
+      starsJson: DefaultJsons.stars,
+      brightnessJson: DefaultJsons.brightness,
+      sihuaJson: DefaultJsons.sihua,
+      flowJson: DefaultJsons.flowStars,
+      mainRulesJson: DefaultJsons.mainRules,
+      mastersJson: DefaultJsons.masters,
+    );
+  }
 
-  static Map<int, String> brightnessLabels = {};
+  /// 在已有规则集的基础上，仅覆盖指定的部分配置
+  static ZiweiRuleset overrideWith(
+    ZiweiRuleset baseRuleset, {
+    String? starsJson,
+    String? brightnessJson,
+    String? sihuaJson,
+    String? flowJson,
+    String? mainRulesJson,
+    String? mastersJson,
+  }) {
+    // 覆盖逻辑：如果有传入新的 JSON，则使用新 JSON 创建一份临时 ruleset；
+    // 否则，沿用基准 baseRuleset 里的对象引用。
+    // 这要求 createRuleset 内部逻辑进行分离，或者为了简便，我们可以通过提取局部方法来复用。
 
-  static Map<TianGan, Map<SiHuaType, String>> siHuaRules = {};
+    // 由于原始的 createRuleset 是全量构建，为了简化，这里我们可以直接复用 createRuleset 的核心代码。
+    // 但是要避免重复解析 baseRuleset 已经解析好的对象。
 
-  static MasterRule? mingZhuRule;
-  static MasterRule? shenZhuRule;
+    // 1. Brightness
+    Map<int, String> brightnessLabels = Map.from(baseRuleset.brightnessLabels);
+    Map<String, List<int>> brightnessMap = {};
+    if (brightnessJson != null && brightnessJson.isNotEmpty) {
+      try {
+        final Map<String, dynamic> rawMap = jsonDecode(brightnessJson);
+        rawMap.forEach((key, value) {
+          if (value is List) {
+            brightnessMap[key] = value.cast<int>();
+          } else if (int.tryParse(key) != null) {
+            // It's a label overwrite
+            brightnessLabels[int.parse(key)] = value.toString();
+          }
+        });
+      } catch (e) {
+        ZiweiLogger.warn("Brightness table parsing failed", e);
+      }
+    }
 
-  static CalendarOptions parse(String? jsonStr) {
-    if (jsonStr == null || jsonStr.trim().isEmpty) {
+    // 2. Stars
+    List<StaticStar> stars = List.from(baseRuleset.stars);
+    if (starsJson != null && starsJson.isNotEmpty) {
+      try {
+        final List<dynamic> list = jsonDecode(starsJson);
+        for (var e in list) {
+          final newStar = StaticStar.fromJson(e, brightnessMap);
+          final existingIndex = stars.indexWhere((s) => s.key == newStar.key);
+          if (existingIndex >= 0) {
+            stars[existingIndex] = newStar; // update
+          } else {
+            stars.add(newStar); // append
+          }
+        }
+      } on FormatException catch (e) {
+        throw FormatException("Failed to patch Stars config: ${e.message}");
+      } catch (e, s) {
+        ZiweiLogger.error("Stars parsing failed due to unexpected error", e, s);
+        throw Exception("Stars JSON parsing syntax error: $e");
+      }
+    }
+
+    // 3. Sihua
+    Map<TianGan, Map<SiHuaType, String>> siHuaRules = baseRuleset.siHuaRules;
+    if (sihuaJson != null && sihuaJson.isNotEmpty) {
+      try {
+        final Map<String, dynamic> raw = jsonDecode(sihuaJson);
+        siHuaRules = Map.from(baseRuleset.siHuaRules); // copy base map
+        raw.forEach((ganKey, rules) {
+          final gan = TianGan.fromName(ganKey);
+          if (rules is Map<String, dynamic>) {
+            // merge into existing gan rules if any
+            final Map<SiHuaType, String> ruleMap = Map.from(
+              siHuaRules[gan] ?? {},
+            );
+            rules.forEach((sihuaKey, starKey) {
+              final type = SiHuaType.fromJson(sihuaKey);
+              ruleMap[type] = starKey.toString();
+            });
+            siHuaRules[gan] = ruleMap;
+          }
+        });
+      } on FormatException catch (e) {
+        throw FormatException("Failed to patch SiHua rules: ${e.message}");
+      } catch (e, s) {
+        ZiweiLogger.error(
+          "SiHua rules parsing failed due to unexpected error",
+          e,
+          s,
+        );
+        throw Exception("SiHua JSON parsing syntax error: $e");
+      }
+    }
+
+    // 4. Flow
+    List<FlowDefinition> flowDefinitions = List.from(
+      baseRuleset.flowDefinitions,
+    );
+    if (flowJson != null && flowJson.isNotEmpty) {
+      try {
+        final List<dynamic> list = jsonDecode(flowJson);
+        for (var e in list) {
+          final newFlow = FlowDefinition.fromJson(e);
+          final existingIndex = flowDefinitions.indexWhere(
+            (f) => f.key == newFlow.key,
+          );
+          if (existingIndex >= 0) {
+            flowDefinitions[existingIndex] = newFlow; // update
+          } else {
+            flowDefinitions.add(newFlow); // append
+          }
+        }
+      } on FormatException catch (e) {
+        throw FormatException("Failed to patch Flow Definitions: ${e.message}");
+      } catch (e, s) {
+        ZiweiLogger.error(
+          "Flow definitions parsing failed due to unexpected error",
+          e,
+          s,
+        );
+        throw Exception("Flow JSON parsing syntax error: $e");
+      }
+    }
+
+    // 5. Calendar Options
+    CalendarOptions calOptions = baseRuleset.calendarOptions;
+    if (mainRulesJson != null && mainRulesJson.isNotEmpty) {
+      // Create a mutable copy of existing labels just in case the main json alters them.
+      Map<int, String> newLabels = Map.from(brightnessLabels);
+      calOptions = _parseCalendarOptions(mainRulesJson, newLabels);
+      brightnessLabels = newLabels;
+    }
+
+    // 6. Masters
+    MasterRule? mingZhuRule = baseRuleset.mingZhuRule;
+    MasterRule? shenZhuRule = baseRuleset.shenZhuRule;
+    if (mastersJson != null && mastersJson.isNotEmpty) {
+      try {
+        final Map<String, dynamic> raw = jsonDecode(mastersJson);
+        if (raw.containsKey('ming_zhu')) {
+          final mz = raw['ming_zhu'];
+          final boundary = _parseBoundary(
+            mz['boundary'] ?? mingZhuRule?.boundary.name ?? 'lunar',
+            'ming_zhu boundary',
+          );
+          final Map<int, String> table = Map.from(mingZhuRule?.table ?? {});
+          (mz['table'] as Map<String, dynamic>).forEach((k, v) {
+            table[int.parse(k)] = v.toString();
+          });
+          mingZhuRule = MasterRule(boundary, table);
+        }
+        if (raw.containsKey('shen_zhu')) {
+          final sz = raw['shen_zhu'];
+          final boundary = _parseBoundary(
+            sz['boundary'] ?? shenZhuRule?.boundary.name ?? 'lunar',
+            'shen_zhu boundary',
+          );
+          final Map<int, String> table = Map.from(shenZhuRule?.table ?? {});
+          (sz['table'] as Map<String, dynamic>).forEach((k, v) {
+            table[int.parse(k)] = v.toString();
+          });
+          shenZhuRule = MasterRule(boundary, table);
+        }
+      } catch (e, s) {
+        ZiweiLogger.error("Masters parsing failed", e, s);
+      }
+    }
+
+    return ZiweiRuleset(
+      stars: stars,
+      flowDefinitions: flowDefinitions,
+      brightnessLabels: brightnessLabels,
+      siHuaRules: siHuaRules,
+      calendarOptions: calOptions,
+      mingZhuRule: mingZhuRule,
+      shenZhuRule: shenZhuRule,
+    );
+  }
+
+  /// [核心底层方法]：使用全量 JSON 直接创建全新规则集
+  static ZiweiRuleset createRuleset({
+    required String starsJson,
+    String? brightnessJson,
+    required String sihuaJson,
+    required String flowJson,
+    required String mainRulesJson,
+    String? mastersJson,
+  }) {
+    // 1. parse brightness map
+    final Map<int, String> brightnessLabels = {};
+    Map<String, List<int>> brightnessMap = {};
+    if (brightnessJson != null && brightnessJson.isNotEmpty) {
+      try {
+        final Map<String, dynamic> rawMap = jsonDecode(brightnessJson);
+        rawMap.forEach((key, value) {
+          if (value is List) {
+            brightnessMap[key] = value.cast<int>();
+          }
+        });
+      } catch (e) {
+        ZiweiLogger.warn("Brightness table parsing failed", e);
+      }
+    }
+
+    // 2. parse stars
+    List<StaticStar> stars = [];
+    if (starsJson.isNotEmpty) {
+      try {
+        final List<dynamic> list = jsonDecode(starsJson);
+        stars = list.map((e) {
+          return StaticStar.fromJson(e, brightnessMap);
+        }).toList();
+      } catch (e, s) {
+        ZiweiLogger.error("Stars parsing failed", e, s);
+      }
+    }
+
+    // 3. parse sihua
+    Map<TianGan, Map<SiHuaType, String>> siHuaRules = {};
+    if (sihuaJson.isNotEmpty) {
+      try {
+        final Map<String, dynamic> raw = jsonDecode(sihuaJson);
+        raw.forEach((ganKey, rules) {
+          final gan = TianGan.fromName(ganKey);
+          if (rules is Map<String, dynamic>) {
+            final Map<SiHuaType, String> ruleMap = {};
+            rules.forEach((sihuaKey, starKey) {
+              final type = SiHuaType.fromJson(sihuaKey);
+              ruleMap[type] = starKey.toString();
+            });
+            siHuaRules[gan] = ruleMap;
+          }
+        });
+      } catch (e, s) {
+        ZiweiLogger.error("SiHua rules parsing failed", e, s);
+      }
+    }
+
+    // 4. parse flow definitions
+    List<FlowDefinition> flowDefinitions = [];
+    if (flowJson.isNotEmpty) {
+      try {
+        final List<dynamic> list = jsonDecode(flowJson);
+        flowDefinitions = list.map((e) => FlowDefinition.fromJson(e)).toList();
+      } catch (e, s) {
+        ZiweiLogger.error("Flow definitions parsing failed", e, s);
+      }
+    }
+
+    // 5. parse main rules
+    final calOptions = _parseCalendarOptions(mainRulesJson, brightnessLabels);
+
+    // 6. parse masters
+    MasterRule? mingZhuRule;
+    MasterRule? shenZhuRule;
+    if (mastersJson != null && mastersJson.isNotEmpty) {
+      try {
+        final Map<String, dynamic> raw = jsonDecode(mastersJson);
+        if (raw.containsKey('ming_zhu')) {
+          final mz = raw['ming_zhu'];
+          final boundary = _parseBoundary(
+            mz['boundary'] ?? 'lunar',
+            'ming_zhu boundary',
+          );
+          final Map<int, String> table = {};
+          (mz['table'] as Map<String, dynamic>).forEach((k, v) {
+            table[int.parse(k)] = v.toString();
+          });
+          mingZhuRule = MasterRule(boundary, table);
+        }
+        if (raw.containsKey('shen_zhu')) {
+          final sz = raw['shen_zhu'];
+          final boundary = _parseBoundary(
+            sz['boundary'] ?? 'lunar',
+            'shen_zhu boundary',
+          );
+          final Map<int, String> table = {};
+          (sz['table'] as Map<String, dynamic>).forEach((k, v) {
+            table[int.parse(k)] = v.toString();
+          });
+          shenZhuRule = MasterRule(boundary, table);
+        }
+      } catch (e, s) {
+        ZiweiLogger.error("Masters parsing failed", e, s);
+      }
+    }
+
+    return ZiweiRuleset(
+      stars: stars,
+      flowDefinitions: flowDefinitions,
+      brightnessLabels: brightnessLabels,
+      siHuaRules: siHuaRules,
+      calendarOptions: calOptions,
+      mingZhuRule: mingZhuRule,
+      shenZhuRule: shenZhuRule,
+    );
+  }
+
+  static CalendarOptions _parseCalendarOptions(
+    String jsonStr,
+    Map<int, String> outLabels,
+  ) {
+    if (jsonStr.trim().isEmpty) {
       throw ArgumentError('JSON string cannot be null or empty');
     }
 
@@ -41,45 +338,28 @@ class ConfigLoader {
 
     if (decoded.containsKey('brightness_labels')) {
       final Map<String, dynamic> labels = decoded['brightness_labels'];
-
-      brightnessLabels.clear(); // Clear old data
       labels.forEach((k, v) {
         if (int.tryParse(k) != null) {
-          brightnessLabels[int.parse(k)] = v.toString();
+          outLabels[int.parse(k)] = v.toString();
         }
       });
-      ZiweiLogger.info("Loaded ${brightnessLabels.length} brightness levels");
     }
-    // 1. Get Calendar node
+
     final calMap = _requireMap(decoded, 'calendar');
-
-    // 2. 拿配置项
     final splitRat = _requireBool(calMap, 'split_rat_hour');
-
-    // 3. 解析枚举
     final leapStr = _requireString(calMap, 'leap_month_strategy');
     final leapRule = _parseLeapRule(leapStr);
-
-    // 4. 解析五虎遁按照农历（默认）还是节气
     final wuHuStr = _requireString(calMap, 'wu_hu_dun_boundary');
     final wuHuBoundary = _parseBoundary(wuHuStr, 'wu_hu_dun_boundary');
-
-    // 5. 解析四化按照农历（默认）还是节气
     final siHuaStr = _requireString(calMap, 'sihua_boundary');
     final siHuaBoundary = _parseBoundary(siHuaStr, 'sihua_boundary');
-
-    //6.解析童限的计算规则
     final childhoodStr = _requireString(calMap, 'childhood_decade');
     final childhoodDecadeRule = _parseChildhoodDecadeRule(childhoodStr);
-
-    //大运流年流月按照阴历还是农历
     final flowLimitstr = _requireString(calMap, 'flowLimit_boundary');
     final flowLimitBoundary = _parseBoundary(
       flowLimitstr,
       'flowLimit_boundary',
     );
-
-    // 是否启用特殊历法（建子月/建丑月等历史历法调整）
     final enableHistorical = _requireBool(calMap, 'enable_historical');
 
     return CalendarOptions(
@@ -99,9 +379,8 @@ class ConfigLoader {
   ) {
     if (!map.containsKey(key)) throw ArgumentError('❌ Missing field: $key');
     final val = map[key];
-    if (val is! Map<String, dynamic>) {
+    if (val is! Map<String, dynamic>)
       throw ArgumentError('field "$key" must be Object');
-    }
     return val;
   }
 
@@ -143,141 +422,14 @@ class ConfigLoader {
     }
   }
 
-  //解析童限规则
-  static ChildhoodRole _parseChildhoodDecadeRule(String childhoodStr) {
-    switch (childhoodStr) {
+  static ChildhoodRole _parseChildhoodDecadeRule(String str) {
+    switch (str) {
       case 'skip':
         return ChildhoodRole.skip;
       case 'regular':
         return ChildhoodRole.regular;
       default:
-        throw ArgumentError('❌ Invalid childhood_decade: $childhoodStr');
-    }
-  }
-
-  //以下是解析stars.json的代码
-  // ✅ Parse stars list
-  // ✅ New param: brightnessJson
-  static void parseStars(String starsJson, String brightnessJson) {
-    // 1. Parse brightness map first (for fast lookup)
-    Map<String, List<int>> brightnessMap = {};
-    try {
-      if (brightnessJson.isNotEmpty) {
-        final Map<String, dynamic> rawMap = jsonDecode(brightnessJson);
-        // Cast dynamic to List<int>
-        rawMap.forEach((key, value) {
-          if (value is List) {
-            brightnessMap[key] = value.cast<int>();
-          }
-        });
-      }
-    } catch (e) {
-      ZiweiLogger.warn(
-        "Brightness table parsing failed (will use defaults)",
-        e,
-      );
-    }
-
-    // 2. Parse stars and inject brightness data
-    if (starsJson.trim().isEmpty) {
-      stars = [];
-      return;
-    }
-
-    try {
-      final List<dynamic> list = jsonDecode(starsJson);
-
-      // 🔥 Critical: Pass brightnessMap to fromJson
-      stars = list.map((e) {
-        return StaticStar.fromJson(e, brightnessMap);
-      }).toList();
-
-      ZiweiLogger.info("Loaded ${stars.length} stars (with brightness data)");
-
-      // 🔥 初始化 StarLocator 规则缓存
-      StarLocator.init(stars);
-    } catch (e, s) {
-      ZiweiLogger.error("Stars parsing failed", e, s);
-      stars = [];
-      throw FormatException("Stars JSON error: $e");
-    }
-  }
-
-  // ✅ 解析四化规则 (rules_sihua.json)
-  static void parseSiHua(String jsonStr) {
-    if (jsonStr.trim().isEmpty) return;
-
-    try {
-      final Map<String, dynamic> raw = jsonDecode(jsonStr);
-      siHuaRules.clear();
-
-      raw.forEach((ganKey, rules) {
-        // ganKey: "jia", "yi"...
-        final gan = TianGan.fromName(ganKey);
-        if (rules is Map<String, dynamic>) {
-          final Map<SiHuaType, String> ruleMap = {};
-          rules.forEach((sihuaKey, starKey) {
-            // sihuaKey: "lu", "quan"...
-            // ✅遇到未知类型直接抛异常，不再吞掉
-            final type = SiHuaType.fromJson(sihuaKey);
-            ruleMap[type] = starKey.toString();
-          });
-          siHuaRules[gan] = ruleMap;
-        }
-      });
-      ZiweiLogger.info("Loaded SiHua rules for ${siHuaRules.length} stems");
-    } catch (e, s) {
-      ZiweiLogger.error("SiHua rules parsing failed", e, s);
-    }
-  }
-
-  // ✅ 解析流曜定义 (flow_stars.json)
-  static void parseFlowStars(String jsonStr) {
-    if (jsonStr.trim().isEmpty) return;
-
-    try {
-      final List<dynamic> list = jsonDecode(jsonStr);
-      flowDefinitions = list.map((e) => FlowDefinition.fromJson(e)).toList();
-      ZiweiLogger.info("Loaded ${flowDefinitions.length} flow definitions");
-    } catch (e, s) {
-      ZiweiLogger.error("Flow definitions parsing failed", e, s);
-      flowDefinitions = [];
-    }
-  }
-
-  static void parseMasters(String jsonStr) {
-    if (jsonStr.trim().isEmpty) return;
-
-    try {
-      final Map<String, dynamic> raw = jsonDecode(jsonStr);
-
-      // 解析命主
-      if (raw.containsKey('ming_zhu')) {
-        final mz = raw['ming_zhu'];
-        final boundary = _parseBoundary(mz['boundary'] ?? 'lunar', 'ming_zhu boundary');
-        final Map<int, String> table = {};
-        (mz['table'] as Map<String, dynamic>).forEach((k, v) {
-          table[int.parse(k)] = v.toString();
-        });
-        mingZhuRule = MasterRule(boundary, table);
-      }
-
-      // 解析身主
-      if (raw.containsKey('shen_zhu')) {
-        final sz = raw['shen_zhu'];
-        final boundary = _parseBoundary(sz['boundary'] ?? 'lunar', 'shen_zhu boundary');
-        final Map<int, String> table = {};
-        (sz['table'] as Map<String, dynamic>).forEach((k, v) {
-          table[int.parse(k)] = v.toString();
-        });
-        shenZhuRule = MasterRule(boundary, table);
-      }
-
-      ZiweiLogger.info("Loaded Masters: MingZhu=${mingZhuRule?.table.length ?? 0}, ShenZhu=${shenZhuRule?.table.length ?? 0}");
-    } catch (e, s) {
-      ZiweiLogger.error("Masters parsing failed", e, s);
-      mingZhuRule = null;
-      shenZhuRule = null;
+        throw ArgumentError('❌ Invalid childhood_decade: $str');
     }
   }
 }

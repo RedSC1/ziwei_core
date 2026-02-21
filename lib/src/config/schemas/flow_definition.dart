@@ -16,9 +16,19 @@ class FlowDefinition {
   });
 
   factory FlowDefinition.fromJson(Map<String, dynamic> json) {
+    if (!json.containsKey('key')) {
+      throw FormatException(
+        'Flow stars JSON error: Missing required field "key". Raw data: $json',
+      );
+    }
+
+    final String key = json['key'] as String;
+
     // 1. 解析规则
     if (!json.containsKey('rule')) {
-      throw FormatException("Flow star ${json['key']} missing 'rule'");
+      throw FormatException(
+        'Flow stars JSON error: Flow star "$key" is missing the required "rule" object.',
+      );
     }
     final rule = StarRule.fromJson(json['rule']);
 
@@ -28,10 +38,6 @@ class FlowDefinition {
       brightnessTable = (json['brightness'] as List).cast<int>();
     }
 
-    return FlowDefinition(
-      key: json['key'] as String,
-      rule: rule,
-      brightness: brightnessTable,
-    );
+    return FlowDefinition(key: key, rule: rule, brightness: brightnessTable);
   }
 }
