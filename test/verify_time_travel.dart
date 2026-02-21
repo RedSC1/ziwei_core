@@ -9,7 +9,7 @@ void main() async {
   // 🚩 1. 接住这张“逻辑灵魂”说明书
   final options = await _loadConfig();
 
-  final birthday = DateTime(2025, 8, 16, 23, 30);
+  final birthday = DateTime(2003, 8, 28, 2, 30);
   
   print('🔨 正在初始化日期引擎 (Options: 早晚子=${options.splitRatHour})...');
   final ziweiDate = ZiweiDate.fromSolar(

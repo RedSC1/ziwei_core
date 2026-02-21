@@ -31,18 +31,41 @@ class ZiweiEngine {
     // 修正：从 ZiweiDate.lunar 获取 month 和 timeIndex
     // BaziCore.LunarDate has month, but we need timeIndex.
     // ZiweiDate has a getter for it.
+    // 1. 基准点：物理历法的绝对年月
+    int effectiveYear = date.lunar.lunarYear;
     int effectiveMonth = date.lunar.month;
+
+    // 🚀 终极归一化：天下哪有正常的 13 月？有就是闰腊月，直接打回 12！
+    if (effectiveMonth == 13) {
+      effectiveMonth = 12;
+    }
+
+    // 2. 核心：闰月推导规则
     if (date.lunar.isLeap) {
-      // 闰月处理规则 (Leap Rule) - 仅用于定命身宫
+      bool shouldAsNext = false;
+
       switch (calendarOptions.leapRule) {
         case LeapMonthRule.asNext:
-          effectiveMonth++;
+          shouldAsNext = true;
           break;
         case LeapMonthRule.splitAt15:
-          effectiveMonth += date.lunar.day > 15 ? 1 : 0;
+          shouldAsNext = date.lunar.day > 15;
           break;
-        default:
+        case LeapMonthRule.asPrevious:
+        //default:
+          shouldAsNext = false; 
           break;
+      }
+
+      // 3. 跨年进位
+      if (shouldAsNext) {
+        effectiveMonth++; 
+        
+        // 进位拦截：13 变正月，年份 +1
+        if (effectiveMonth > 12) {
+          effectiveMonth = 1;  
+          effectiveYear++;     
+        }
       }
     }
 
@@ -94,9 +117,10 @@ class ZiweiEngine {
       "ming": lifeIndex, // Ming Index
       "body": bodyIndex,
       "shen": bodyIndex, // Alias
+      "wuxingjv": elementBureau.name,//water2,wood3....
       // === 农历数据源 (Lunar Source) ===
       // [Index] 用于数值计算 (e.g. month offset)
-      "lunar_year_index": date.lunar.lunarYear, // e.g. 2024
+      "lunar_year_index": effectiveYear, // e.g. 2024
       "lunar_month": effectiveMonth - 1, // 0-based
       "effective_month": effectiveMonth - 1, // 用于 anchor_offset 规则
       "lunar_day": date.lunar.day - 1,
@@ -161,6 +185,8 @@ class ZiweiEngine {
       elementBureau: elementBureau,//五行局
       date: date,
       siHuaRules: ConfigLoader.siHuaRules,
+      effective_month: effectiveMonth,
+      effective_year: effectiveYear,
       // 初始化状态机
       yearMingIndex: null,
       monthMingIndex: null,

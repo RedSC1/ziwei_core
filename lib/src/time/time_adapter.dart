@@ -9,11 +9,13 @@ class TimeAdapter {
     CalendarOptions? options,
     Location? location,
     double timeZone = 8,
+    bool? useTrueSolarTime = true,
   }) {
 
 
     final opt = options ?? const CalendarOptions();
-    final loc = location ?? Location.beijing;
+    final loc = location ?? defaultLoc;//120N 30E
+    final utst = useTrueSolarTime ?? true;
 
     // 1. 使用 bazi_core 的 TimePack 封装时间计算
     // TimePack 会自动处理真太阳时、UTC 等
@@ -22,7 +24,7 @@ class TimeAdapter {
       location: loc, // 经纬度
       timezone: timeZone, // 时区
       splitByRatHour: opt.splitRatHour, // 是否早晚子时
-      useTrueSolarTime: true, // 默认使用真太阳时
+      useTrueSolarTime: utst, // 默认使用真太阳时
     );
 
     // 2. 使用 bazi_core 的 TimeAdaptor 计算八字
@@ -61,14 +63,14 @@ class TimeAdapter {
     int minute,   // 🚀 核心：精准分
     int second,   // 🚀 核心：精准秒
     bool isLeap,
-    Gender gender, {
+    Gender gender,{
     CalendarOptions? options,
     Location? location,
+    bool? useTrueSolarTime = true,
   }) {
     // 1. 构造 bazi_core 的 LunarDate 对象
     String monthName;
     
-    // 极致防御性编程 + 兼容民间叫法
     if (month == 1) {
       monthName = "正";
     } else if (month == 11) {
@@ -76,8 +78,6 @@ class TimeAdapter {
     } else if (month == 12) {
       monthName = "腊";
     } else {
-      // 这里的 "一" 是为了兼容 sxwnl 底层真有的那个字段
-      // 数组拉长到 13，完美包容所有历史奇葩历法
       const names = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二", "十三"];
       if (month > 0 && month < names.length) {
         monthName = names[month];
@@ -113,7 +113,7 @@ class TimeAdapter {
     );
 
     // 4. 递归调用 fromSolar，扔给底层算真太阳时
-    return fromSolar(solar, gender, options: options, location: location);
+    return fromSolar(solar, gender, options: options, location: location, useTrueSolarTime: useTrueSolarTime);
   }
 
 

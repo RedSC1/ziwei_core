@@ -10,7 +10,5 @@ export 'src/enums/config_enums.dart'; // Contains Gender, Boundary etc.
 export 'src/enums/scope.dart';
 export 'src/enums/star_enums.dart';
 export 'src/time/ziwei_date.dart'; // Exports BaZi/LunarDate/GanZhi from BaziCore
-
-// 🚀 Re-export core types from dependencies if needed
 export 'package:bazi_core/bazi_core.dart';
 export 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart' show AstroDateTime;

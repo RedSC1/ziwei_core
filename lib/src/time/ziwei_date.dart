@@ -39,7 +39,7 @@ class ZiweiDate {
   final BaZi bazi; // 八字
   final CalendarOptions options; // 历法选项
   final int solarDay; //上个节令后第几天
-  final Gender gender; // ✅ 新增：性别
+  final Gender gender; // 性别
 
   // 兼容旧版 getter：时辰索引
   int get timeIndex => bazi.time.zhi.index;
@@ -58,7 +58,7 @@ class ZiweiDate {
   /// 从阳历创建（支持 AstroDateTime 或 DateTime）。
   ///
   /// [dt] 输入时间。如果是 DateTime，会自动转为 AstroDateTime。
-  /// [location] 地理位置。如果不传，默认为北京。
+  /// [location] 地理位置。如果不传，默认为120N 30E。
   factory ZiweiDate.fromSolar(
     Object dt, {
     CalendarOptions? options,
@@ -82,7 +82,7 @@ class ZiweiDate {
     );
   }
 
-  // 2. Lunar 入口也改一下：
+  // 2. Lunar 入口
   factory ZiweiDate.fromLunar(
     int year,
     int month,
@@ -115,59 +115,93 @@ class ZiweiDate {
     return '阳: $solar\n阴: $lunar\n八: $bazi';
   }
 
+  /// 🛡️ 核心基石：获取排盘的“绝对有效年月” (包含跨年进位逻辑)
+  /// 使用 Dart 3 Record 语法同时返回年份和月份
+  ({int year, int month}) get _effectiveLunar {
+    int eYear = lunar.lunarYear;
+    int eMonth = lunar.month;
+
+    // 1. 终极归一化：防 13 月核弹
+    if (eMonth == 13) {
+      eMonth = 12;
+    }
+
+    // 2. 闰月处理
+    if (lunar.isLeap) {
+      bool shouldAsNext = false;
+      switch (options.leapRule) {
+        case LeapMonthRule.asNext:
+          shouldAsNext = true;
+          break;
+        case LeapMonthRule.splitAt15:
+          shouldAsNext = lunar.day > 15;
+          break;
+        case LeapMonthRule.asPrevious:
+        //default:
+          shouldAsNext = false;
+          break;
+      }
+
+      // 3. 触发进位与跨年
+      if (shouldAsNext) {
+        eMonth++;
+        if (eMonth > 12) {
+          eMonth = 1;
+          eYear++; 
+        }
+      }
+    }
+    return (year: eYear, month: eMonth);
+  }
+
   GanZhi getGanZhi(ZiweiScope scope, {Boundary? b}) {
     Boundary boundary = b ?? options.siHuaBasedOn;
+    
+    // 💥 关键点：拿到洗干净的绝对真理！
+    final effective = _effectiveLunar; 
+
     switch (scope) {
       case ZiweiScope.origin:
       case ZiweiScope.year:
         if (boundary == Boundary.lunar) {
-          // 1. 计算年干 (Year Stem)
-          // 公元4年是甲(0)，公式：(year - 4) % 10
-          // 必须处理公元前(负数)的情况
-          int stemIndex = (lunar.lunarYear - 4) % 10;
-          if (stemIndex < 0) stemIndex += 10; // 核心修复：防止负数索引
+          // ⚠️ 以前这里用的是 lunar.lunarYear，如果是闰腊月跨年就彻底算错八字了！
+          // 现在无脑用 effective.year，完美自洽！
+          int stemIndex = (effective.year - 4) % 10;
+          if (stemIndex < 0) stemIndex += 10;
 
-          // 2. 计算年支 (Year Branch)
-          // 公元4年是子(0)，公式：(year - 4) % 12
-          int branchIndex = (lunar.lunarYear - 4) % 12;
-          if (branchIndex < 0) branchIndex += 12; // 核心修复
+          int branchIndex = (effective.year - 4) % 12;
+          if (branchIndex < 0) branchIndex += 12;
 
           return GanZhi(TianGan.values[stemIndex], DiZhi.values[branchIndex]);
         } else {
           return bazi.year;
         }
+
       case ZiweiScope.month:
         if (boundary == Boundary.lunar) {
-          int virtualMonth = lunar.month;
-          if (lunar.isLeap) {
-            switch (options.leapRule) {
-              case LeapMonthRule.asNext:
-                virtualMonth++;
-              case LeapMonthRule.splitAt15:
-                if (lunar.day > 15) {
-                  virtualMonth++;
-                }
-              default:
-                break;
-            }
-          }
+          // 无脑使用 effective 属性，之前的 switch 垃圾代码全删了！
+          int eMonth = effective.month;
+          int eYear = effective.year;
+
           // 农历月干: 需要用“五虎遁”推算！
-          // 1. 先算农历年干索引
-          // 修正负数年份模运算
-          int yIdx = (lunar.lunarYear - 4) % 10;
+          // 1. 先算有效年干索引 (同样必须用 eYear，保证跨年时五虎遁不出错)
+          int yIdx = (eYear - 4) % 10;
           if (yIdx < 0) yIdx += 10;
 
           // 2. 算出正月(寅)的天干: (年干%5)*2 + 2
           int startStem = (yIdx % 5) * 2 + 2;
 
           // 3. 推算当前月的天干: 起点 + (月-1)
-          int mStemIdx = (startStem + (virtualMonth - 1)) % 10;
+          int mStemIdx = (startStem + (eMonth - 1)) % 10;
 
-          int mZhiIdx = (virtualMonth + 1) % 12;
+          // 4. 地支永远是 (月 + 1) % 12 (正月=寅=2)
+          int mZhiIdx = (eMonth + 1) % 12;
+
           return GanZhi(TianGan.values[mStemIdx], DiZhi.values[mZhiIdx]);
         } else {
           return bazi.month;
         }
+
       case ZiweiScope.day:
         return bazi.day;
       case ZiweiScope.hour:

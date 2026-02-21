@@ -14,6 +14,8 @@ class ZiWeiPlate {
   final FiveElementBureau elementBureau;
   final ZiweiDate date;
   final Map<TianGan, Map<SiHuaType, String>> siHuaRules;
+  final int effective_month;
+  final int effective_year;
 
   int? decadeMingIndex;
   int? smallLimitMingIndex;
@@ -28,12 +30,15 @@ class ZiWeiPlate {
     required this.elementBureau,
     required this.date,
     required this.siHuaRules,
+    required this.effective_month,
+    required this.effective_year,
     this.decadeMingIndex,
     this.smallLimitMingIndex,
     this.yearMingIndex,
     this.monthMingIndex,
     this.dayMingIndex,
     this.hourMingIndex,
+   
   });
 
   /// 核心查询方法：获取某一层级、某一角色的宫位
@@ -76,6 +81,8 @@ class ZiWeiPlate {
 
       // 3. 规则引用复制 (浅拷贝即可，因为规则是只读的)
       siHuaRules: siHuaRules,
+      effective_month: effective_month,
+      effective_year: effective_year,
 
       // 4. 状态指针复制
       decadeMingIndex: decadeMingIndex,

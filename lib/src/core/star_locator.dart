@@ -156,11 +156,6 @@ class StarLocator {
         if (gender == null) return 1; // 兜底顺行
 
         // 2. 获取当前上下文的年干 (用于定阴阳)
-        // Resolve key based on boundary
-        // Wait, _resolveKey logic handles key mappings.
-        // We need 'year_stem' resolved to 'lunar_year_stem' or 'solar_year_stem'
-        // based on boundary.
-        // Let's resolve 'year_stem' manually correctly here.
         final stemKey = _resolveKey('year_stem', boundary);
         final stemName = ctx[stemKey] as String?;
         if (stemName == null) return 1;
