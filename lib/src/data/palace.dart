@@ -1,8 +1,6 @@
-import 'package:bazi_core/bazi_core.dart';
-import 'package:ziwei_core/src/time/ziwei_date.dart';
 import 'package:ziwei_core/ziwei_core.dart';
 
-import 'star.dart'; // 引用星星定义
+// 引用星星定义
 
 class Palace {
   // 1. 地支索引 (0=子, 1=丑 ... 11=亥) - 这是死的，初始化后不可变

@@ -11,11 +11,12 @@ abstract class FlowLimit {
     return ganzhi.zhi.index;
   }
 }
+
 class Decade extends FlowLimit {
   @override
   final GanZhi ganzhi;
   final int startTime; // 起始岁数 (如 2 岁)
-  final int endTime;   // 结束岁数 (如 11 岁)
+  final int endTime; // 结束岁数 (如 11 岁)
   final PalaceRole role;
 
   static List<int> childHoodDecadeOffsetTable = [0, 4, 5, 2, 10, 8];
@@ -27,9 +28,9 @@ class Decade extends FlowLimit {
     if (index <= 0) {
       throw ArgumentError("大限索引必须从 1 开始。如果要看童限，请使用 Decade.childhood()");
     }
-    
+
     // 内部计算时，自动把 1-based 转回 0-based 偏移量
-    final int offset = index - 1; 
+    final int offset = index - 1;
 
     final birthYear = getEffectiveBirthYear(plate);
     final mingIndex = plate.originMingIndex;
@@ -43,7 +44,7 @@ class Decade extends FlowLimit {
     // 计算区间与宫位
     int startAge = bureauNum + (offset * 10);
     int endAge = startAge + 9;
-    int targetPalaceIndex = isClockwise 
+    int targetPalaceIndex = isClockwise
         ? ZiweiConsts.fixIndex(mingIndex + offset)
         : ZiweiConsts.fixIndex(mingIndex - offset);
 
@@ -63,11 +64,11 @@ class Decade extends FlowLimit {
     if (year < startDecadeYear) {
       // 这里的 index 绑定为 0
       int virtualAge = year - Decade.getEffectiveBirthYear(plate) + 1;
-      return Decade.createChildhood(virtualAge, plate); 
+      return Decade.createChildhood(virtualAge, plate);
     }
     // 加上 1，确保起运后的第一个十年对应 Index 1
     int decadeIndex = ((year - startDecadeYear) ~/ 10) + 1;
-    
+
     // 此时 decadeIndex 的范围是 1 ~ 12
     return Decade.fromIndex(decadeIndex, plate);
   }
@@ -90,14 +91,15 @@ class Decade extends FlowLimit {
 
     if (rule == ChildhoodRole.skip) {
       // 口诀跳跃派
-      int offset = (virtualAge >= 1 && virtualAge <= childHoodDecadeOffsetTable.length)
+      int offset =
+          (virtualAge >= 1 && virtualAge <= childHoodDecadeOffsetTable.length)
           ? childHoodDecadeOffsetTable[virtualAge - 1]
           : 0;
       targetPalaceIndex = ZiweiConsts.fixIndex(mingIndex - offset);
     } else {
       // 常规顺延派 (一年一格)
       int steps = virtualAge - 1;
-      targetPalaceIndex = isClockwise 
+      targetPalaceIndex = isClockwise
           ? ZiweiConsts.fixIndex(mingIndex + steps)
           : ZiweiConsts.fixIndex(mingIndex - steps);
     }
@@ -417,7 +419,7 @@ class LimitContext {
 
   /// 剥离某一层级 (Remove Layer)
   /// 返回一个新的 Context，其中指定的层级被移除 (置为 null)
- LimitContext remove(ZiweiScope scope) {
+  LimitContext remove(ZiweiScope scope) {
     switch (scope) {
       case ZiweiScope.origin:
         // 彻底重置，只留原局
@@ -437,7 +439,7 @@ class LimitContext {
         // 删了流年，月、日、时跟着一起消失（小限通常也一起消失，看你设计）
         return copyWith(
           year: null,
-          smallLimit: null, 
+          smallLimit: null,
           month: null,
           day: null,
           hour: null,
@@ -445,18 +447,11 @@ class LimitContext {
 
       case ZiweiScope.month:
         // 删了月，日、时也保不住
-        return copyWith(
-          month: null,
-          day: null,
-          hour: null,
-        );
+        return copyWith(month: null, day: null, hour: null);
 
       case ZiweiScope.day:
         // 删了日，时也就没了
-        return copyWith(
-          day: null,
-          hour: null,
-        );
+        return copyWith(day: null, hour: null);
 
       case ZiweiScope.hour:
         // 只删时辰，不影响上级
@@ -465,11 +460,9 @@ class LimitContext {
       case ZiweiScope.smallLimit:
         // 小限通常是独立的开关，可以单独删
         return copyWith(smallLimit: null);
-
-      default:
-        return this;
     }
   }
+
   @override
   String toString() {
     List<String> parts = [];
@@ -545,11 +538,16 @@ class TimeMachine {
       hour: flowHour,
     );
   }
+
   /// 场景：当用户在 UI 的大限列表里点选了某一个大限（0-11）
   /// 🛰️0=童限, 1=第一大限, 2=第二大限...
   /// [index] 索引
   /// [targetYear] 可选：如果是看童限(0)，需要知道具体哪一年的童限
-  static LimitContext travelByMacro(ZiWeiPlate plate, int index, {int? targetYear}) {
+  static LimitContext travelByMacro(
+    ZiWeiPlate plate,
+    int index, {
+    int? targetYear,
+  }) {
     Decade decade;
 
     if (index == 0) {

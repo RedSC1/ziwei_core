@@ -2,7 +2,6 @@ import 'package:ziwei_core/src/core/engine.dart';
 import 'package:ziwei_core/src/data/limit.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
-import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 /// 紫微流运状态管理器
@@ -13,7 +12,7 @@ import 'package:ziwei_core/src/time/ziwei_date.dart';
 /// 每次变动“大单位”时，会自动清除“小单位”的状态。例如调用 [addMonth]，
 /// 会清空 [day] 和 [hour] 的流运展示，防止旧时间的污染。
 class ZiweiLimitManager {
-  ZiWeiPlate _basePlate;
+  final ZiWeiPlate _basePlate;
 
   /// 基于“物理时间”步进时的流动时间锚点（如果要玩转 addDays 或 addHours）
   ZiweiDate? currentDate;

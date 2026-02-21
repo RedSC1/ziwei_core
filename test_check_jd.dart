@@ -1,5 +1,4 @@
 import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
-import 'package:sxwnl_spa_dart/src/sxwnl/ssq.dart';
 
 void main() {
   var ssq = SSQ();
@@ -15,7 +14,7 @@ void main() {
     var result1 = ssq.calcY(dt1.toJ2000());
     var result2 = ssq.calcY(dt2.toJ2000());
 
-    print("=== 公元${year}年 ===");
+    print("=== 公元$year年 ===");
     print("1月1日 月名: ${result1.ym}");
     print("6月15日 月名: ${result2.ym}");
     print("");

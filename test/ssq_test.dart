@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 
 import 'package:test/test.dart';
 import 'package:sxwnl_spa_dart/src/sxwnl/ssq.dart';

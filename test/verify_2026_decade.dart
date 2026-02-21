@@ -62,30 +62,36 @@ void main() async {
   print('-' * 40);
 
   // 打印各维度干支信息
-  if (context.hasDecade)
+  if (context.hasDecade) {
     print(
       '⏳ [大限]: ${context.decade!.ganzhi.gan.label}${context.decade!.ganzhi.zhi.label}',
     );
-  if (context.smallLimit != null)
+  }
+  if (context.smallLimit != null) {
     print(
       '👶 [小限]: ${context.smallLimit!.ganzhi.gan.label}${context.smallLimit!.ganzhi.zhi.label}',
     );
-  if (context.hasYear)
+  }
+  if (context.hasYear) {
     print(
       '🐎 [流年]: ${context.year!.ganzhi.gan.label}${context.year!.ganzhi.zhi.label}',
     );
-  if (context.month != null)
+  }
+  if (context.month != null) {
     print(
       '🌙 [流月]: ${context.month!.ganzhi.gan.label}${context.month!.ganzhi.zhi.label}',
     );
-  if (context.day != null)
+  }
+  if (context.day != null) {
     print(
       '☀️ [流日]: ${context.day!.ganzhi.gan.label}${context.day!.ganzhi.zhi.label}',
     );
-  if (context.hour != null)
+  }
+  if (context.hour != null) {
     print(
       '⏰ [流时]: ${context.hour!.ganzhi.gan.label}${context.hour!.ganzhi.zhi.label}',
     );
+  }
   print('-' * 60);
 
   // 6. 遍历打印 12 宫
@@ -107,22 +113,28 @@ void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
   );
 
   if (palace.index == plate.bodyPalaceIndex) roles.add("身宫");
-  if (plate.decadeMingIndex != null)
+  if (plate.decadeMingIndex != null) {
     roles.add(
       _calculateRelativeName(plate.decadeMingIndex!, palace.index, "大"),
     );
-  if (plate.smallLimitMingIndex != null)
+  }
+  if (plate.smallLimitMingIndex != null) {
     roles.add(
       _calculateRelativeName(plate.smallLimitMingIndex!, palace.index, "小"),
     );
-  if (plate.yearMingIndex != null)
+  }
+  if (plate.yearMingIndex != null) {
     roles.add(_calculateRelativeName(plate.yearMingIndex!, palace.index, "年"));
-  if (plate.monthMingIndex != null)
+  }
+  if (plate.monthMingIndex != null) {
     roles.add(_calculateRelativeName(plate.monthMingIndex!, palace.index, "月"));
-  if (plate.dayMingIndex != null)
+  }
+  if (plate.dayMingIndex != null) {
     roles.add(_calculateRelativeName(plate.dayMingIndex!, palace.index, "日"));
-  if (plate.hourMingIndex != null)
+  }
+  if (plate.hourMingIndex != null) {
     roles.add(_calculateRelativeName(plate.hourMingIndex!, palace.index, "时"));
+  }
 
   final roleStr = "(${roles.join("/")})";
 
@@ -146,38 +158,47 @@ void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
 
         // 3. 多维四化 (原/向心/自化/大/小/年/月/日/时)
         if (star is StaticStar) {
-          if (star.siHuaBuff[ZiweiScope.origin] != null)
+          if (star.siHuaBuff[ZiweiScope.origin] != null) {
             sb.write(
               "{生${_t("sihua_${star.siHuaBuff[ZiweiScope.origin]!.name}")}}",
             );
-          if (star.centripetalSiHua != null)
+          }
+          if (star.centripetalSiHua != null) {
             sb.write("[向心${_t("sihua_${star.centripetalSiHua!.name}")}]");
-          if (star.selfSiHua != null)
+          }
+          if (star.selfSiHua != null) {
             sb.write("[自化${_t("sihua_${star.selfSiHua!.name}")}]");
-          if (star.siHuaBuff[ZiweiScope.decade] != null)
+          }
+          if (star.siHuaBuff[ZiweiScope.decade] != null) {
             sb.write(
               "{大${_t("sihua_${star.siHuaBuff[ZiweiScope.decade]!.name}")}}",
             );
-          if (star.siHuaBuff[ZiweiScope.smallLimit] != null)
+          }
+          if (star.siHuaBuff[ZiweiScope.smallLimit] != null) {
             sb.write(
               "{小${_t("sihua_${star.siHuaBuff[ZiweiScope.smallLimit]!.name}")}}",
             );
-          if (star.siHuaBuff[ZiweiScope.year] != null)
+          }
+          if (star.siHuaBuff[ZiweiScope.year] != null) {
             sb.write(
               "{年${_t("sihua_${star.siHuaBuff[ZiweiScope.year]!.name}")}}",
             );
-          if (star.siHuaBuff[ZiweiScope.month] != null)
+          }
+          if (star.siHuaBuff[ZiweiScope.month] != null) {
             sb.write(
               "{月${_t("sihua_${star.siHuaBuff[ZiweiScope.month]!.name}")}}",
             );
-          if (star.siHuaBuff[ZiweiScope.day] != null)
+          }
+          if (star.siHuaBuff[ZiweiScope.day] != null) {
             sb.write(
               "{日${_t("sihua_${star.siHuaBuff[ZiweiScope.day]!.name}")}}",
             );
-          if (star.siHuaBuff[ZiweiScope.hour] != null)
+          }
+          if (star.siHuaBuff[ZiweiScope.hour] != null) {
             sb.write(
               "{时${_t("sihua_${star.siHuaBuff[ZiweiScope.hour]!.name}")}}",
             );
+          }
         }
 
         // 4. 流曜角标分类

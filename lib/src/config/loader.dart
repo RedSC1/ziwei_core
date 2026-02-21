@@ -379,8 +379,9 @@ class ConfigLoader {
   ) {
     if (!map.containsKey(key)) throw ArgumentError('❌ Missing field: $key');
     final val = map[key];
-    if (val is! Map<String, dynamic>)
+    if (val is! Map<String, dynamic>) {
       throw ArgumentError('field "$key" must be Object');
+    }
     return val;
   }
 

@@ -1,8 +1,5 @@
 import 'package:test/test.dart';
 import 'package:ziwei_core/ziwei_core.dart';
-import 'package:ziwei_core/src/config/schemas/star_rule.dart';
-import 'package:ziwei_core/src/enums/config_enums.dart';
-import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 
 void main() {
   group('ConfigLoader Ruleset Overrides', () {

@@ -84,16 +84,19 @@ void _printPalaceInfo(ZiWeiPlate plate, Palace palace) {
 
         // 四化标记
         if (s is StaticStar) {
-          if (s.siHuaBuff[ZiweiScope.origin] != null)
+          if (s.siHuaBuff[ZiweiScope.origin] != null) {
             sb.write(
               "{生${_t("sihua_${s.siHuaBuff[ZiweiScope.origin]!.name}")}}",
             );
-          if (s.siHuaBuff[ZiweiScope.decade] != null)
+          }
+          if (s.siHuaBuff[ZiweiScope.decade] != null) {
             sb.write(
               "{大${_t("sihua_${s.siHuaBuff[ZiweiScope.decade]!.name}")}}",
             );
-          if (s.siHuaBuff[ZiweiScope.year] != null)
+          }
+          if (s.siHuaBuff[ZiweiScope.year] != null) {
             sb.write("{流${_t("sihua_${s.siHuaBuff[ZiweiScope.year]!.name}")}}");
+          }
         }
 
         // 流曜标记
@@ -158,21 +161,6 @@ String _getSiHuaStr(TianGan gan, ZiweiRuleset ruleset) {
   final rules = ruleset.siHuaRules[gan];
   if (rules == null) return "未知";
   return "${rules[SiHuaType.lu]}禄 ${rules[SiHuaType.quan]}权 ${rules[SiHuaType.ke]}科 ${rules[SiHuaType.ji]}忌";
-}
-
-String _getBureauLabel(FiveElementBureau bureau) {
-  switch (bureau) {
-    case FiveElementBureau.water2:
-      return "水二局";
-    case FiveElementBureau.wood3:
-      return "木三局";
-    case FiveElementBureau.metal4:
-      return "金四局";
-    case FiveElementBureau.earth5:
-      return "土五局";
-    case FiveElementBureau.fire6:
-      return "火六局";
-  }
 }
 
 String _getBrightnessLabel(int level) {
