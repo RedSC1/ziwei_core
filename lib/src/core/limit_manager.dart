@@ -4,13 +4,15 @@ import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
-/// 紫微流运状态管理器
+/// **紫微流运状态管理器 (Limit Manager)**
 ///
-/// 封装了底层的 [ZiWeiPlate] 与 [LimitContext]，提供简单的 API 进行时间推演。
-/// 核心思想：通过改变内部的 [ZiweiDate] 或大限索引，然后自动重新计算上下文。
+/// 封装了底层的 [ZiWeiPlate] 与 [LimitContext]，提供简洁且一致的 API 进行时间推演。
+/// 核心思想：通过改变内部的 [ZiweiDate] 或大限索引，然后自动重新计算流年、流月、流日、流时上下文。
 ///
-/// 每次变动“大单位”时，会自动清除“小单位”的状态。例如调用 [addMonth]，
-/// 会清空 [day] 和 [hour] 的流运展示，防止旧时间的污染。
+/// ---
+/// ### 🌊 瀑布式层级清理机制
+/// 每次变动**“大单位”**时间时，引擎会自动清除所有的**“小单位”**附着状态。
+/// 例如：调用 `addMonth()` 切换流月，会自动清空 `day` 和 `hour` 的流运展示，防止旧时间的污染，保持盘面干净。
 class ZiweiLimitManager {
   final ZiWeiPlate _basePlate;
 
@@ -34,7 +36,10 @@ class ZiweiLimitManager {
 
   // --- 大限控制 (Decade) ---
 
-  /// 切换到指定的大限索引（0:童限, 1:第一大限, ...）
+  /// 切入指定大限，重置流年流月
+  ///
+  /// - [index] 目标大限的绝对索引 (0:童限, 1:第一大限, ...)
+  /// - [targetChildhoodYear] (可选) 若查看童限 (0)，需提供具体看哪一年的童限以推算流年
   void setDecadeIndex(int index, {int? targetChildhoodYear}) {
     _currentContext = TimeMachine.travelByMacro(
       _basePlate,
@@ -50,12 +55,16 @@ class ZiweiLimitManager {
 
   // --- 物理时间驱动推演 (Year, Month, Day, Hour) ---
 
-  /// 初始化进入某一个流年
+  /// 初始化进入某一个流年 (同时清空以下流月流日等)
+  ///
+  /// - [year] 目标物理属性年份 (如 `2024`)
   void setYear(int year) {
     _currentContext = TimeMachine.travel(_basePlate, year: year);
   }
 
-  /// 年份跳转 (会清除流月、日、时)
+  /// 按年份幅度跨越跳转 (同时清除流月、日、时)
+  ///
+  /// - [delta] 偏移跨幅，如 `1` 表示明年起运，`-2` 表示两年前
   void addYear(int delta) {
     if (!_currentContext.hasYear) {
       // 没有任何流年，无法加减。默认以现在的农历年为准也可，但按规范应当先 setYear
@@ -65,8 +74,9 @@ class ZiweiLimitManager {
     setYear(newYear);
   }
 
-  /// 进入/跳转流月 (1-12)。会清除流日、时。
-  /// (传入的 month 是农历正月=1)
+  /// 绝对切入指定农历流月 (会清除流日、流时)
+  ///
+  /// - [month] 农历正向月份 (正月: `1`, 腊月: `12`)
   void setMonth(int month) {
     if (!_currentContext.hasYear) return;
 
@@ -78,6 +88,10 @@ class ZiweiLimitManager {
     );
   }
 
+  /// 按照相对幅度切分月份 (如前两个月、后四个月)
+  ///
+  /// 💡 当前的简单进位逻辑会忽略真实的闰月物理跳跃，纯粹推演逻辑月。若要推算真实的物理历法跨越，请使用`addDuration()`
+  /// - [delta] 月份漂移量 (正数往后，负数往前)
   void addMonth(int delta) {
     if (!_currentContext.hasMonth || !_currentContext.hasYear) return;
 
@@ -102,8 +116,13 @@ class ZiweiLimitManager {
     );
   }
 
-  /// 进入流日。这里要求提供这一天的日干支，因为农历大小月复杂，管理器本身不含有物理时钟。
-  /// 如果使用者使用的是完整的 ZiweiDate API 进行时间迭代，请直接使用外部工具计算后传入。
+  /// 显式切入流日结构
+  ///
+  /// 这里要求显式提供这一天的日柱干支，因为农历大小月复杂，且本管理器逻辑链上不维护物理时钟。
+  /// （若要更省心的日历跳转，请考虑使用 `setPhysicalDate()`）
+  ///
+  /// - [day] 农历物理初几
+  /// - [dayGanZhi] 计算出来的真正物理当天的日柱干支
   void setDay(int day, GanZhi dayGanZhi) {
     if (!_currentContext.hasMonth) return;
 
@@ -116,7 +135,9 @@ class ZiweiLimitManager {
     );
   }
 
-  /// 进入流时 (0=子, 1=丑).
+  /// 切入流时阶段
+  ///
+  /// - [hourIndex] 流时的硬装地支绝对索引 (0:子, 1:丑...)
   void setHour(int hourIndex) {
     if (!_currentContext.hasDay) return;
 
@@ -147,7 +168,11 @@ class ZiweiLimitManager {
   // 就像用户指出的，依靠整数 +1 跨月、跨日、早晚子时切分会遇到历法逻辑死角。
   // 通过向底层 SolarTime 加入 Duration，重新过一遍八字引擎，能完美化解一切闰月/交截点！
 
-  /// 以给定的 DateTime 为基准，自动解析包含年月日时的完整流运状态。
+  /// 核心魔法：以给定的绝对物理 DateTime 为基准，自动解析并重构出此时天地相交的完整流运切片
+  ///
+  /// 它会自动考虑原盘传承的所有“真太阳时配置、早晚子配置、地理经纬度偏差”。
+  ///
+  /// - [time] 需要推演探勘的当前地球时刻
   void setPhysicalDate(DateTime time) {
     // 1. 利用引擎彻底解析这个时间点，自动处理早晚子时、真太阳时等
     currentDate = ZiweiDate.fromSolar(
@@ -161,7 +186,11 @@ class ZiweiLimitManager {
     _rebuildContextFromCurrentDate();
   }
 
-  /// 物理时间前进或倒退（完美支持“下一个时辰”、“下一天”）
+  /// 基于当前停泊的物理时刻，做基于绝对真实物理的增量滑动推演。
+  ///
+  /// 相比基于数字的大限增减，这是完美无视历法盲区 (闰腊月等) 的“终极解决手段”。
+  ///
+  /// - [duration] 标准时间偏移量对象 (`Duration`)
   void addDuration(Duration duration) {
     if (currentDate == null) {
       // 如果没有抛锚真实时间，默认从“现在”开始流动
@@ -179,15 +208,16 @@ class ZiweiLimitManager {
   /// 封装：上一天
   void previousDay() => addDuration(const Duration(days: -1));
 
-  /// 封装：下一个时辰 (绝对物理推演)
-  /// 如果只简单加2小时，当处于 23:30 (晚子) 时加 2 小时会变成 01:30 (丑时)，直接跳过了 00:30 (早子时)！
-  /// 为了绝对精准，我们将首先计算出目前的“时辰正中央时点”，然后再加 2 小时，绝对落在下一个时区的正中心。
+  /// 以精准中心推演法则跨入下一个时辰
+  ///
+  /// 💡 防止出现晚子时（23:30）被简单相加推入下个错误时辰丑时（01:30）跳过早子时的历法特例：
+  /// 该方法会强制回归当前时辰的“精准中轴点”，向下一跃两小时，直击靶心！
   void nextHour() {
     if (currentDate == null) return nextDay();
     _snapToTargetHourOffset(2);
   }
 
-  /// 封装：上一个时辰 (绝对物理推演)
+  /// 以精准中心推演法则归隐上一个时辰
   void previousHour() {
     if (currentDate == null) return previousDay();
     _snapToTargetHourOffset(-2);

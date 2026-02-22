@@ -42,6 +42,18 @@ class CalendarOptions {
     this.flowLimitBasedOn = Boundary.lunar,
     this.enableHistorical = true, // 默认启用
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'splitRatHour': splitRatHour,
+      'leapRule': leapRule.name,
+      'wuHuDunBasedOn': wuHuDunBasedOn.name,
+      'siHuaBasedOn': siHuaBasedOn.name,
+      'childhoodRule': childhoodRule.name,
+      'flowLimitBasedOn': flowLimitBasedOn.name,
+      'enableHistorical': enableHistorical,
+    };
+  }
 }
 
 /// **紫微基底日期对象 (Ziwei Date)**
@@ -162,6 +174,41 @@ class ZiweiDate {
   @override
   String toString() {
     return '阳: $solar\n阴: $lunar\n八: $bazi';
+  }
+
+  /// 序列化基底排盘时刻结构
+  ///
+  /// 将时间包、八字结构、地理坐标降维打击为通用 JSON Map
+  Map<String, dynamic> toJson() {
+    return {
+      'solar': {
+        'year': solar.year,
+        'month': solar.month,
+        'day': solar.day,
+        'hour': solar.hour,
+        'minute': solar.minute,
+        'second': solar.second,
+      },
+      'lunar': {
+        'year': lunar.lunarYear, // lunarYear 不是 solar year
+        'month': lunar.month,
+        'day': lunar.day,
+        'isLeap': lunar.isLeap,
+      },
+      'bazi': {
+        'year': bazi.year.toString(),
+        'month': bazi.month.toString(),
+        'day': bazi.day.toString(),
+        'time': bazi.time.toString(),
+      },
+      'location': {
+        'longitude': location.longitude,
+        'latitude': location.latitude,
+      },
+      'gender': gender.name,
+      'timeZone': timeZone,
+      'options': options.toJson(),
+    };
   }
 
   /// 🛡️ 核心基石：获取排盘的“绝对有效年月” (包含跨年进位逻辑)

@@ -17,6 +17,15 @@ abstract class Star {
   ///
   /// 用于在大限/流年排盘时深拷贝对象，防止流运状态污染原盘数据。
   Star clone();
+
+  /// 序列化该星曜的状态视图
+  ///
+  /// - [brightnessLabels]: 全局亮度字典，用于将内部数字转为 `miao`, `wang` 等 key
+  /// - [branch]: 当前星曜所处的宫位地支，用于推算亮度
+  Map<String, dynamic> toJson({
+    required Map<int, String> brightnessLabels,
+    required DiZhi branch,
+  });
 }
 
 /// **固态星曜 (Static Star)**
@@ -65,6 +74,46 @@ class StaticStar extends Star {
   /// - [branch]: 目标查询的宫位地支
   int getBrightness(DiZhi branch) {
     return brightnessTable[branch.index];
+  }
+
+  @override
+  Map<String, dynamic> toJson({
+    required Map<int, String> brightnessLabels,
+    required DiZhi branch,
+  }) {
+    final Map<String, dynamic> res = {'key': key, 'type': type.name};
+
+    // 1. 亮度映射 (如果是 -1 或者字典没覆盖则忽略该字段)
+    final bIndex = getBrightness(branch);
+    if (bIndex != -1 && brightnessLabels.containsKey(bIndex)) {
+      res['brightness'] = brightnessLabels[bIndex];
+    }
+
+    // 2. 四化映射 (如果有 selfSiHua 或 siHuaBuff 里有针对自身的叠加四化，统一展平)
+    final Map<String, String> sihuaMap = {};
+
+    // 叠加流运四化 (生年四化、大限四化等，都在 siHuaBuff 里，由对应的 scope 作为 key)
+    if (siHuaBuff.isNotEmpty) {
+      siHuaBuff.forEach((scope, type) {
+        sihuaMap[scope.name] = type.name;
+      });
+    }
+
+    // 离心自化 (本宫宫干引发，落入本宫)
+    if (selfSiHua != null) {
+      sihuaMap['centrifugal'] = selfSiHua!.name;
+    }
+
+    // 向心自化 (对宫宫干引发，落入本宫)
+    if (centripetalSiHua != null) {
+      sihuaMap['centripetal'] = centripetalSiHua!.name;
+    }
+
+    if (sihuaMap.isNotEmpty) {
+      res['sihua'] = sihuaMap;
+    }
+
+    return res;
   }
 
   /// 引擎核心装载器：从预配置的数据字典里组装出这颗星星的实体
@@ -145,5 +194,24 @@ class FlowStar extends Star {
   @override
   FlowStar clone() {
     return FlowStar(key: key, brightnessTable: brightnessTable, scope: scope);
+  }
+
+  @override
+  Map<String, dynamic> toJson({
+    required Map<int, String> brightnessLabels,
+    required DiZhi branch,
+  }) {
+    final Map<String, dynamic> res = {
+      'key': key,
+      'type': type.name,
+      'scope': scope.name,
+    };
+
+    final bIndex = getBrightness(branch);
+    if (bIndex != -1 && brightnessLabels.containsKey(bIndex)) {
+      res['brightness'] = brightnessLabels[bIndex];
+    }
+
+    return res;
   }
 }

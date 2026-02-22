@@ -155,6 +155,17 @@ class Decade extends FlowLimit {
   static int getStartDecadeYear(ZiWeiPlate plate) {
     return getEffectiveBirthYear(plate) + (plate.elementBureau.number - 1);
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': 'decade',
+      'stem': ganzhi.gan.name,
+      'branch': ganzhi.zhi.name,
+      'role': role.name,
+      'startTime': startTime,
+      'endTime': endTime,
+    };
+  }
 }
 
 /// **流年 (一年流运)**
@@ -188,6 +199,16 @@ class FlowYear extends FlowLimit {
     DiZhi branch = DiZhi.values[placeIndex];
     PalaceRole r = plate.getRole(ZiweiScope.origin, placeIndex);
     return FlowYear(GanZhi(stem, branch), year, r);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': 'flow_year',
+      'stem': ganzhi.gan.name,
+      'branch': ganzhi.zhi.name,
+      'role': role.name,
+      'year': year,
+    };
   }
 }
 
@@ -259,6 +280,16 @@ class FlowMonth extends FlowLimit {
 
     // 构造混合干支 (Hybrid GanZhi): 时间天干 + 宫位地支
     return FlowMonth(GanZhi(monthStem, palaceBranch), month, r);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': 'flow_month',
+      'stem': ganzhi.gan.name,
+      'branch': ganzhi.zhi.name,
+      'role': role.name,
+      'month': month,
+    };
   }
 }
 
@@ -336,6 +367,16 @@ class SmallLimit extends FlowLimit {
     // 注意：这里用的是 targetPalace.ganzhi，也就是原盘那个宫位的干支
     return SmallLimit(targetPalace.ganzhi, virtualAge, r);
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': 'small_limit',
+      'stem': ganzhi.gan.name,
+      'branch': ganzhi.zhi.name,
+      'role': role.name,
+      'virtualAge': age,
+    };
+  }
 }
 
 /// **流日 (一日流运)**
@@ -395,6 +436,16 @@ class FlowDay extends FlowLimit {
     GanZhi hybridGanZhi = GanZhi(dayGanZhi.gan, palaceBranch);
 
     return FlowDay(hybridGanZhi, day, r);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': 'flow_day',
+      'stem': ganzhi.gan.name,
+      'branch': ganzhi.zhi.name,
+      'role': role.name,
+      'day': day,
+    };
   }
 }
 
@@ -457,6 +508,16 @@ class FlowHour extends FlowLimit {
     PalaceRole r = plate.getRole(ZiweiScope.origin, targetIndex);
 
     return FlowHour(GanZhi(hourStem, palaceBranch), hourIndex, r);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': 'flow_hour',
+      'stem': ganzhi.gan.name,
+      'branch': ganzhi.zhi.name,
+      'role': role.name,
+      'hourIndex': hourIndex,
+    };
   }
 }
 
@@ -584,7 +645,23 @@ class LimitContext {
     if (month != null) parts.add("流月: ${month!.ganzhi} (${month!.month}月)");
     if (day != null) parts.add("流日: ${day!.ganzhi} (${day!.day}日)");
     if (hour != null) parts.add("流时: ${hour!.ganzhi} (${hour!.hourIndex}时)");
+    if (hour != null) parts.add("流时: ${hour!.ganzhi} (${hour!.hourIndex}时)");
     return parts.isEmpty ? "原盘状态" : parts.join(" | ");
+  }
+
+  /// 序列化当前所有的流运状态切片游标
+  ///
+  /// 注意：这里**只**输出流运时间结构的坐标参数，不重复输出庞大的 `plate`
+  /// 使得上层组装时可以把原盘和 LimitContext 当作两个平级的块进行组合。
+  Map<String, dynamic> toJson() {
+    return {
+      if (decade != null) 'decade': decade!.toJson(),
+      if (smallLimit != null) 'small_limit': smallLimit!.toJson(),
+      if (year != null) 'flow_year': year!.toJson(),
+      if (month != null) 'flow_month': month!.toJson(),
+      if (day != null) 'flow_day': day!.toJson(),
+      if (hour != null) 'flow_hour': hour!.toJson(),
+    };
   }
 }
 

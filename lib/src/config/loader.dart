@@ -17,7 +17,10 @@ class MasterRule {
 }
 
 class ConfigLoader {
-  /// 获取自带的默认排盘规则集
+  /// **获取系统内置的默认排盘规则集 (Default Ruleset)**
+  ///
+  /// 返回引擎打包时内建的这套星曜坐标、四化字典及流年流动设定。
+  /// 对于常规排盘，开发者只需调用此方法即可。
   static ZiweiRuleset getDefault() {
     return createRuleset(
       starsJson: DefaultJsons.stars,
@@ -29,7 +32,20 @@ class ConfigLoader {
     );
   }
 
-  /// 在已有规则集的基础上，仅覆盖指定的部分配置
+  /// **局部覆盖并派生自定义规则集 (Override Ruleset)**
+  ///
+  /// 这个方法是你能够介入引擎，改变星曜布星、四化等核心逻辑或文字显示的**唯一合法入口**。
+  ///
+  /// 💡 你只需要传入你**想改变的那一部分**的 JSON 字符串即可。引擎会自动用你的配置做热补丁覆盖，
+  /// 对于那些你没有传的字段，它依然会沿用 `baseRuleset` 也就是系统原版的逻辑。这相当于做了一次 "Deep Merge"。
+  ///
+  /// - [baseRuleset] 基准规则集，通常传入 `ConfigLoader.getDefault()` 的结果
+  /// - [starsJson] (可选) 新的安星规矩定义 `stars.json`
+  /// - [brightnessJson] (可选) 新的各宫亮度定义 `brightness.json`
+  /// - [sihuaJson] (可选) 新的四化演变规则 `sihua.json`
+  /// - [flowJson] (可选) 新的流运规则定义 `flow_stars.json`
+  /// - [mainRulesJson] (可选) 新的引擎整体历法运行配制 `main_rules.json`
+  /// - [mastersJson] (可选) 新的命主身主起例配制 `masters.json`
   static ZiweiRuleset overrideWith(
     ZiweiRuleset baseRuleset, {
     String? starsJson,
@@ -193,7 +209,7 @@ class ConfigLoader {
       }
     }
 
-    return ZiweiRuleset(
+    final ruleset = ZiweiRuleset(
       stars: stars,
       flowDefinitions: flowDefinitions,
       brightnessLabels: brightnessLabels,
@@ -202,9 +218,23 @@ class ConfigLoader {
       mingZhuRule: mingZhuRule,
       shenZhuRule: shenZhuRule,
     );
+
+    _validateBrightnessDependencies(ruleset);
+
+    return ruleset;
   }
 
-  /// [核心底层方法]：使用全量 JSON 直接创建全新规则集
+  /// **直接由原生大JSON全量装载一套完整的引擎规则集**
+  ///
+  /// 此方法常用于开发者想要完全摒弃自带的默认规则，不借助 `overrideWith` 差异覆盖，
+  /// 而是从零开始注入所有的排盘算法数据。
+  ///
+  /// - [starsJson] `stars.json`
+  /// - [brightnessJson] `brightness.json` (可选)
+  /// - [sihuaJson] `sihua.json`
+  /// - [flowJson] `flow_stars.json`
+  /// - [mainRulesJson] `main_rules.json`
+  /// - [mastersJson] `masters.json` (可选)
   static ZiweiRuleset createRuleset({
     required String starsJson,
     String? brightnessJson,
@@ -312,7 +342,7 @@ class ConfigLoader {
       }
     }
 
-    return ZiweiRuleset(
+    final ruleset = ZiweiRuleset(
       stars: stars,
       flowDefinitions: flowDefinitions,
       brightnessLabels: brightnessLabels,
@@ -321,6 +351,10 @@ class ConfigLoader {
       mingZhuRule: mingZhuRule,
       shenZhuRule: shenZhuRule,
     );
+
+    _validateBrightnessDependencies(ruleset);
+
+    return ruleset;
   }
 
   static CalendarOptions _parseCalendarOptions(
@@ -431,6 +465,39 @@ class ConfigLoader {
         return ChildhoodRole.regular;
       default:
         throw ArgumentError('❌ Invalid childhood_decade: $str');
+    }
+  }
+
+  /// 内部校验器：确保每一颗星曜身上的亮度数字，在当前的规则集下都合法存在（-1 除外）
+  static void _validateBrightnessDependencies(ZiweiRuleset ruleset) {
+    if (ruleset.brightnessLabels.isEmpty) {
+      ZiweiLogger.warn(
+        "Brightness labels are empty. Ensure main_rules.json defines them.",
+      );
+    }
+
+    final validKeys = ruleset.brightnessLabels.keys.toList();
+
+    // 1. 校验所有的静态星曜
+    for (var star in ruleset.stars) {
+      for (var b in star.brightnessTable) {
+        if (b != -1 && !validKeys.contains(b)) {
+          throw FormatException(
+            "💥 Validation Error: StaticStar '${star.key}' uses an undefined brightness value '$b'. Defined labels are: $validKeys",
+          );
+        }
+      }
+    }
+
+    // 2. 校验所有的流运星曜
+    for (var flow in ruleset.flowDefinitions) {
+      for (var b in flow.brightness) {
+        if (b != -1 && !validKeys.contains(b)) {
+          throw FormatException(
+            "💥 Validation Error: FlowStar '${flow.key}' uses an undefined brightness value '$b'. Defined labels are: $validKeys",
+          );
+        }
+      }
     }
   }
 }

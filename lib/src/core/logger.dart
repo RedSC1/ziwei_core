@@ -1,13 +1,14 @@
 /// 日志级别
-enum ZiweiLogLevel {
-  debug,
-  info,
-  warning,
-  error,
-}
+enum ZiweiLogLevel { debug, info, warning, error }
 
 /// 日志回调函数定义
-typedef ZiweiLogCallback = void Function(ZiweiLogLevel level, String message, [Object? error, StackTrace? stackTrace]);
+typedef ZiweiLogCallback =
+    void Function(
+      ZiweiLogLevel level,
+      String message, [
+      Object? error,
+      StackTrace? stackTrace,
+    ]);
 
 /// 核心日志代理类
 ///

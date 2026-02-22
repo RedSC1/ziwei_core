@@ -146,6 +146,7 @@ class LookupShiftRule extends StarRule {
     );
   }
 }
+
 //规则D直接偏移
 class ConstantRule extends StarRule {
   final int value;
@@ -153,9 +154,7 @@ class ConstantRule extends StarRule {
   ConstantRule({required this.value}) : super(StarRuleType.constant);
 
   factory ConstantRule.fromJson(Map<String, dynamic> json) {
-    return ConstantRule(
-      value: (json['value'] as num?)?.toInt() ?? 0,
-    );
+    return ConstantRule(value: (json['value'] as num?)?.toInt() ?? 0);
   }
 }
 
@@ -164,10 +163,8 @@ class PipelineRule extends StarRule {
   final List<StarRule> steps; // 🔥 里面全是继承自 StarRule 的兄弟姐妹
   final Boundary boundary;
 
-  PipelineRule({
-    required this.steps,
-    required this.boundary,
-  }) : super(StarRuleType.pipeline);
+  PipelineRule({required this.steps, required this.boundary})
+    : super(StarRuleType.pipeline);
 
   factory PipelineRule.fromJson(Map<String, dynamic> json) {
     final boundaryStr = json['boundary'] as String? ?? 'lunar';
@@ -182,9 +179,6 @@ class PipelineRule extends StarRule {
       return StarRule.fromJson(stepJson as Map<String, dynamic>);
     }).toList();
 
-    return PipelineRule(
-      steps: parsedSteps,
-      boundary: boundary,
-    );
+    return PipelineRule(steps: parsedSteps, boundary: boundary);
   }
 }

@@ -3,6 +3,7 @@ export 'src/config/loader.dart';
 export 'src/config/ruleset.dart';
 export 'src/core/engine.dart';
 export 'src/core/limit_manager.dart'; // [NEW] Export Flow State Manager
+export 'src/core/timeline_provider.dart'; // [NEW] Export UI Timeline Generator
 export 'src/data/limit.dart';
 export 'src/data/palace.dart';
 export 'src/data/plate.dart';

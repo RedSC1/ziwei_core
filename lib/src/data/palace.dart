@@ -112,4 +112,34 @@ class Palace {
 
   /// 提取宫内一切星星的扁平数组列表
   List<Star> get allStars => stars.values.expand((e) => e).toList();
+
+  /// 序列化该宫位的状态视图
+  ///
+  /// - [brightnessLabels] 全局亮度字典，透传给星曜用以外推亮度 key
+  Map<String, dynamic> toJson({required Map<int, String> brightnessLabels}) {
+    final Map<String, dynamic> res = {'index': index, 'branch': branch.name};
+
+    if (stem != null) {
+      res['stem'] = stem!.name;
+    }
+
+    // 递归序列化所有入住的星星 (扁平化输出还是按照大类输出给前端配置？这里给出一个大类 Map 或扁平 Array)
+    // 通常前端希望按大类(major, minor)取，或者直接 flat。
+    // 为了视图侧使用最高效，我们将不同类型的星曜分开放到各个字典里
+    final Map<String, List<Map<String, dynamic>>> starsJson = {};
+
+    stars.forEach((type, starList) {
+      starsJson[type.name] = starList
+          .map(
+            (s) => s.toJson(brightnessLabels: brightnessLabels, branch: branch),
+          )
+          .toList();
+    });
+
+    if (starsJson.isNotEmpty) {
+      res['stars'] = starsJson;
+    }
+
+    return res;
+  }
 }

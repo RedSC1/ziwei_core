@@ -9,7 +9,7 @@ import 'package:ziwei_core/src/config/ruleset.dart';
 /// 规则上下文 (Rule Context)
 ///
 /// 这是一个 Map 的包装器，用于传递计算星曜位置所需的所有参数。
-/// 核心变更：不再硬编码 getter，而是作为“哑数据容器”，
+/// 不硬编码 getter，而是作为“哑数据容器”，
 /// 具体的 Key 选择逻辑 (Lunar vs Solar) 移交给 [StarLocator] 处理。
 class RuleContext {
   final Map<String, dynamic> _data;
@@ -38,7 +38,6 @@ class RuleContext {
 /// 3. 执行具体的定位算法 (Offset/Lookup)
 class StarLocator {
   /// 核心计算方法 (通过 Key 查找缓存规则)
-  /// 🔥 改动点：从 int 变成 int?，从 -1 变成 null
   static int? locate(String starKey, RuleContext ctx) {
     final rule = ctx.ruleset.getStarRule(starKey);
 
@@ -52,7 +51,7 @@ class StarLocator {
     return locateByRule(rule, ctx);
   }
 
-  /// 🔥 新增：直接根据规则对象计算 (用于流曜等动态规则)
+  /// 🔥直接根据规则对象计算 (用于流曜等动态规则)
   static int? locateByRule(StarRule rule, RuleContext ctx) {
     try {
       if (rule is PipelineRule) {
@@ -64,7 +63,7 @@ class StarLocator {
       } else if (rule is LookupShiftRule) {
         return _handleLookupShift(rule, ctx);
       } else if (rule is ConstantRule) {
-        return rule.value; // 🔥 遇到常数，直接吐出数字！
+        return rule.value;
       } else {
         return null;
       }
@@ -219,7 +218,7 @@ class StarLocator {
     int dirMult = _getDirectionMultiplier(rule.direction, ctx, rule.boundary);
 
     // 4. 计算
-    // 🚑 紧急修复：区分“时间偏移”和“星曜偏移”
+    // 🚑 区分“时间偏移”和“星曜偏移”
     // - 文昌(逆时辰): 从固定点(Offset) 逆数 时辰(Anchor) -> Result = Offset + (Anchor * Dir)
     // - 力士(逆星曜): 从星曜(Anchor) 逆数 固定点(Offset) -> Result = Anchor + (Offset * Dir)
 
@@ -260,7 +259,7 @@ class StarLocator {
     if (rule.table.containsKey(keyStr)) {
       int baseIndex = rule.table[keyStr]!;
 
-      // ✅ 关键修复：应用方向乘数 (这样 gender_shun_ni 才能生效)
+      // ✅ 应用方向乘数 (这样 gender_shun_ni 才能生效)
       int dirMult = _getDirectionMultiplier(rule.direction, ctx, rule.boundary);
 
       // 计算: base + (offset * direction)

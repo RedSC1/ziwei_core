@@ -77,14 +77,14 @@ enum StarRuleType {
       case 'lookup':
         return StarRuleType.lookup;
       case 'lookup_offset':
-      case 'lookup_shift': 
+      case 'lookup_shift':
         return StarRuleType.lookupOffset;
-        
+
       case 'pipeline':
         return StarRuleType.pipeline;
       case 'constant':
         return StarRuleType.constant;
-        
+
       default:
         ZiweiLogger.warn("⚠️ 警告：未知的安星规则类型: $str");
         return StarRuleType.unknown;
@@ -114,4 +114,5 @@ enum SiHuaType {
     }
   }
 }
+
 enum StarDirection { shun, ni, genderShunNi }

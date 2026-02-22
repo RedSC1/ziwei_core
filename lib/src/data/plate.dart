@@ -212,4 +212,34 @@ class ZiWeiPlate {
     }
     return mingIndex;
   }
+
+  /// 序列化紫微斗数全局命盘结构
+  ///
+  /// 这是总控级别的 JSON 输出，整合了基础元数据、出生时刻模型、流运游标位置以及完整的十二宫星曜分布。
+  Map<String, dynamic> toJson() {
+    return {
+      'meta': {
+        'element_bureau': elementBureau.name,
+        'effective_year': effective_year,
+        'effective_month': effective_month,
+        'ming_zhu': mingZhu,
+        'shen_zhu': shenZhu,
+      },
+      'date': date.toJson(),
+      'time_cursors': {
+        'origin_ming': originMingIndex,
+        'body_palace': bodyPalaceIndex,
+        'decade_ming': decadeMingIndex,
+        'small_limit_ming': smallLimitMingIndex,
+        'year_ming': yearMingIndex,
+        'month_ming': monthMingIndex,
+        'day_ming': dayMingIndex,
+        'hour_ming': hourMingIndex,
+      },
+      // 遍历 12 个宫位，调用各个 Palace 自己的 toJson 进行递归装配
+      'palaces': palaces
+          .map((p) => p.toJson(brightnessLabels: ruleset.brightnessLabels))
+          .toList(),
+    };
+  }
 }

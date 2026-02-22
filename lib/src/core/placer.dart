@@ -4,11 +4,14 @@ import 'package:ziwei_core/src/time/ziwei_date.dart';
 import 'package:ziwei_core/src/core/star_locator.dart';
 import 'package:ziwei_core/src/enums/consts.dart';
 
+/// **紫微与天府双星定位器**
+///
+/// 专门用来推算紫微星系与天府星系起点。
 class ZiweiAndTianfuPlacer {
-  /// 安紫微星
-  /// [day] 农历生日 (1-30)
-  /// [bureau] 五行局数 (2,3,4,5,6)
-  /// 返回: 紫微星的宫位索引 (0-11, 0是子宫)
+  /// 核心定位算法：推算紫微星与天府星的落入宫位。
+  ///
+  /// - [day] 农历生日日期 (1-30)
+  /// - [bureau] 命造所在五行局数 (水二局=2, 木三局=3...)
   static (int ziweiIndex, int tianfuIndex) placeZiweiAndTianfu(
     int day,
     int bureau,
@@ -32,10 +35,10 @@ class ZiweiAndTianfuPlacer {
   }
 }
 
-/// 星曜安放器 (Star Placer)
+/// **星曜安放器 (Star Placer)**
 ///
-/// 现在的职责非常单一：它只是 StarLocator 的“操作员”。
-/// 它持有上下文，遍历星星列表，然后把 StarLocator 算出来的结果填进 Palace 里。
+/// 作为 `StarLocator` 的批量执行代理。
+/// 其持有全局排盘引擎上下文，遍历配置好的星星实体列表，并将其置入对应的 `Palace` 格子中。
 class StarPlacer {
   final RuleContext context;
   final List<Palace> palaces;
@@ -43,6 +46,9 @@ class StarPlacer {
 
   StarPlacer(this.context, this.palaces, this.date);
 
+  /// 批量安放列表中的所有星星实体
+  ///
+  /// - [stars] 需要被安放到物理宫位的静态星星集合
   void placeAll(List<StaticStar> stars) {
     if (stars.isEmpty) return;
     for (var star in stars) {
@@ -50,24 +56,21 @@ class StarPlacer {
     }
   }
 
+  /// 针对单一特定静态星曜执行定位与安放
+  ///
+  /// - [star] 等待落宫的具体星体
   void placeStar(StaticStar star) {
-    // 1. 核心逻辑委托给 StarLocator (现在返回的是 int?)
+    // 1. 将计算核心全部委托给 StarLocator 获取绝对或相对偏移量
     final int? rawIndex = StarLocator.locate(star.key, context);
 
-    // 2. 先判断是不是 null (代表规则缺失或计算彻底失败)
+    // 2. 检测计算合法性 (null 代表规则中枢无对应配置或触发逻辑异常)
     if (rawIndex != null) {
-      
-      // 3只要不是 null，哪怕是 -1, -5, 13
-      // 都统统交给 fixIndex 修正回 0-11 的合法宫位索引
+      // 3. 将任何跨界的数值包裹修剪为物理宫位范围 (0-11)
       final int finalIndex = ZiweiConsts.fixIndex(rawIndex);
-      
+
       palaces[finalIndex].addStar(star);
-      
-      // Optional: 调试的时候可以看看它最后落在了哪
-      // print("${star.key} raw: $rawIndex -> fixed: $finalIndex");
     } else {
-      // 如果是 null，这颗星就安安静静地不出现在盘上
-      // ZiweiLogger.warn("星曜 ${star.key} 计算失败，跳过安星");
+      // 若计算结果为 null，则表明这颗星曜不触发（留空处理）
     }
   }
 }

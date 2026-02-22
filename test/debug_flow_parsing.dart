@@ -26,7 +26,6 @@ void main() async {
       }
     }
     print('✅ Successfully parsed $successCount items');
-
   } catch (e, s) {
     print('❌ Fatal error: $e');
     print(s);
