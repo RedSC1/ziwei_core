@@ -126,8 +126,19 @@ class TimelineProvider {
           final startAstro = startJie!.dateTime;
           final endAstroExclusive = endJie!.dateTime;
 
-          daysInMonth = (endAstroExclusive.toJ2000() - startAstro.toJ2000())
-              .ceil();
+          int calStart = DateTime(
+            startAstro.year,
+            startAstro.month,
+            startAstro.day,
+          ).millisecondsSinceEpoch;
+          int calEnd = DateTime(
+            endAstroExclusive.year,
+            endAstroExclusive.month,
+            endAstroExclusive.day,
+          ).millisecondsSinceEpoch;
+          daysInMonth =
+              (calEnd - calStart) ~/
+              (1000 * 60 * 60 * 24); // 精确计算出日历的纯间隔天数，不受时分秒跨界干扰
 
           solarStart =
               "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')} ${startAstro.hour.toString().padLeft(2, '0')}:${startAstro.minute.toString().padLeft(2, '0')}:${startAstro.second.toString().padLeft(2, '0')}";
