@@ -2,7 +2,6 @@ import 'package:bazi_core/bazi_core.dart';
 import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/data/limit.dart';
-import 'package:ziwei_core/src/data/limit.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 
 /// **历法时间轴生成器 (Timeline Provider)**
@@ -127,9 +126,8 @@ class TimelineProvider {
           final startAstro = startJie!.dateTime;
           final endAstroExclusive = endJie!.dateTime;
 
-          daysInMonth =
-              endAstroExclusive.toJ2000().toInt() -
-              startAstro.toJ2000().toInt();
+          daysInMonth = (endAstroExclusive.toJ2000() - startAstro.toJ2000())
+              .ceil();
 
           solarStart =
               "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')} ${startAstro.hour.toString().padLeft(2, '0')}:${startAstro.minute.toString().padLeft(2, '0')}:${startAstro.second.toString().padLeft(2, '0')}";
