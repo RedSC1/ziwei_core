@@ -26,10 +26,17 @@ class Decade extends FlowLimit {
   final int startTime; // 起始岁数 (如 2 岁)
   final int endTime; // 结束岁数 (如 11 岁)
   final PalaceRole role;
+  final int decadeIndex; // 大限序数 (0:童限, 1:第一大限, ...)
 
-  static List<int> childHoodDecadeOffsetTable = [0, 4, 5, 2, 10, 8];
+  static const List<int> childHoodDecadeOffsetTable = [0, 4, 5, 2, 10, 8];
 
-  Decade(this.ganzhi, this.startTime, this.endTime, this.role);
+  Decade(
+    this.ganzhi,
+    this.startTime,
+    this.endTime,
+    this.role,
+    this.decadeIndex,
+  );
 
   /// 根据索引创建大限
   ///
@@ -64,6 +71,7 @@ class Decade extends FlowLimit {
       startAge,
       endAge,
       plate.getRole(ZiweiScope.origin, targetPalaceIndex),
+      index, // 1-based
     );
   }
 
@@ -126,7 +134,13 @@ class Decade extends FlowLimit {
     PalaceRole role = plate.getRole(ZiweiScope.origin, targetPalaceIndex);
 
     // 童限的 startTime/endTime 直接用虚岁表示
-    return Decade(targetPalace.ganzhi, virtualAge, virtualAge, role);
+    return Decade(
+      targetPalace.ganzhi,
+      virtualAge,
+      virtualAge,
+      role,
+      0,
+    ); // 童限索引为 0
   }
 
   /// 获取“有效出生年” (用于计算虚岁与阴阳)

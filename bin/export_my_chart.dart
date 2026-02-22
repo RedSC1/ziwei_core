@@ -54,6 +54,22 @@ void main() {
     // 附带流运的干支及游标坐标数据
     "flow_context": limitContext.toJson(),
 
+    // 🕒 完整的历法时间轴示例 (前端构建导航的基础)
+    "timeline_samples": {
+      "decades": timeline.getDecades(),
+      "years_in_current_decade": timeline.getYears(
+        limitContext.decade?.decadeIndex ?? 1,
+      ),
+      "months_in_current_year": timeline.getMonths(currentYear),
+      "days_in_current_month": timeline.getDays(
+        currentYear,
+        limitContext.month?.month ?? 1,
+      ),
+      "hours_in_current_day": timeline.getHours(
+        limitContext.day?.ganzhi ?? zNowDate.bazi.day,
+      ),
+    },
+
     // 送给前端画“左右滑动导航栏”用的极简日历元数据
     "timeline_manifest": timeline.generateManifest(currentYear),
   };
