@@ -11,10 +11,8 @@ class TimeAdapter {
     double timeZone = 8,
     bool? useTrueSolarTime = true,
   }) {
-
-
     final opt = options ?? const CalendarOptions();
-    final loc = location ?? defaultLoc;//120N 30E
+    final loc = location ?? defaultLoc; //120N 30E
     final utst = useTrueSolarTime ?? true;
 
     // 1. 使用 bazi_core 的 TimePack 封装时间计算
@@ -55,22 +53,22 @@ class TimeAdapter {
     );
   }
 
- static ZiweiDate fromLunar(
+  static ZiweiDate fromLunar(
     int year,
     int month,
     int day,
-    int hour,     // 🚀 核心：精准时
-    int minute,   // 🚀 核心：精准分
-    int second,   // 🚀 核心：精准秒
+    int hour, // 🚀 核心：精准时
+    int minute, // 🚀 核心：精准分
+    int second, // 🚀 核心：精准秒
     bool isLeap,
-    Gender gender,{
+    Gender gender, {
     CalendarOptions? options,
     Location? location,
     bool? useTrueSolarTime = true,
   }) {
     // 1. 构造 bazi_core 的 LunarDate 对象
     String monthName;
-    
+
     if (month == 1) {
       monthName = "正";
     } else if (month == 11) {
@@ -78,7 +76,22 @@ class TimeAdapter {
     } else if (month == 12) {
       monthName = "腊";
     } else {
-      const names = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二", "十三"];
+      const names = [
+        "",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+        "十",
+        "十一",
+        "十二",
+        "十三",
+      ];
       if (month > 0 && month < names.length) {
         monthName = names[month];
       } else {
@@ -89,9 +102,14 @@ class TimeAdapter {
 
     // 处理闰月与历史特殊历法
     if (isLeap) {
-      // 如果开启了历史历法，且恰好是 9 月的闰月（秦/汉初的颛顼历岁末闰月）
-      if (options?.enableHistorical == true && month == 9) {
-        monthName = "后九"; 
+      // 如果开启了历史历法，且恰好是 9 的闰月（秦/汉初的颛顼历岁末闰月）
+      // 颛顼历的施行期大约在公元前 366 年（秦献公时期）开始，并在公元前 104 年（太初元年）被废止。
+      // 这个时间段内的闰九月才能叫“后九月”，其它年代的正常无中气置闰都叫“闰九月”
+      if (options?.enableHistorical == true &&
+          month == 9 &&
+          year >= -366 &&
+          year <= -104) {
+        monthName = "后九";
       } else {
         monthName = "闰$monthName";
       }
@@ -107,17 +125,22 @@ class TimeAdapter {
       anchorTime.year,
       anchorTime.month,
       anchorTime.day,
-      hour,    // 精准时
-      minute,  // 精准分
-      second,  // 精准秒
+      hour, // 精准时
+      minute, // 精准分
+      second, // 精准秒
     );
 
     // 4. 递归调用 fromSolar，扔给底层算真太阳时
-    return fromSolar(solar, gender, options: options, location: location, useTrueSolarTime: useTrueSolarTime);
+    return fromSolar(
+      solar,
+      gender,
+      options: options,
+      location: location,
+      useTrueSolarTime: useTrueSolarTime,
+    );
   }
 
-
-  static int _getSolarDay(TimePack timePack, {bool splitByRatHour = false}){
+  static int _getSolarDay(TimePack timePack, {bool splitByRatHour = false}) {
     // 1. 算出“排盘钟”和“北京钟”之间的物理差值
     // 这个差值已经包含了：时区差 + 经度差 + 均时差（如果开了真太阳）
     final double bjJd = timePack.bjClt.toJ2000();
@@ -133,12 +156,12 @@ class TimeAdapter {
     if (!splitByRatHour && timePack.virtualTime.hour >= 23) {
       // 如果不分早晚子且是晚子时，逻辑上这人已经活在“明天”了
       // 这里的 +1/24 是为了让 JD 跨过凌晨那个坎，从而改变 Day ID
-      currentLogicalJd += (1.0 / 24.0); 
+      currentLogicalJd += (1.0 / 24.0);
     }
 
     // 4. 用统一参照系下的两个 JD 算日子 ID
     int currentDayID = (currentLogicalJd + 0.5).floor();
-    int jieDayID =  (jieVirtualJd + 0.5).floor();
+    int jieDayID = (jieVirtualJd + 0.5).floor();
     return (currentDayID - jieDayID) + 1;
   }
 }
