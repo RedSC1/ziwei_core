@@ -126,19 +126,24 @@ class TimelineProvider {
           final startAstro = startJie!.dateTime;
           final endAstroExclusive = endJie!.dateTime;
 
-          int calStart = DateTime(
+          // 掰到正午再相减，消除时分秒造成的 ±1 天偏移（兼容公元前）
+          final startNoon = AstroDateTime(
             startAstro.year,
             startAstro.month,
             startAstro.day,
-          ).millisecondsSinceEpoch;
-          int calEnd = DateTime(
+            12,
+            0,
+            0,
+          ).toJ2000();
+          final endNoon = AstroDateTime(
             endAstroExclusive.year,
             endAstroExclusive.month,
             endAstroExclusive.day,
-          ).millisecondsSinceEpoch;
-          daysInMonth =
-              (calEnd - calStart) ~/
-              (1000 * 60 * 60 * 24); // 精确计算出日历的纯间隔天数，不受时分秒跨界干扰
+            12,
+            0,
+            0,
+          ).toJ2000();
+          daysInMonth = (endNoon - startNoon).round();
 
           solarStart =
               "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')} ${startAstro.hour.toString().padLeft(2, '0')}:${startAstro.minute.toString().padLeft(2, '0')}:${startAstro.second.toString().padLeft(2, '0')}";

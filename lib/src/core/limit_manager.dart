@@ -1,6 +1,8 @@
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'package:ziwei_core/src/core/engine.dart';
 import 'package:ziwei_core/src/data/limit.dart';
 import 'package:ziwei_core/src/data/plate.dart';
+import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
@@ -95,11 +97,56 @@ class ZiweiLimitManager {
   void addMonth(int delta) {
     if (!_currentContext.hasMonth || !_currentContext.hasYear) return;
 
+    // === 节气模式：跳到下/上一个节的物理日期 ===
+    final isSolarBoundary =
+        _basePlate.ruleset.calendarOptions.flowLimitBasedOn == Boundary.solar;
+    if (isSolarBoundary && currentDate != null) {
+      final solar = currentDate!.solar;
+      var anchor = AstroDateTime(
+        solar.year,
+        solar.month,
+        solar.day,
+        solar.hour,
+        solar.minute,
+        solar.second,
+      );
+      // 逐个节跳转
+      for (int i = 0; i < delta.abs(); i++) {
+        if (delta > 0) {
+          final nextJie = getNextJie(anchor);
+          if (nextJie == null) break;
+          // 落入下一个节后 1 小时，确保安全落地
+          anchor = AstroDateTime(
+            nextJie.dateTime.year,
+            nextJie.dateTime.month,
+            nextJie.dateTime.day,
+            nextJie.dateTime.hour + 1,
+            nextJie.dateTime.minute,
+            0,
+          );
+        } else {
+          final prevJie = getPrevJie(anchor);
+          if (prevJie == null) break;
+          // 落入上一个节前 1 小时，确保安全落地到前一个月
+          anchor = AstroDateTime(
+            prevJie.dateTime.year,
+            prevJie.dateTime.month,
+            prevJie.dateTime.day,
+            prevJie.dateTime.hour - 1,
+            prevJie.dateTime.minute,
+            0,
+          );
+        }
+      }
+      setPhysicalDate(anchor.toDateTime()!);
+      return;
+    }
+
+    // === 农历模式：简单数字进位 ===
     int currentMonth = _currentContext.month!.month;
     int targetMonth = currentMonth + delta;
     int targetYear = _currentContext.year!.year;
 
-    // 简单进位逻辑 (忽略真实闰月情况，因为只是月份数字的加减。要涉及物理日期请用 addDays)
     while (targetMonth > 12) {
       targetMonth -= 12;
       targetYear++;
@@ -263,17 +310,45 @@ class ZiweiLimitManager {
     final bazi = currentDate!.bazi;
 
     // 获取绝对有效年（不包含干支逻辑，纯数字）用于计算大阴历差
-    // 这里的年已经由 fromSolar 在底层处理过了闰腊月进位问题（详见 ZiweiDate getter）
     int effectiveYear = eLunar.lunarYear;
-    // 双重保险：防 13 月
     int effectiveMonth = eLunar.month;
     if (effectiveMonth == 13) effectiveMonth = 12;
+    int effectiveDay = eLunar.day;
+
+    // === 节气(太阳)边界模式：用精确交节时刻判定月份和日期 ===
+    final isSolarBoundary =
+        _basePlate.ruleset.calendarOptions.flowLimitBasedOn == Boundary.solar;
+    if (isSolarBoundary) {
+      final solar = currentDate!.solar;
+      final now = AstroDateTime(
+        solar.year,
+        solar.month,
+        solar.day,
+        solar.hour,
+        solar.minute,
+        solar.second,
+      );
+      final prevJie = getPrevJie(now);
+      if (prevJie != null) {
+        // 八字月份 = 上一个节所在的阳历月份映射
+        // 立春(2月)→1, 惊蛰(3月)→2, ... 大雪(12月)→11, 小寒(1月)→12
+        effectiveMonth = (prevJie.dateTime.month - 2 + 12) % 12 + 1;
+
+        // 八字年以立春为界：小寒落在1月，说明还是上一年
+        effectiveYear = prevJie.dateTime.month == 1
+            ? prevJie.dateTime.year - 1
+            : prevJie.dateTime.year;
+
+        // 流日 = 节后第N天（底层 solarDay 已由 _getSolarDay 精确算过）
+        effectiveDay = currentDate!.solarDay;
+      }
+    }
 
     _currentContext = TimeMachine.travel(
       _basePlate,
       year: effectiveYear,
       month: effectiveMonth,
-      day: eLunar.day,
+      day: effectiveDay,
       dayGanZhi: bazi.day, // 😎 真正的降维打击！这里直接拿到物理正确的当日干支
       hourIndex: bazi.time.zhi.index, // 早晚子时的自动裁决
     );
