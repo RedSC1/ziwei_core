@@ -125,21 +125,18 @@ class TimelineProvider {
           final endJie = getNextJie(anchorTime);
 
           final startAstro = startJie!.dateTime;
-          // 注意：八字的换月是精确到秒的(交节时间)，为了前端渲染天数，算到前一天的 23:59 或只保留日期即可。
           final endAstroExclusive = endJie!.dateTime;
 
           daysInMonth =
               endAstroExclusive.toJ2000().toInt() -
               startAstro.toJ2000().toInt();
 
-          final endAstro = AstroDateTime.fromJ2000(
-            startAstro.toJ2000() + daysInMonth - 1,
-          );
-
           solarStart =
-              "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')}";
+              "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')} ${startAstro.hour.toString().padLeft(2, '0')}:${startAstro.minute.toString().padLeft(2, '0')}:${startAstro.second.toString().padLeft(2, '0')}";
+
+          // 八字的结束也是交节时刻！不是当天的0点！严格来说结束时刻就是 endAstroExclusive!
           solarEnd =
-              "${endAstro.year}-${endAstro.month.toString().padLeft(2, '0')}-${endAstro.day.toString().padLeft(2, '0')}";
+              "${endAstroExclusive.year}-${endAstroExclusive.month.toString().padLeft(2, '0')}-${endAstroExclusive.day.toString().padLeft(2, '0')} ${endAstroExclusive.hour.toString().padLeft(2, '0')}:${endAstroExclusive.minute.toString().padLeft(2, '0')}:${endAstroExclusive.second.toString().padLeft(2, '0')}";
         } else {
           // ==============================
           // 阴历(太阴)流月模式 (传统紫微纯阴历)
