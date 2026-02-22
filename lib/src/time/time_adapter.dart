@@ -115,7 +115,36 @@ class TimeAdapter {
       }
     }
 
-    final lunar = LunarDate.fromString(year, monthName, day);
+    // 2. 扔给新的纯字符串处理函数
+    return fromStringLunar(
+      year,
+      monthName,
+      day,
+      hour,
+      minute,
+      second,
+      gender,
+      options: options,
+      location: location,
+      useTrueSolarTime: useTrueSolarTime,
+    );
+  }
+
+  /// 允许直接传入 "闰九", "正" 等字符串进行排盘
+  static ZiweiDate fromStringLunar(
+    int year,
+    String monthString, // 核心改动：直接接收农历月份字符串
+    int day,
+    int hour,
+    int minute,
+    int second,
+    Gender gender, {
+    CalendarOptions? options,
+    Location? location,
+    bool? useTrueSolarTime = true,
+  }) {
+    // 1. 无需转换，直接调用 LunarDate.fromString
+    final lunar = LunarDate.fromString(year, monthString, day);
 
     // 2. 转阳历 (拿到那一天的基准日期)
     final anchorTime = lunar.toSolar;
