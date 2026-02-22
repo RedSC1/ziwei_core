@@ -1,7 +1,6 @@
 import 'package:test/test.dart';
 import 'package:ziwei_core/ziwei_core.dart';
 import 'package:ziwei_core/src/time/time_adapter.dart';
-import 'package:ziwei_core/src/enums/config_enums.dart';
 
 void main() {
   group('TimeAdapter.fromStringLunar', () {

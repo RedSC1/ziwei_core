@@ -2,7 +2,18 @@ import 'package:bazi_core/bazi_core.dart';
 import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
+/// 时间适配器，可以使用公历时间和农历时间来创建ZiweiDate
 class TimeAdapter {
+  /// **通过公历时间创建紫微命盘基底 (ZiweiDate)**
+  ///
+  /// - [solarDate] 公历时间
+  /// - [gender] 性别 默认男
+  /// - [options] 历法选项 默认参数见 `CalendarOptions`
+  /// - [location] 地理位置 默认 `120E 30N`
+  /// - [timeZone] 时区 默认 `utc+8`（北京时间）
+  /// - [useTrueSolarTime] 是否使用真太阳时 默认 `true`
+  ///
+  /// 💡 若 `useTrueSolarTime = false`，则默认 `solarDate` 为钟表平太阳时间，引擎将不会执行经度与均时差修正。
   static ZiweiDate fromSolar(
     AstroDateTime solarDate,
     Gender gender, {
@@ -12,7 +23,7 @@ class TimeAdapter {
     bool? useTrueSolarTime = true,
   }) {
     final opt = options ?? const CalendarOptions();
-    final loc = location ?? defaultLoc; //120N 30E
+    final loc = location ?? defaultLoc; //120E 30N
     final utst = useTrueSolarTime ?? true;
 
     // 1. 使用 bazi_core 的 TimePack 封装时间计算
@@ -50,9 +61,26 @@ class TimeAdapter {
       options: opt,
       solarDay: solarDay,
       gender: gender,
+      timeZone: timeZone,
     );
   }
 
+  /// **通过农历时间创建紫微命盘基底 (ZiweiDate)**
+  ///
+  /// - [year] 农历年份
+  /// - [month] 农历月份 (1-12)
+  /// - [day] 农历日期
+  /// - [hour] 物理小时（不是时辰 0-23）
+  /// - [minute] 物理分钟
+  /// - [second] 物理秒钟
+  /// - [isLeap] 该月是否为闰月
+  /// - [gender] 性别 默认男
+  /// - [timeZone] 时区 默认 `utc+8`（北京时间）
+  /// - [options] 历法选项 默认参数见 `CalendarOptions`
+  /// - [location] 地理位置 默认 `120E 30N`
+  /// - [useTrueSolarTime] 是否使用真太阳时 默认 `true`
+  ///
+  /// 💡 若 `useTrueSolarTime = false`，则默认内部转化的 `solarDate` 退化为钟表平太阳时间，不进行经纬度补偿。
   static ZiweiDate fromLunar(
     int year,
     int month,
@@ -64,6 +92,7 @@ class TimeAdapter {
     Gender gender, {
     CalendarOptions? options,
     Location? location,
+    double timeZone = 8,
     bool? useTrueSolarTime = true,
   }) {
     // 1. 构造 bazi_core 的 LunarDate 对象
@@ -126,11 +155,29 @@ class TimeAdapter {
       gender,
       options: options,
       location: location,
+      timeZone: timeZone,
       useTrueSolarTime: useTrueSolarTime,
     );
   }
 
-  /// 允许直接传入 "闰九", "正" 等字符串进行排盘
+  /// **通过直接传入的“传统中国历法字符串”进行排盘**
+  ///
+  /// 此接口用于处理极其宽松的前端/数据库数据输入，例如直接传入 `"闰九"`, `"正"`, `"腊"`。
+  /// 它内置了针对颛顼古历等特殊时代月名 `"后九"` 等数据的兼容能力。
+  ///
+  /// - [year] 农历年份
+  /// - [monthString] 中文农历月份字符串 (支持 `正`, `闰五`, `后九`, `十二` 等格式)
+  /// - [day] 农历日期
+  /// - [hour] 物理小时（不是时辰 0-23）
+  /// - [minute] 物理分钟
+  /// - [second] 物理秒钟
+  /// - [gender] 性别 男/女
+  /// - [options] 历法选项 默认参数见 `CalendarOptions`
+  /// - [location] 地理位置观测基址 默认 `120E 30N`
+  /// - [timeZone] 时区参考维度 默认 `utc+8`（北京时间）
+  /// - [useTrueSolarTime] 是否激进计算真太阳时 默认 `true`
+  ///
+  /// 💡 若 `useTrueSolarTime = false`，引用的底层阳历转换将被视为当地法定平流时间，跳过由 `Location` 带来的太阳角偏转。
   static ZiweiDate fromStringLunar(
     int year,
     String monthString, // 核心改动：直接接收农历月份字符串
@@ -141,6 +188,7 @@ class TimeAdapter {
     Gender gender, {
     CalendarOptions? options,
     Location? location,
+    double timeZone = 8,
     bool? useTrueSolarTime = true,
   }) {
     // 1. 无需转换，直接调用 LunarDate.fromString
@@ -165,6 +213,7 @@ class TimeAdapter {
       gender,
       options: options,
       location: location,
+      timeZone: timeZone,
       useTrueSolarTime: useTrueSolarTime,
     );
   }

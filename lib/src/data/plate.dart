@@ -6,6 +6,32 @@ import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 import 'package:ziwei_core/src/config/ruleset.dart';
 
+/// **紫微斗数命盘 (ZiWei Plate)**
+///
+/// 整个排盘引擎的核心数据结构。这里存储了12宫的所有星曜、神煞、四化，
+/// 以及当前所处的各种大限、小限和流年状态。
+///
+/// ---
+/// ### 📦 核心配置属性
+/// - [palaces] 包含十二宫位的完整状态集合
+/// - [date] 真正的命盘出生时间设定
+/// - [ruleset] 从JSON读取的排盘规则字典，详见 `ZiweiRuleset`
+/// - [elementBureau] 该命盘的五行局
+/// - [effective_month] 实际用于排盘的有效历法月
+/// - [effective_year] 实际用于排盘的有效历法年
+/// - [mingZhu] 命主星
+/// - [shenZhu] 身主星
+///
+/// ---
+/// ### 📍 宫位指针结构
+/// - [originMingIndex] 原局命宫索引
+/// - [bodyPalaceIndex] 身宫索引
+/// - [decadeMingIndex] 大限命宫索引 (若进入流运)
+/// - [smallLimitMingIndex] 小限命宫索引 (若进入小限)
+/// - [yearMingIndex] 流年命宫索引
+/// - [monthMingIndex] 流月命宫索引
+/// - [dayMingIndex] 流日命宫索引
+/// - [hourMingIndex] 流时命宫索引
 class ZiWeiPlate {
   final List<Palace> palaces;
   final int originMingIndex;
@@ -27,8 +53,7 @@ class ZiWeiPlate {
   int? hourMingIndex;
 
   // ==========================================
-  // 🌟 UI 渲染专属：宫位快捷 Getter (1.0.0 语法糖)
-  // 快速获取各个流层的“命宫”实体，免去每次查询
+  // 快速获取各个流层的“命宫”实体
   // ==========================================
 
   /// 获取[原局命宫]实体对象
@@ -91,7 +116,11 @@ class ZiWeiPlate {
   });
 
   /// 核心查询方法：获取某一层级、某一角色的宫位
-  /// 比如: getPalace(ZiweiScope.decade, PalaceRole.spouse) -> 大限夫妻宫
+  ///
+  /// 比如: `getPalace(ZiweiScope.decade, PalaceRole.spouse)` -> 返回当前大限夫妻宫
+  ///
+  /// - [scope] 所查询的流运层级 (原局,大限,流年...)
+  /// - [role] 目标查看的角色名称 (命,兄弟,夫妻...)
   Palace getPalace(ZiweiScope scope, PalaceRole role) {
     // 1. 先找到那一层的【命宫】在哪
     int mingIndex = _getMingIndex(scope);
@@ -103,7 +132,10 @@ class ZiWeiPlate {
     return palaces[targetIndex];
   }
 
-  // ✅ 新增：反查角色 (给定某个宫位格子，查它是什么职能)
+  /// 反查角色 (给定某个宫位格子，查它在指定流派层级里是什么职能)
+  ///
+  /// - [scope] 目标评估的流运层级 (原局,大限,流年...)
+  /// - [palaceIndex] 宫位的硬装地支绝对索引 (0=子, 1=丑...)
   PalaceRole getRole(ZiweiScope scope, int palaceIndex) {
     // 1. 先找那一层的命宫在哪
     int mingIndex = _getMingIndex(scope);
@@ -117,7 +149,9 @@ class ZiWeiPlate {
   }
 
   /// 🚀 深拷贝 (Deep Copy)
-  /// 生成一个完全独立的盘面副本，用于叠加流运（大限/流年）
+  ///
+  /// 生成一个完全独立的数据副本模型，允许时间在流转时 (如生成流运盘) 随意篡改星体引用状态，
+  /// 同时不破坏原盘局数据。
   ZiWeiPlate clone() {
     return ZiWeiPlate(
       // 1. 关键：所有宫位深拷贝 (Recursive Clone)

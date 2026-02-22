@@ -12,6 +12,14 @@ abstract class FlowLimit {
   }
 }
 
+/// **大限 (十年流运)**
+///
+/// ---
+/// ### 📦 属性列表
+/// - [ganzhi] 大限宫位的干支
+/// - [startTime] 大限的起始岁数
+/// - [endTime] 大限的结束岁数
+/// - [role] 大限的宫位角色职能
 class Decade extends FlowLimit {
   @override
   final GanZhi ganzhi;
@@ -23,7 +31,10 @@ class Decade extends FlowLimit {
 
   Decade(this.ganzhi, this.startTime, this.endTime, this.role);
 
-  /// 🚀 index 1 就是第一大限
+  /// 根据索引创建大限
+  ///
+  /// - [index] 大限索引 (🚀 1 就是第一大限)
+  /// - [plate] 命盘
   factory Decade.fromIndex(int index, ZiWeiPlate plate) {
     if (index <= 0) {
       throw ArgumentError("大限索引必须从 1 开始。如果要看童限，请使用 Decade.childhood()");
@@ -56,7 +67,11 @@ class Decade extends FlowLimit {
     );
   }
 
+  /// 根据年份提取或创建大限
+  ///
   /// 🔍 [路由层] 找到包含该年份的大限或童限
+  /// - [year] 指定的物理或推演年份
+  /// - [plate] 命盘
   factory Decade.createByYear(int year, ZiWeiPlate plate) {
     int startDecadeYear = getStartDecadeYear(plate);
 
@@ -76,6 +91,9 @@ class Decade extends FlowLimit {
   // --- 辅助私有方法与静态工具 ---
 
   /// 👶 专门处理“未起运”前的童限逻辑
+  ///
+  /// - [year] 所查询的尚未起运的年份
+  /// - [plate] 命盘
   static Decade createChildhood(int year, ZiWeiPlate plate) {
     int birthYear = getEffectiveBirthYear(plate);
     int virtualAge = year - birthYear + 1;
@@ -112,13 +130,24 @@ class Decade extends FlowLimit {
   }
 
   /// 获取“有效出生年” (用于计算虚岁与阴阳)
+  ///
+  /// - [plate] 命盘
   static int getEffectiveBirthYear(ZiWeiPlate plate) {
-    // 这里复用你之前写的带逻辑年判断的代码
     if (plate.date.options.flowLimitBasedOn == Boundary.lunar) {
       return plate.effective_year;
     } else {
-      // 节气派逻辑... (此处略，保持你原有的逻辑即可)
-      return plate.date.solar.year; // 示例占位
+      // 节气派：依靠 Bazi 四柱推断年份
+      // bazi.year 仅提供干支。我们需要比对当年的干支和实际公历年的干支。
+      // 因为立春可能在公历年初，如果公历是2月1日但还没过立春，八字年会是去年 (-1)
+      int physicalYear = plate.date.solar.year;
+      int physicalYearStemIndex = (physicalYear - 4) % 10;
+      if (physicalYearStemIndex < 0) physicalYearStemIndex += 10;
+
+      // 如果计算出的物理公历年干 与 八字给定的年干不同，说明八字处于“立春前”的旧年
+      if (physicalYearStemIndex != plate.date.bazi.year.gan.index) {
+        return physicalYear - 1;
+      }
+      return physicalYear;
     }
   }
 
@@ -128,12 +157,31 @@ class Decade extends FlowLimit {
   }
 }
 
+/// **流年 (一年流运)**
+///
+/// ---
+/// ### 💡 核心注意
+/// 这里的干支**不是**原局宫位的干支，也**不是**流年单纯的年份干支！
+/// 它是组合而成的**混合干支 (Hybrid GanZhi)**：
+/// - `天干`: 流年的年份天干
+/// - `地支`: 流年命宫所在的宫位地支
+///
+/// ---
+/// ### 📦 属性列表
+/// - [ganzhi] 流年的混合干支
+/// - [year] 流年的物理年份 (如 2024)
+/// - [role] 流年的宫位角色职能
 class FlowYear extends FlowLimit {
   @override
   final GanZhi ganzhi;
   final int year;
   final PalaceRole role;
   FlowYear(this.ganzhi, this.year, this.role);
+
+  /// 根据年份创建流年
+  ///
+  /// - [year] 指定的流年物理年份
+  /// - [plate] 原始命盘
   factory FlowYear.createByYear(int year, ZiWeiPlate plate) {
     int placeIndex = ZiweiConsts.fixIndex(year + 8);
     TianGan stem = TianGan.values[((year + 6) % 10 + 10) % 10];
@@ -143,6 +191,20 @@ class FlowYear extends FlowLimit {
   }
 }
 
+/// **流月 (一月流运)**
+///
+/// ---
+/// ### 💡 核心注意
+/// 这里的干支**不是**原局宫位的干支，也**不是**流月单纯的月份干支！
+/// 它是组合而成的**混合干支 (Hybrid GanZhi)**：
+/// - `天干`: 农历月份的天干
+/// - `地支`: 流月命宫所在的宫位地支
+///
+/// ---
+/// ### 📦 属性列表
+/// - [ganzhi] 流月的混合干支
+/// - [month] 农历月份 (1-12)
+/// - [role] 流月的宫位角色职能
 class FlowMonth extends FlowLimit {
   @override
   final GanZhi ganzhi;
@@ -151,6 +213,11 @@ class FlowMonth extends FlowLimit {
 
   FlowMonth(this.ganzhi, this.month, this.role);
 
+  /// 根据年份与月份创建流月
+  ///
+  /// - [month] 农历月份 (1-12)
+  /// - [year] 该月所属的流年年份
+  /// - [plate] 原始命盘
   factory FlowMonth.create(int month, int year, ZiWeiPlate plate) {
     // 1. 获取流年参数
     // 流年命宫 (地支)
@@ -195,6 +262,13 @@ class FlowMonth extends FlowLimit {
   }
 }
 
+/// **小限 (一年流运)**
+///
+/// ---
+/// ### 📦 属性列表
+/// - [ganzhi] 小限宫位的干支
+/// - [age] 小限的虚岁
+/// - [role] 小限的宫位角色职能
 class SmallLimit extends FlowLimit {
   @override
   final GanZhi ganzhi;
@@ -203,6 +277,10 @@ class SmallLimit extends FlowLimit {
 
   SmallLimit(this.ganzhi, this.age, this.role);
 
+  /// 根据虚岁创建小限
+  ///
+  /// - [virtualAge] 取自流年的小限虚岁
+  /// - [plate] 原始命盘
   factory SmallLimit.create(int virtualAge, ZiWeiPlate plate) {
     // 1. 确定起跑点 (1岁位置)
     // 规则：三合局墓库的对冲位
@@ -260,14 +338,26 @@ class SmallLimit extends FlowLimit {
   }
 }
 
-/// 流日 (Flow Day)
+/// **流日 (一日流运)**
 ///
-/// **定位逻辑**：
-/// 1. 起点：以流月宫为初一。
-/// 2. 移动：顺数到当日 (day - 1)。
+/// ---
+/// ### ⚙️ 逻辑与规则
+/// - **定位起点**：以流月所在的宫位为【初一】。
+/// - **移动规律**：从起点顺数至当日 (`day - 1`)。
+/// - **四化源起**：使用当日的**物理天干**（通常由历节气真实推算，纯逻辑推导大小月交接过于复杂）。
 ///
-/// **四化逻辑**：
-/// 使用 **当日的天干** (通常由历法传入，因为日柱涉及到大小月/闰年，纯逻辑推算太复杂)。
+/// ---
+/// ### 💡 核心注意
+/// 这里的干支**不是**原局宫位的干支，也**不是**流日单纯的日子干支！
+/// 它是组合而成的**混合干支 (Hybrid GanZhi)**：
+/// - `天干`: 流日当天的天干
+/// - `地支`: 流日命宫所在的宫位地支
+///
+/// ---
+/// ### 📦 属性列表
+/// - [ganzhi] 流日的混合干支
+/// - [day] 农历初几
+/// - [role] 流日的宫位角色职能
 class FlowDay extends FlowLimit {
   @override
   final GanZhi ganzhi;
@@ -276,6 +366,12 @@ class FlowDay extends FlowLimit {
 
   FlowDay(this.ganzhi, this.day, this.role);
 
+  /// 根据流月与流日数据创建流日运实例
+  ///
+  /// - [day] 农历日期 (如 初十五)
+  /// - [dayGanZhi] 该日的日柱干支 (物理日干支)
+  /// - [flowMonth] 所属的流月实例
+  /// - [plate] 原始命盘
   factory FlowDay.create(
     int day,
     GanZhi dayGanZhi,
@@ -302,14 +398,26 @@ class FlowDay extends FlowLimit {
   }
 }
 
-/// 流时 (Flow Hour)
+/// **流时 (一时辰运)**
 ///
-/// **定位逻辑**：
-/// 1. 起点：以流日宫为子时。
-/// 2. 移动：顺数到当时 (hourIndex)。
+/// ---
+/// ### ⚙️ 逻辑与规则
+/// - **定位起点**：以流日所在的宫位为【子时】。
+/// - **移动规律**：从起点顺数至当时 (`hourIndex`)。
+/// - **四化源起**：使用**五鼠遁 (Wu Zi Dun) 诀**，根据日天干硬推时天干。
 ///
-/// **四化逻辑**：
-/// 使用 **五鼠遁 (Wu Zi Dun)** 根据日干推算时干。
+/// ---
+/// ### 💡 核心注意
+/// 这里的干支**不是**原局宫位的干支，也**不是**流时单纯的时辰干支！
+/// 它是组合而成的**混合干支 (Hybrid GanZhi)**：
+/// - `天干`: 流时推算出的时辰天干
+/// - `地支`: 流时命宫所在的宫位地支
+///
+/// ---
+/// ### 📦 属性列表
+/// - [ganzhi] 流时的混合干支
+/// - [hourIndex] 时辰索引 (0=子, 1=丑...)
+/// - [role] 流时的宫位角色职能
 class FlowHour extends FlowLimit {
   @override
   final GanZhi ganzhi;
@@ -318,6 +426,11 @@ class FlowHour extends FlowLimit {
 
   FlowHour(this.ganzhi, this.hourIndex, this.role);
 
+  /// 根据流日与时辰创建流时辰运实例
+  ///
+  /// - [hourIndex] 目标时辰的索引 (0:子, 1:丑...)
+  /// - [flowDay] 目标时辰所属的流日实例
+  /// - [plate] 原始命盘
   factory FlowHour.create(int hourIndex, FlowDay flowDay, ZiWeiPlate plate) {
     // 1. 确定流时宫位 (Location)
     // 规则：从流日宫位起子时，顺行
@@ -370,7 +483,7 @@ class LimitContext {
   /// 流日 (Flow Day) - 1日运
   final FlowDay? day;
 
-  /// 流时 (Flow Hour) - 1时运
+  /// 流时 (Flow Hour) - 1时辰运
   final FlowHour? hour;
 
   const LimitContext({
@@ -418,7 +531,7 @@ class LimitContext {
   }
 
   /// 剥离某一层级 (Remove Layer)
-  /// 返回一个新的 Context，其中指定的层级被移除 (置为 null)
+  /// 返回一个新的 Context，其中指定的被移除 (置为 null)
   LimitContext remove(ZiweiScope scope) {
     switch (scope) {
       case ZiweiScope.origin:
@@ -480,14 +593,21 @@ class LimitContext {
 /// 这是一个辅助工厂类，用于快速生成 [LimitContext]。
 /// 它支持“不完整的时间”，比如只传入年份，就会只生成到流年层级。
 class TimeMachine {
-  /// 穿越到指定时间
+  /// 穿越到指定的物理流转时间结构
+  ///
+  /// - [plate] 原始命盘
+  /// - [year] (可选) 进入指定流年
+  /// - [month] (可选) 进入指定流月
+  /// - [day] (可选) 进入指定流日
+  /// - [dayGanZhi] 如果计算流日，必须传入当日物理干支用于飞星
+  /// - [hourIndex] (可选) 进入指定流时
   static LimitContext travel(
     ZiWeiPlate plate, {
     int? year,
     int? month,
     int? day,
     int? hourIndex,
-    GanZhi? dayGanZhi, // 如果计算流日，必须传入当日干支
+    GanZhi? dayGanZhi,
   }) {
     Decade? decade;
     SmallLimit? smallLimit;
@@ -540,9 +660,13 @@ class TimeMachine {
   }
 
   /// 场景：当用户在 UI 的大限列表里点选了某一个大限（0-11）
-  /// 🛰️0=童限, 1=第一大限, 2=第二大限...
-  /// [index] 索引
-  /// [targetYear] 可选：如果是看童限(0)，需要知道具体哪一年的童限
+  ///
+  /// 🛰️ **定位规则**:
+  /// `0` = 童限, `1` = 第一大限, `2` = 第二大限...
+  ///
+  /// - [plate] 原始命盘
+  /// - [index] 索引 (0-11)
+  /// - [targetYear] (可选) 如果看童限(`0`)，需要知道具体看哪一年的童限
   static LimitContext travelByMacro(
     ZiWeiPlate plate,
     int index, {

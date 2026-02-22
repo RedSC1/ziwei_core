@@ -2,69 +2,85 @@ import 'package:ziwei_core/ziwei_core.dart';
 
 // 引用星星定义
 
+/// **十二地支宫位 (Palace)**
+///
+/// 紫微斗数排盘中的“格子”。总共 12 个，每个宫位都有固定的地支坐标，并容纳不同的星曜与天干。
 class Palace {
-  // 1. 地支索引 (0=子, 1=丑 ... 11=亥) - 这是死的，初始化后不可变
+  /// 宫位地支的绝对物理索引 (0=子, 1=丑 ... 11=亥)
+  /// 此为只读固定坐标，初始化后不可变。
   final int index;
 
-  // 2. 对应的地支枚举 (方便调试和显示，自动根据index算出来)
+  /// 该宫位对应的地支枚举 (根据 index 推演)，方便跨模块做地支数学计算
   DiZhi get branch => DiZhi.values[index];
 
-  // 3. 宫干 (天干) - 活的，排盘时通过“五虎遁”算出来填进去
+  /// 该宫位被分配的天干 (宫干)
+  ///
+  /// 这是活属性，在排盘初期根据命造年份使用“五虎遁”口诀推算填入。
   TianGan? stem;
 
-  // 5. 住在这里的星星列表 - 活的，安星时一颗颗塞进去
-  //List<Star> stars = [];
+  /// 住在这个宫位格子里所有的星星集合
+  ///
+  /// 根据星曜的类型分门别类 (如主星、辅曜、杂曜等)，装安星时逐一置入。
   Map<StarType, List<Star>> stars = {};
 
-  // --- 构造函数 ---
-  // 创建时只需要指定它是第几个格子(index)，其他的后面填
+  /// 标准构造器
+  ///
+  /// - [index] 物理地支索引 (0-11)
+  /// - [stem] (可选) 直接注入宫干
   Palace(this.index, {this.stem});
 
+  /// 地支枚举构造器
+  ///
+  /// - [branch] 地支枚举
+  /// - [stem] (可选) 直接注入宫干
   factory Palace.fromDiZhi(DiZhi branch, {TianGan? stem}) {
     return Palace(branch.index, stem: stem);
   }
 
+  /// 封装宫位本身的干支对象
   GanZhi get ganzhi {
     if (stem == null) {
-      throw Exception("还没排盘就算大运？？？");
+      throw StateError("宫位天干尚未推算，无法获取 GanZhi 对象。请确保已执行完整的原局排盘。");
     }
     return GanZhi(stem!, branch);
   }
 
   // --- 辅助方法 ---
 
-  // 往宫里安一颗星
+  /// 往当前宫位安插一颗星星
+  ///
+  /// - [star] 星体实例 (StaticStar 或 FlowStar)
   void addStar(Star star) {
-  // 1. 如果 stars[star.type] 还没创建，就先创建一个空的 List []
-  // 2. 然后直接把星星 add 进去
     stars.putIfAbsent(star.type, () => []).add(star);
   }
-  /// 🚀 深拷贝 (Deep Copy)
-  /// 用于大限/流年排盘，防止污染原盘
- Palace clone() {
-  return Palace(index, stem: stem)
-    ..stars.addAll(
-      // 1. 遍历旧 Map 的每一个“抽屉” (StarType -> List<Star>)
-      stars.map((type, starList) => MapEntry(
-            type,
-            // 2. 让抽屉里的每一颗星星都自我克隆，并生成一个新的 List
-            starList.map((s) => s.clone()).toList(),
-          )),
-    );
-}
 
-  // 方便调试打印看结果，不仅看地支，还能看到里面的星星
+  /// 🚀 原型深拷贝 (Deep Copy)
+  ///
+  /// 将该宫位格子以及内部的所有星星都进行引用剥离的克隆，
+  /// 这是底层能够无损支撑各个大限与流年切片计算“星耀四化变化”的核心机制。
+  Palace clone() {
+    return Palace(index, stem: stem)
+      ..stars.addAll(
+        stars.map(
+          (type, starList) =>
+              MapEntry(type, starList.map((s) => s.clone()).toList()),
+        ),
+      );
+  }
+
+  /// 控制台调试格式化
   @override
   String toString() {
-    // 效果：[丙子] 命宫: Star(紫微), Star(天府)
-    String stemStr = stem?.label ?? "?"; // 如果没算出来显示?
+    String stemStr = stem?.label ?? "?";
     String branchStr = branch.label;
     return "[$stemStr$branchStr]: $stars";
   }
 
-
+  /// 在该宫位中检索指定的星星实例对象
+  ///
+  /// - [key] 星星配置中的标识键 (如 "ziwei")
+  /// - [type] (可选) 指定星星大类来加速检索，避免全盘扫表
   Star? findStar(String key, {StarType? type}) {
-    // 1. 如果指定了类型，直接精准打击
     if (type != null) {
       final list = stars[type];
       if (list == null) return null;
@@ -75,7 +91,6 @@ class Palace {
       }
     }
 
-    // 2. 如果没给类型，再全盘扫描（复用上面的逻辑）
     for (var starList in stars.values) {
       for (var star in starList) {
         if (star.key == key) return star;
@@ -83,15 +98,18 @@ class Palace {
     }
     return null;
   }
+
+  /// 快速探询该宫位中是否驻扎了某颗星
+  ///
+  /// - [key] 星星标识键
+  /// - [type] (可选) 加速探询所在的星星大群类
   bool hasStar(String key, {StarType? type}) {
-  // 1. 如果你给了类型，我直接开那个抽屉，瞬发！
     if (type != null) {
       return stars[type]?.any((s) => s.key == key) ?? false;
     }
-    // 2. 如果没给类型，我再全盘扫描
     return stars.values.any((list) => list.any((s) => s.key == key));
   }
 
-  // 在 Palace 类内部
+  /// 提取宫内一切星星的扁平数组列表
   List<Star> get allStars => stars.values.expand((e) => e).toList();
 }

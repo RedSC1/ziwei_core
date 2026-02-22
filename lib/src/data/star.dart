@@ -4,20 +4,25 @@ import 'package:ziwei_core/src/enums/scope.dart';
 
 import '../enums/star_enums.dart';
 
-/// 1. 抽象基类
+/// **抽象基星 (Abstract Star)**
+///
+/// 紫微斗数排盘系统中所有“星星”物体的顶层基类，无论是固定的主星还是游走的流曜，都继承于此。
 abstract class Star {
   abstract final String key; // 唯一标识 (ziwei)
   abstract final StarType type; // 类型 (major/bad...)
   // 统一的构造/工厂
   const Star();
 
-  /// 核心：原型模式 (Prototype Pattern)
-  /// 用于在大限/流年排盘时深拷贝对象，防止污染原盘数据
+  /// 🚀 原型模式 (Prototype Pattern)深拷贝核心
+  ///
+  /// 用于在大限/流年排盘时深拷贝对象，防止流运状态污染原盘数据。
   Star clone();
 }
 
-/// 2. 普通静态星 (14主星 + 吉煞 + 杂曜)
-/// 这些星位置是固定的，也是 stars.json 里配的那些
+/// **固态星曜 (Static Star)**
+///
+/// 包含紫微斗数中位置相对固定的原局星星（14主星 + 吉煞 + 杂曜）。
+/// 它们的安星规则通常由 JSON 配置表直接加载决定。
 class StaticStar extends Star {
   @override
   final String key;
@@ -29,7 +34,6 @@ class StaticStar extends Star {
   SiHuaType? centripetalSiHua;
 
   // 特有属性：安星规则 (因为流曜不需要这个，它们靠流年算)
-  // 注意：这个 Rule 类型你得在 schemas 里定义好
   final StarRule rule;
   final List<int> brightnessTable;
 
@@ -56,10 +60,17 @@ class StaticStar extends Star {
       ..centripetalSiHua = centripetalSiHua;
   }
 
+  /// 获取静态星在指定宫底地支的亮度表现 (庙、旺、平、陷)
+  ///
+  /// - [branch]: 目标查询的宫位地支
   int getBrightness(DiZhi branch) {
     return brightnessTable[branch.index];
   }
 
+  /// 引擎核心装载器：从预配置的数据字典里组装出这颗星星的实体
+  ///
+  /// - [json]: 加载自 `stars.json` 的单星星字典对象
+  /// - [brightnessMap]: 加载自 `brightness.json` 的全局亮度映射表
   factory StaticStar.fromJson(
     Map<String, dynamic> json,
     Map<String, List<int>> brightnessMap,
@@ -100,9 +111,10 @@ class StaticStar extends Star {
   }
 }
 
-/// 4. 流曜 (Flow Stars)
-/// 比如：流年禄存、流年羊陀、流年魁钺
-/// 特点：位置随时间变，但有亮度属性
+/// **流星星曜 (Flow Star)**
+///
+/// 流曜属于根据时间和大限动态游走的星星，比如常见的：流年禄存、流年羊陀、流年魁钺...
+/// 特点：位置岁时间流动，同样享受亮度属性加持
 class FlowStar extends Star {
   @override
   final String key; // "flow_year_lucun"
@@ -112,8 +124,7 @@ class FlowStar extends Star {
   // 新增 scope 字段，方便后续逻辑判断
   final ZiweiScope scope;
 
-  // 流曜也是有庙旺平陷的，直接复用原星的亮度表
-  // 比如流羊的亮度表 = 原盘擎羊的亮度表
+  // 流曜也是有庙旺平陷的，通过 JSON 数据（如 flow_stars.json）独立配置并初始化
   final List<int> brightnessTable;
 
   FlowStar({
@@ -122,6 +133,11 @@ class FlowStar extends Star {
     required this.scope,
   });
 
+  /// 获取流曜在指定宫底地支的亮度表现
+  ///
+  /// 💡 流曜同样拥有自己独立配置的 `brightnessTable`，通常在 `flow_stars.json` 中定义。
+  ///
+  /// - [branch] 目标查询的宫位地支
   int getBrightness(DiZhi branch) {
     return brightnessTable[branch.index];
   }
@@ -131,5 +147,3 @@ class FlowStar extends Star {
     return FlowStar(key: key, brightnessTable: brightnessTable, scope: scope);
   }
 }
-
-// 流曜以后再加...
