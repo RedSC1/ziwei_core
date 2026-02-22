@@ -220,7 +220,177 @@ class TimelineProvider {
     return months;
   }
 
-  /// 4. 生成所有层级的超级时间轴数据字典快照 (Manifest)
+  /// 4. 获取指定月份的流日表
+  ///
+  /// 返回该月每一天的阳历日期与日干支，供前端画日历格子。
+  ///
+  /// - [targetYear]: 目标年份
+  /// - [month]: 月份 (1-12)
+  List<Map<String, dynamic>> getDays(int targetYear, int month) {
+    final isSolarBoundary =
+        plate.ruleset.calendarOptions.flowLimitBasedOn == Boundary.solar;
+
+    AstroDateTime startDate = AstroDateTime(targetYear, 1, 1, 12, 0, 0);
+    int dayCount = 30;
+
+    try {
+      if (isSolarBoundary) {
+        // 节气模式：用 Jie 边界
+        int anchorMonth = month + 1;
+        int anchorYear = targetYear;
+        if (anchorMonth > 12) {
+          anchorMonth -= 12;
+          anchorYear += 1;
+        }
+        final anchorTime = AstroDateTime(anchorYear, anchorMonth, 15, 12, 0, 0);
+        final startJie = getPrevJie(anchorTime)!;
+        final endJie = getNextJie(anchorTime)!;
+        startDate = startJie.dateTime;
+
+        final startNoon = AstroDateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+          12,
+          0,
+          0,
+        ).toJ2000();
+        final endNoon = AstroDateTime(
+          endJie.dateTime.year,
+          endJie.dateTime.month,
+          endJie.dateTime.day,
+          12,
+          0,
+          0,
+        ).toJ2000();
+        dayCount = (endNoon - startNoon).round();
+      } else {
+        // 农历模式
+        const cnMonths = [
+          "",
+          "正",
+          "二",
+          "三",
+          "四",
+          "五",
+          "六",
+          "七",
+          "八",
+          "九",
+          "十",
+          "冬",
+          "腊",
+          "十三",
+        ];
+        String queryStr = (month >= 1 && month <= 13)
+            ? cnMonths[month]
+            : month.toString();
+        final ln0 = LunarDate.fromString(targetYear, queryStr, 1);
+        startDate = ln0.toSolar;
+
+        // 用下月初一减本月初一算天数
+        String nextMonthStr = (month + 1 >= 1 && month + 1 <= 12)
+            ? cnMonths[month + 1]
+            : "正";
+        int nextYear = month == 12 ? targetYear + 1 : targetYear;
+        final ln1 = LunarDate.fromString(nextYear, nextMonthStr, 1);
+        final endAstro = ln1.toSolar;
+        final startNoon = AstroDateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+          12,
+          0,
+          0,
+        ).toJ2000();
+        final endNoon = AstroDateTime(
+          endAstro.year,
+          endAstro.month,
+          endAstro.day,
+          12,
+          0,
+          0,
+        ).toJ2000();
+        dayCount = (endNoon - startNoon).round();
+      }
+    } catch (_) {
+      // fallback
+    }
+
+    List<Map<String, dynamic>> days = [];
+    final startNoonJ = AstroDateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+      12,
+      0,
+      0,
+    ).toJ2000();
+
+    for (int d = 1; d <= dayCount; d++) {
+      final dayDate = AstroDateTime.fromJ2000(startNoonJ + (d - 1));
+      final gz = _dayGanZhi(dayDate);
+      days.add({
+        'day': d,
+        'stem': gz.gan.name,
+        'branch': gz.zhi.name,
+        'solar_date':
+            "${dayDate.year}-${dayDate.month.toString().padLeft(2, '0')}-${dayDate.day.toString().padLeft(2, '0')}",
+      });
+    }
+    return days;
+  }
+
+  /// 5. 获取指定日干支的流时表
+  ///
+  /// 根据 `splitRatHour` 配置返回 12 或 13 个时辰条目。
+  /// 13 个条目时：早子(0) + 丑(1)~亥(11) + 晚子(12)
+  ///
+  /// - [dayGanZhi]: 该日的日柱干支（用于五鼠遁推算时辰天干）
+  List<Map<String, dynamic>> getHours(GanZhi dayGanZhi) {
+    final splitRat = plate.ruleset.calendarOptions.splitRatHour;
+    List<Map<String, dynamic>> hours = [];
+
+    int startRatStemIndex = (dayGanZhi.gan.index % 5) * 2;
+
+    if (splitRat) {
+      // 早子时 (00:00-01:00)
+      hours.add({
+        'hour_index': 0,
+        'label': '早子',
+        'stem': TianGan.values[startRatStemIndex % 10].name,
+        'branch': DiZhi.values[0].name,
+        'is_early_rat': true,
+      });
+    }
+
+    // 不拆子时从0开始，拆子时从1开始（早子已添加）
+    int startIdx = splitRat ? 1 : 0;
+    for (int h = startIdx; h < 12; h++) {
+      int stemIdx = (startRatStemIndex + h) % 10;
+      hours.add({
+        'hour_index': h,
+        'label': DiZhi.values[h].name,
+        'stem': TianGan.values[stemIdx].name,
+        'branch': DiZhi.values[h].name,
+      });
+    }
+
+    if (splitRat) {
+      // 晚子时 (23:00-00:00)
+      hours.add({
+        'hour_index': 12,
+        'label': '晚子',
+        'stem': TianGan.values[startRatStemIndex % 10].name,
+        'branch': DiZhi.values[0].name,
+        'is_late_rat': true,
+      });
+    }
+
+    return hours;
+  }
+
+  /// 6. 生成所有层级的超级时间轴数据字典快照 (Manifest)
   ///
   /// 通常在用户刚进入排盘界面时，连同 `plate` 一次性发送给前端，
   /// 用来做底部的年份/月份双向轮播滚动条。
@@ -231,8 +401,28 @@ class TimelineProvider {
       'decades': getDecades(),
       'current_year_months': getMonths(currentYear),
       // 注意：getYears 我们这里不全体输出，因为 120 个年份容易撑大 Payload。
-      // 前端渲染“当前大限内部的10年”时，可以通过大限的 start_year 去纯手工 +1 计算即可，
+      // 前端渲染"当前大限内部的10年"时，可以通过大限的 start_year 去纯手工 +1 计算即可，
       // 因为流年的干支规律极度线性（十年一旬）。如果有需要也可以随时追加输出。
+      // getDays / getHours 也设计为按需调用，不在 manifest 里全量铺开。
     };
+  }
+
+  // === 内部工具 ===
+
+  /// 由阳历日期推算日干支 (60甲子日循环)
+  ///
+  /// 基于 J2000 纪元：2000-01-01 12:00 = 庚辰日 (庚=6, 辰=4)
+  GanZhi _dayGanZhi(AstroDateTime date) {
+    final j = AstroDateTime(
+      date.year,
+      date.month,
+      date.day,
+      12,
+      0,
+      0,
+    ).toJ2000().round();
+    final stemIndex = ((j % 10) + 10 + 6) % 10;
+    final branchIndex = ((j % 12) + 12 + 4) % 12;
+    return GanZhi(TianGan.values[stemIndex], DiZhi.values[branchIndex]);
   }
 }
