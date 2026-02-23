@@ -58,7 +58,8 @@ class ZiweiLimitManager {
     if (_currentContext.hasYear) {
       targetYear = _currentContext.year!.year;
     }
-    int dIdx = decadeIndex ?? _currentContext.decade?.decadeIndex ?? 1;
+    // 如果没有被明确指定，且当前上下文中没有大限对象（说明在童限），兜底使用 0 (童限) 索引
+    int dIdx = decadeIndex ?? _currentContext.decade?.decadeIndex ?? 0;
     return _timelineProvider.getFullManifest(targetYear, dIdx);
   }
 

@@ -86,8 +86,7 @@ class Decade extends FlowLimit {
     // 1. 逻辑分流：是否尚未起运 (进入童限)
     if (year < startDecadeYear) {
       // 这里的 index 绑定为 0
-      int virtualAge = year - Decade.getEffectiveBirthYear(plate) + 1;
-      return Decade.createChildhood(virtualAge, plate);
+      return Decade.createChildhood(year, plate);
     }
     // 加上 1，确保起运后的第一个十年对应 Index 1
     int decadeIndex = ((year - startDecadeYear) ~/ 10) + 1;

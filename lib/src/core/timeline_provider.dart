@@ -510,7 +510,8 @@ class TimelineProvider {
       decades: manifest.decades,
       currentYearMonths: manifest.currentYearMonths,
       status: manifest.status,
-      currentDecadeYears: getYears(decadeIndex),
+      // 童限 (index 0) 并非一个十年大限段，不支持展开 10 年流年表
+      currentDecadeYears: decadeIndex == 0 ? [] : getYears(decadeIndex),
     );
   }
   // 注意：getYears 我们这里不全体输出，因为 120 个年份容易撑大 Payload。
