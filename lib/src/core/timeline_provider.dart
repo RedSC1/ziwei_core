@@ -65,13 +65,15 @@ class TimelineProvider {
 
     for (int i = 0; i < childhoodYearsCount; i++) {
       int currentYear = birthYear + i;
-      var fy = FlowYear.createByYear(currentYear, plate);
+      int age = i + 1; // 虚岁
+      // 童限的宫位并非物理流年，而是由“小限”负责在盘面上寻找落宫干支
+      var smallLimit = SmallLimit.create(age, plate);
       childhoods.add(
         ChildhoodNode(
-          age: i + 1,
+          age: age,
           year: currentYear,
-          stem: fy.ganzhi.gan.name,
-          branch: fy.ganzhi.zhi.name,
+          stem: smallLimit.ganzhi.gan.name,
+          branch: smallLimit.ganzhi.zhi.name,
         ),
       );
     }
