@@ -45,8 +45,6 @@ class DecadeNode {
   final int endYear;
   final String stem;
   final String branch;
-  final String solarStart;
-  final String solarEnd;
 
   DecadeNode({
     required this.index,
@@ -56,8 +54,6 @@ class DecadeNode {
     required this.endYear,
     required this.stem,
     required this.branch,
-    required this.solarStart,
-    required this.solarEnd,
   });
 
   Map<String, dynamic> toJson() => {
@@ -68,8 +64,6 @@ class DecadeNode {
     'end_year': endYear,
     'stem': stem,
     'branch': branch,
-    'solar_start': solarStart,
-    'solar_end': solarEnd,
   };
 }
 

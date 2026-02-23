@@ -45,8 +45,6 @@ class TimelineProvider {
           endYear: endYear,
           stem: d.ganzhi.gan.name,
           branch: d.ganzhi.zhi.name,
-          solarStart: '$startYear-02-04',
-          solarEnd: '$endYear-12-31',
         ),
       );
     }
