@@ -539,10 +539,21 @@ class TimelineProvider {
 
   // === 内部工具 ===
 
-  /// 由阳历日期推算日干支 (委托给八字库的精确算法)
+  /// 由阳历日期推算日干支 (60甲子日循环)
+  ///
+  /// 基于 J2000 纪元：2000-01-01 12:00 = 戊午日 (戊=4, 午=6)
   GanZhi _dayGanZhi(AstroDateTime date) {
-    final zd = ZiweiDate.fromSolar(date);
-    return zd.bazi.day;
+    final j = AstroDateTime(
+      date.year,
+      date.month,
+      date.day,
+      12,
+      0,
+      0,
+    ).toJ2000().round();
+    final stemIndex = ((j % 10) + 10 + 4) % 10;
+    final branchIndex = ((j % 12) + 12 + 6) % 12;
+    return GanZhi(TianGan.values[stemIndex], DiZhi.values[branchIndex]);
   }
 
   /// 判定当前时间是否处于历法“不可推演流月”的红区
