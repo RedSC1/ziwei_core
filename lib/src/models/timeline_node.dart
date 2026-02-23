@@ -91,3 +91,68 @@ class TimelineManifest {
     'status': status.toJson(),
   };
 }
+
+/// 流年节点
+class YearNode {
+  final int year;
+  final String stem;
+  final String branch;
+
+  YearNode({required this.year, required this.stem, required this.branch});
+
+  Map<String, dynamic> toJson() => {
+    'year': year,
+    'stem': stem,
+    'branch': branch,
+  };
+}
+
+/// 流日节点
+class DayNode {
+  final int day;
+  final String stem;
+  final String branch;
+  final String solarDate;
+
+  DayNode({
+    required this.day,
+    required this.stem,
+    required this.branch,
+    required this.solarDate,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'day': day,
+    'stem': stem,
+    'branch': branch,
+    'solar_date': solarDate,
+  };
+}
+
+/// 流时节点
+class HourNode {
+  final int hourIndex;
+  final String label;
+  final String stem;
+  final String branch;
+  final bool isEarlyRat;
+  final bool isLateRat;
+
+  HourNode({
+    required this.hourIndex,
+    required this.label,
+    required this.stem,
+    required this.branch,
+    this.isEarlyRat = false,
+    this.isLateRat = false,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'hour_index': hourIndex,
+    'label': label,
+    'stem': stem,
+    'branch': branch,
+    if (isEarlyRat) 'is_early_rat': true,
+    if (isLateRat) 'is_late_rat': true,
+  };
+}

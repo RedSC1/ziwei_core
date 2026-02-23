@@ -57,8 +57,8 @@ class TimelineProvider {
   /// 2. 获取指定大限内的 10 个流年表
   ///
   /// - [decadeIndex]: 1~12 的大限索引
-  List<Map<String, dynamic>> getYears(int decadeIndex) {
-    List<Map<String, dynamic>> years = [];
+  List<YearNode> getYears(int decadeIndex) {
+    List<YearNode> years = [];
     int startDecadeYear = Decade.getStartDecadeYear(plate);
 
     // 计算该大限内的起点公历年份
@@ -67,11 +67,13 @@ class TimelineProvider {
     for (int i = 0; i < 10; i++) {
       int currentYear = startYear + i;
       var fy = FlowYear.createByYear(currentYear, plate);
-      years.add({
-        'year': currentYear, // 物理年份，前端显示用 + 后端寻址用
-        'stem': fy.ganzhi.gan.name, // 混合天干
-        'branch': fy.ganzhi.zhi.name, // 流年命宫所在的地支
-      });
+      years.add(
+        YearNode(
+          year: currentYear,
+          stem: fy.ganzhi.gan.name,
+          branch: fy.ganzhi.zhi.name,
+        ),
+      );
     }
     return years;
   }
@@ -241,11 +243,12 @@ class TimelineProvider {
   /// 4. 获取指定月份的流日表
   ///
   /// 返回该月每一天的阳历日期与日干支，供前端画日历格子。
+  /// 4. 获取指定流年、流月的流日表
   ///
-  /// - [targetYear]: 目标年份
-  /// - [month]: 月份 (1-12)
-  List<Map<String, dynamic>> getDays(int targetYear, int month) {
-    // 检查是否处于历史红区且开启了历史模式
+  /// - [year]: 对应的年份
+  /// - [month]: 1-12 对应的流月序号
+  List<DayNode> getDays(int targetYear, int month) {
+    int dayCount = 30; // 默认30天检查是否处于历史红区且开启了历史模式
     final bool enableHist = plate.date.options.enableHistorical;
     if (enableHist) {
       final sampleDate = AstroDateTime(targetYear, month, 15, 12, 0, 0);
@@ -258,7 +261,7 @@ class TimelineProvider {
         plate.ruleset.calendarOptions.flowLimitBasedOn == Boundary.solar;
 
     AstroDateTime startDate = AstroDateTime(targetYear, 1, 1, 12, 0, 0);
-    int dayCount = 30;
+    // int dayCount = 30; // 兜底
 
     try {
       if (isSolarBoundary) {
@@ -364,7 +367,7 @@ class TimelineProvider {
       // fallback
     }
 
-    List<Map<String, dynamic>> days = [];
+    List<DayNode> days = [];
     final startNoonJ = AstroDateTime(
       startDate.year,
       startDate.month,
@@ -377,13 +380,15 @@ class TimelineProvider {
     for (int d = 1; d <= dayCount; d++) {
       final dayDate = AstroDateTime.fromJ2000(startNoonJ + (d - 1));
       final gz = _dayGanZhi(dayDate);
-      days.add({
-        'day': d,
-        'stem': gz.gan.name,
-        'branch': gz.zhi.name,
-        'solar_date':
-            "${dayDate.year}-${dayDate.month.toString().padLeft(2, '0')}-${dayDate.day.toString().padLeft(2, '0')}",
-      });
+      days.add(
+        DayNode(
+          day: d,
+          stem: gz.gan.name,
+          branch: gz.zhi.name,
+          solarDate:
+              "${dayDate.year}-${dayDate.month.toString().padLeft(2, '0')}-${dayDate.day.toString().padLeft(2, '0')}",
+        ),
+      );
     }
     return days;
   }
@@ -394,44 +399,50 @@ class TimelineProvider {
   /// 13 个条目时：早子(0) + 丑(1)~亥(11) + 晚子(12)
   ///
   /// - [dayGanZhi]: 该日的日柱干支（用于五鼠遁推算时辰天干）
-  List<Map<String, dynamic>> getHours(GanZhi dayGanZhi) {
+  List<HourNode> getHours(GanZhi dayGanZhi) {
     final splitRat = plate.ruleset.calendarOptions.splitRatHour;
-    List<Map<String, dynamic>> hours = [];
+    List<HourNode> hours = [];
 
     int startRatStemIndex = (dayGanZhi.gan.index % 5) * 2;
 
     if (splitRat) {
       // 早子时 (00:00-01:00)
-      hours.add({
-        'hour_index': 0,
-        'label': '早子',
-        'stem': TianGan.values[startRatStemIndex % 10].name,
-        'branch': DiZhi.values[0].name,
-        'is_early_rat': true,
-      });
+      hours.add(
+        HourNode(
+          hourIndex: 0,
+          label: '早子',
+          stem: TianGan.values[startRatStemIndex % 10].name,
+          branch: DiZhi.values[0].name,
+          isEarlyRat: true,
+        ),
+      );
     }
 
     // 不拆子时从0开始，拆子时从1开始（早子已添加）
     int startIdx = splitRat ? 1 : 0;
     for (int h = startIdx; h < 12; h++) {
       int stemIdx = (startRatStemIndex + h) % 10;
-      hours.add({
-        'hour_index': h,
-        'label': DiZhi.values[h].name,
-        'stem': TianGan.values[stemIdx].name,
-        'branch': DiZhi.values[h].name,
-      });
+      hours.add(
+        HourNode(
+          hourIndex: h,
+          label: DiZhi.values[h].name,
+          stem: TianGan.values[stemIdx].name,
+          branch: DiZhi.values[h].name,
+        ),
+      );
     }
 
     if (splitRat) {
       // 晚子时 (23:00-00:00)
-      hours.add({
-        'hour_index': 12,
-        'label': '晚子',
-        'stem': TianGan.values[startRatStemIndex % 10].name,
-        'branch': DiZhi.values[0].name,
-        'is_late_rat': true,
-      });
+      hours.add(
+        HourNode(
+          hourIndex: 12,
+          label: '晚子',
+          stem: TianGan.values[(startRatStemIndex + 12) % 10].name,
+          branch: DiZhi.values[0].name,
+          isLateRat: true,
+        ),
+      );
     }
 
     return hours;
