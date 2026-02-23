@@ -3,6 +3,7 @@ import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/data/limit.dart';
 import 'package:ziwei_core/src/data/plate.dart';
+import 'package:ziwei_core/src/models/timeline_node.dart';
 
 /// **历法时间轴生成器 (Timeline Provider)**
 ///
@@ -27,38 +28,27 @@ class TimelineProvider {
   TimelineProvider(this.plate);
 
   /// 1. 获取完整的 12 个大限周期间隔表
-  ///
-  /// 返回格式：
-  /// ```json
-  /// [
-  ///   {
-  ///     "index": 1,
-  ///     "start_age": 2, "end_age": 11,
-  ///     "start_year": 2004, "end_year": 2013,
-  ///     "stem": "xin", "branch": "you"
-  ///   }
-  /// ]
-  /// ```
-  List<Map<String, dynamic>> getDecades() {
-    List<Map<String, dynamic>> decades = [];
+  List<DecadeNode> getDecades() {
+    List<DecadeNode> decades = [];
     int startDecadeYear = Decade.getStartDecadeYear(plate);
 
     for (int i = 1; i <= 12; i++) {
       var d = Decade.fromIndex(i, plate);
       int startYear = startDecadeYear + (i - 1) * 10;
       int endYear = startDecadeYear + i * 10 - 1;
-      decades.add({
-        'index': i,
-        'start_age': d.startTime,
-        'end_age': d.endTime,
-        'start_year': startYear,
-        'end_year': endYear,
-        'stem': d.ganzhi.gan.name,
-        'branch': d.ganzhi.zhi.name,
-        // 返回大限第一天大概的公历戳 (方便跨历法引擎联动定点)
-        'solar_start': '$startYear-02-04',
-        'solar_end': '$endYear-12-31',
-      });
+      decades.add(
+        DecadeNode(
+          index: i,
+          startAge: d.startTime,
+          endAge: d.endTime,
+          startYear: startYear,
+          endYear: endYear,
+          stem: d.ganzhi.gan.name,
+          branch: d.ganzhi.zhi.name,
+          solarStart: '$startYear-02-04',
+          solarEnd: '$endYear-12-31',
+        ),
+      );
     }
 
     return decades;
@@ -89,7 +79,7 @@ class TimelineProvider {
   /// 3. 获取指定流年内的 12个流月表 (严格遵从小限/太岁/流月配置)
   ///
   /// 返回包含了 `month` 数字和混合干支的列表。
-  List<Map<String, dynamic>> getMonths(int targetYear) {
+  List<MonthNode> getMonths(int targetYear) {
     // 检查是否处于历史红区且开启了历史模式
     final bool enableHist = plate.date.options.enableHistorical;
     if (enableHist) {
@@ -100,7 +90,7 @@ class TimelineProvider {
       }
     }
 
-    List<Map<String, dynamic>> months = [];
+    List<MonthNode> months = [];
 
     // 预先读取节气或历法配置
     final bool isSolarBoundary =
@@ -235,15 +225,15 @@ class TimelineProvider {
         // Fallback
       }
 
-      months.add({
-        'month': m, // 农历或节令相对位置 1-12
-        'stem': fm.ganzhi.gan.name,
-        'palace_branch': fm.ganzhi.zhi.name, // 该流月所在的命盘宫位
-        'calendar_branch': DiZhi.values[(m + 1) % 12].name, // 传统月建地支 (正月=寅)
-        'days_count': daysInMonth,
-        'solar_start': solarStart, // e.g. "2026-02-17" 或是立春日 "2026-02-04"
-        'solar_end': solarEnd,
-      });
+      months.add(
+        MonthNode(
+          month: m,
+          stem: fm.ganzhi.gan.name,
+          branch: fm.ganzhi.zhi.name,
+          solarStart: solarStart.isNotEmpty ? solarStart : null,
+          solarEnd: solarEnd.isNotEmpty ? solarEnd : null,
+        ),
+      );
     }
     return months;
   }
@@ -447,31 +437,28 @@ class TimelineProvider {
     return hours;
   }
 
-  /// 6. 生成所有层级的超级时间轴数据字典快照 (Manifest)
+  /// 6. 生成某年度流运概览清单
   ///
-  /// 通常在用户刚进入排盘界面时，连同 `plate` 一次性发送给前端，
-  /// 用来做底部的年份/月份双向轮播滚动条。
-  ///
-  /// - [currentYear]: 需要预先展开的当下年份（用来渲染今年的12个月份列表）
-  Map<String, dynamic> generateManifest(int currentYear) {
+  /// 这是给 UI 渲染层提供的轻量化年度通行证
+  TimelineManifest generateManifest(int currentYear) {
     final months = getMonths(currentYear);
     final bool isFused = months.isEmpty && plate.date.options.enableHistorical;
 
-    return {
-      'decades': getDecades(),
-      'current_year_months': months,
-      'status': {
-        'is_historical_red_zone': isFused,
-        'note': isFused
+    return TimelineManifest(
+      decades: getDecades(),
+      currentYearMonths: months,
+      status: ManifestStatus(
+        isHistoricalRedZone: isFused,
+        note: isFused
             ? "当前年份处于历史历法特殊更迭期（非建寅为正），流运数据已停用。如需强行排盘，请在配置中关闭“启用历史历法”选项。"
             : "正常",
-      },
-      // 注意：getYears 我们这里不全体输出，因为 120 个年份容易撑大 Payload。
-      // 前端渲染"当前大限内部的10年"时，可以通过大限的 start_year 去纯手工 +1 计算即可，
-      // 因为流年的干支规律极度线性（十年一旬）。如果有需要也可以随时追加输出。
-      // getDays / getHours 也设计为按需调用，不在 manifest 里全量铺开。
-    };
+      ),
+    );
   }
+  // 注意：getYears 我们这里不全体输出，因为 120 个年份容易撑大 Payload。
+  // 前端渲染"当前大限内部的10年"时，可以通过大限的 start_year 去纯手工 +1 计算即可，
+  // 因为流年的干支规律极度线性（十年一旬）。如果有需要也可以随时追加输出。
+  // getDays / getHours 也设计为按需调用，不在 manifest 里全量铺开。
 
   // === 内部工具 ===
 

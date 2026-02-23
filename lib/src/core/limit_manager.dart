@@ -5,6 +5,8 @@ import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
+import 'package:ziwei_core/src/core/timeline_provider.dart';
+import 'package:ziwei_core/src/models/timeline_node.dart';
 
 /// **紫微流运状态管理器 (Limit Manager)**
 ///
@@ -17,6 +19,7 @@ import 'package:ziwei_core/src/time/ziwei_date.dart';
 /// 例如：调用 `addMonth()` 切换流月，会自动清空 `day` 和 `hour` 的流运展示，防止旧时间的污染，保持盘面干净。
 class ZiweiLimitManager {
   final ZiWeiPlate _basePlate;
+  late final TimelineProvider _timelineProvider;
 
   /// 基于“物理时间”步进时的流动时间锚点（如果要玩转 addDays 或 addHours）
   ZiweiDate? currentDate;
@@ -25,7 +28,9 @@ class ZiweiLimitManager {
   LimitContext _currentContext;
 
   ZiweiLimitManager(this._basePlate)
-    : _currentContext = LimitContext.original(_basePlate);
+    : _currentContext = LimitContext.original(_basePlate) {
+    _timelineProvider = TimelineProvider(_basePlate);
+  }
 
   // --- Getters ---
 
@@ -35,6 +40,15 @@ class ZiweiLimitManager {
   LimitContext get limitContext => _currentContext;
 
   ZiWeiPlate get basePlate => _basePlate;
+
+  /// 获取与当前“流年状态”绑定的完整年度流月通行证，自带强类型实体和熔断状态
+  TimelineManifest get currentManifest {
+    int targetYear = currentDate?.solar.year ?? DateTime.now().year;
+    if (_currentContext.hasYear) {
+      targetYear = _currentContext.year!.year;
+    }
+    return _timelineProvider.generateManifest(targetYear);
+  }
 
   // --- 大限控制 (Decade) ---
 
