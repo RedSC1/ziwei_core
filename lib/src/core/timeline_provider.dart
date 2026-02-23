@@ -4,6 +4,7 @@ import 'package:ziwei_core/src/enums/config_enums.dart';
 import 'package:ziwei_core/src/data/limit.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/models/timeline_node.dart';
+import 'package:ziwei_core/src/time/ziwei_date.dart';
 
 /// **历法时间轴生成器 (Timeline Provider)**
 ///
@@ -538,21 +539,10 @@ class TimelineProvider {
 
   // === 内部工具 ===
 
-  /// 由阳历日期推算日干支 (60甲子日循环)
-  ///
-  /// 基于 J2000 纪元：2000-01-01 12:00 = 庚辰日 (庚=6, 辰=4)
+  /// 由阳历日期推算日干支 (委托给八字库的精确算法)
   GanZhi _dayGanZhi(AstroDateTime date) {
-    final j = AstroDateTime(
-      date.year,
-      date.month,
-      date.day,
-      12,
-      0,
-      0,
-    ).toJ2000().round();
-    final stemIndex = ((j % 10) + 10 + 6) % 10;
-    final branchIndex = ((j % 12) + 12 + 4) % 12;
-    return GanZhi(TianGan.values[stemIndex], DiZhi.values[branchIndex]);
+    final zd = ZiweiDate.fromSolar(date);
+    return zd.bazi.day;
   }
 
   /// 判定当前时间是否处于历法“不可推演流月”的红区
