@@ -52,6 +52,33 @@ class TimelineProvider {
     return decades;
   }
 
+  /// 1.5 获取起运前的童限表 (1岁 ~ 起运前一年)
+  ///
+  /// 注意：如果刚好是1岁起运，该列表为空。
+  List<ChildhoodNode> getChildhood() {
+    List<ChildhoodNode> childhoods = [];
+    int startDecadeAge = plate.elementBureau.number; // 水二局=2岁, 木三局=3岁...
+    int birthYear = plate.date.solar.year;
+
+    // 童限年数 = 起运年龄 - 1
+    int childhoodYearsCount = startDecadeAge - 1;
+
+    for (int i = 0; i < childhoodYearsCount; i++) {
+      int currentYear = birthYear + i;
+      var fy = FlowYear.createByYear(currentYear, plate);
+      childhoods.add(
+        ChildhoodNode(
+          age: i + 1,
+          year: currentYear,
+          stem: fy.ganzhi.gan.name,
+          branch: fy.ganzhi.zhi.name,
+        ),
+      );
+    }
+
+    return childhoods;
+  }
+
   /// 2. 获取指定大限内的 10 个流年表
   ///
   /// - [decadeIndex]: 1~12 的大限索引
@@ -454,6 +481,7 @@ class TimelineProvider {
     final bool isFused = months.isEmpty && plate.date.options.enableHistorical;
 
     return TimelineManifest(
+      childhoods: getChildhood(),
       decades: getDecades(),
       currentYearMonths: months,
       status: ManifestStatus(

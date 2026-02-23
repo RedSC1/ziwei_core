@@ -67,19 +67,44 @@ class DecadeNode {
   };
 }
 
+/// 童限节点（起大限前）
+class ChildhoodNode {
+  final int age;
+  final int year;
+  final String stem;
+  final String branch;
+
+  ChildhoodNode({
+    required this.age,
+    required this.year,
+    required this.stem,
+    required this.branch,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'age': age,
+    'year': year,
+    'stem': stem,
+    'branch': branch,
+  };
+}
+
 /// 流运时间轴年度通行证
 class TimelineManifest {
+  final List<ChildhoodNode> childhoods;
   final List<DecadeNode> decades;
   final List<MonthNode> currentYearMonths;
   final ManifestStatus status;
 
   TimelineManifest({
+    required this.childhoods,
     required this.decades,
     required this.currentYearMonths,
     required this.status,
   });
 
   Map<String, dynamic> toJson() => {
+    'childhoods': childhoods.map((e) => e.toJson()).toList(),
     'decades': decades.map((e) => e.toJson()).toList(),
     'current_year_months': currentYearMonths.map((e) => e.toJson()).toList(),
     'status': status.toJson(),

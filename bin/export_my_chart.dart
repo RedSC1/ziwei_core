@@ -31,8 +31,9 @@ void main() {
   final currentDecadeIndex = manager.limitContext.decade?.decadeIndex ?? 1;
   final decadeYears = timeline.getYears(currentDecadeIndex);
 
-  // 拼装一个给前端看的终极响应包，注意顺序：大限 -> 流年 -> 流月
+  // 拼装一个给前端看的终极响应包，注意顺序：童限 -> 大限 -> 流年 -> 流月
   final responsePayload = {
+    'childhoods': manifest.childhoods.map((e) => e.toJson()).toList(),
     'decades': manifest.decades.map((e) => e.toJson()).toList(),
     'current_decade_years': decadeYears.map((e) => e.toJson()).toList(),
     'current_year_months': manifest.currentYearMonths
