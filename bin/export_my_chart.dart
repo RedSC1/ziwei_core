@@ -6,14 +6,14 @@ import 'package:ziwei_core/src/data/limit.dart'; // 用于读取未公开的大�
 void main() {
   print("==================================================");
   print("🔮 紫微斗数排盘及流运 JSON 序列化 Demo");
-  print("👤 出生信息: 2003-08-28 02:30 (公历)");
+  print("👤 出生信息: 2004-02-28 12:30 (公历)");
   print("==================================================\n");
 
   // 1. 加载默认引擎配置规则
   final ruleset = ConfigLoader.getDefault();
 
   // 2. 设定出生时间
-  final birthTime = DateTime(2003, 8, 28, 2, 30);
+  final birthTime = DateTime(2004, 2, 28, 12, 30);
   final zDate = ZiweiDate.fromSolar(birthTime, gender: Gender.male);
 
   // 3. 驱动引擎计算命盘主体 (原局紫微盘)

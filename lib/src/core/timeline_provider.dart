@@ -106,6 +106,36 @@ class TimelineProvider {
     final bool isSolarBoundary =
         plate.ruleset.calendarOptions.flowLimitBasedOn == Boundary.solar;
 
+    // --- 极稳健的“节令流水线”采集 (规避历法大平移问题) ---
+    // 如果是太阳历模式，预先按序采集这一年所有的 12 个“节”，以及第 13 个（即次年立春）用来做 12 月的结尾
+    List<AstroDateTime> yearJies = [];
+    if (isSolarBoundary) {
+      // 倒退回上一年的 11 月 1 号（公历）寻找立春，以确保兼容远古儒略历（此时立春甚至可能在 1 月初）
+      AstroDateTime anchor = AstroDateTime(targetYear - 1, 11, 1, 12, 0, 0);
+      var curr = getNextJie(anchor);
+
+      int safeguard = 0;
+      while (curr != null && safeguard < 40) {
+        if (curr.name == '立春') {
+          yearJies.add(curr.dateTime);
+          break;
+        }
+        // 精确跨越当前节，寻找下一个“节”（加2天JD安全跨越浮点精度）
+        curr = getNextJie(
+          AstroDateTime.fromJ2000(curr.dateTime.toJ2000() + 2.0),
+        );
+        safeguard++;
+      }
+
+      // 接着抓取后面的 12 个节（总计拿到 13 个：正月首...到十二月末尾的次年立春）
+      for (int i = 0; i < 12; i++) {
+        curr = getNextJie(
+          AstroDateTime.fromJ2000(yearJies.last.toJ2000() + 2.0),
+        );
+        yearJies.add(curr!.dateTime);
+      }
+    }
+
     for (int m = 1; m <= 12; m++) {
       // 内部通过 ZiweiDate 的历法和五虎遁，结合流年斗君，确保算出的干支绝对正确
       var fm = FlowMonth.create(m, targetYear, plate);
@@ -120,31 +150,8 @@ class TimelineProvider {
           // ==============================
           // 节气(太阳)流月模式 (类似八字库运势)
           // ==============================
-          // 八字的流月，完全由【节】（Jie）决定，不考虑【气】（Qi），且与农历初一毫无瓜葛。
-          // 寅月(m=1) = 立春到惊蛰。因为我们需要取当年的立春时刻作为基准。
-          // 所以简单办法：我们粗略找当年该阳历月的15号作为一个锚点时间 (因为节一般在月初4-8号)，
-          // 然后向前后查找相近的节令。
-          // 由于 m=1 代表寅月，物理落在阳历 2月。
-          int anchorMonth = m + 1;
-          int anchorYear = targetYear;
-          if (anchorMonth > 12) {
-            anchorMonth -= 12;
-            anchorYear += 1;
-          }
-          final anchorTime = AstroDateTime(
-            anchorYear,
-            anchorMonth,
-            15,
-            12,
-            0,
-            0,
-          );
-
-          final startJie = getPrevJie(anchorTime);
-          final endJie = getNextJie(anchorTime);
-
-          final startAstro = startJie!.dateTime;
-          final endAstroExclusive = endJie!.dateTime;
+          final startAstro = yearJies[m - 1];
+          final endAstroExclusive = yearJies[m];
 
           // 掰到正午再相减，消除时分秒造成的 ±1 天偏移（兼容公元前）
           final startNoon = AstroDateTime(
@@ -266,15 +273,35 @@ class TimelineProvider {
     try {
       if (isSolarBoundary) {
         // 节气模式：用 Jie 边界
-        int anchorMonth = month + 1;
-        int anchorYear = targetYear;
-        if (anchorMonth > 12) {
-          anchorMonth -= 12;
-          anchorYear += 1;
+        // --- 同样的“节令流水线”采集，找齐目标月（month）的起止节 ---
+        AstroDateTime anchor = AstroDateTime(targetYear - 1, 11, 1, 12, 0, 0);
+        var curr = getNextJie(anchor);
+
+        int safeguard = 0;
+        while (curr != null && safeguard < 40) {
+          if (curr.name == '立春') {
+            break;
+          }
+          curr = getNextJie(
+            AstroDateTime.fromJ2000(curr.dateTime.toJ2000() + 2.0),
+          );
+          safeguard++;
         }
-        final anchorTime = AstroDateTime(anchorYear, anchorMonth, 15, 12, 0, 0);
-        final startJie = getPrevJie(anchorTime)!;
-        final endJie = getNextJie(anchorTime)!;
+
+        // 找到了流年的首个节（立春，month=1的起点）
+        // 往后跳 (month - 1) 个节就是当前月的起点
+        for (int i = 0; i < month - 1; i++) {
+          curr = getNextJie(
+            AstroDateTime.fromJ2000(curr!.dateTime.toJ2000() + 2.0),
+          );
+        }
+        final startJie = curr!;
+
+        // 再往后跳 1 个节就是当前月的终点
+        final endJie = getNextJie(
+          AstroDateTime.fromJ2000(startJie.dateTime.toJ2000() + 2.0),
+        )!;
+
         startDate = startJie.dateTime;
 
         final startNoon = AstroDateTime(

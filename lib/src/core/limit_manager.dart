@@ -115,27 +115,13 @@ class ZiweiLimitManager {
         if (delta > 0) {
           final nextJie = getNextJie(anchor);
           if (nextJie == null) break;
-          // 落入下一个节后 1 小时，确保安全落地
-          anchor = AstroDateTime(
-            nextJie.dateTime.year,
-            nextJie.dateTime.month,
-            nextJie.dateTime.day,
-            nextJie.dateTime.hour + 1,
-            nextJie.dateTime.minute,
-            0,
-          );
+          // 落入下一个节后约 1.2 小时 (+0.05 JD)，确保安全落地，完美规避24点/月末越界
+          anchor = AstroDateTime.fromJ2000(nextJie.dateTime.toJ2000() + 0.05);
         } else {
           final prevJie = getPrevJie(anchor);
           if (prevJie == null) break;
-          // 落入上一个节前 1 小时，确保安全落地到前一个月
-          anchor = AstroDateTime(
-            prevJie.dateTime.year,
-            prevJie.dateTime.month,
-            prevJie.dateTime.day,
-            prevJie.dateTime.hour - 1,
-            prevJie.dateTime.minute,
-            0,
-          );
+          // 落入上一个节前约 1.2 小时 (-0.05 JD)，确保安全落地到前一个月
+          anchor = AstroDateTime.fromJ2000(prevJie.dateTime.toJ2000() - 0.05);
         }
       }
       setPhysicalDate(anchor.toDateTime()!);
