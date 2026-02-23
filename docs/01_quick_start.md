@@ -89,7 +89,7 @@ final days = provider.getDays(2026, 2);
 | 分类 | 方法 | 说明 |
 | :--- | :--- | :--- |
 | **核心定位** | `setPhysicalDate(time)` | **最推荐用法**。会自动解析并重构出此时此刻天地相交的完整流运切片。 |
-| **手动切换** | `setDecadeIndex(index, {targetChildhoodYear})` | 直接跳转到指定大限 (0:童限, 1:第一大限...)。<br>💡 如果传入 `0` 看前几年的散装童限，**必须**带上第二个参数 `targetChildhoodYear` (你想看哪一年)，否则引擎不知道落在哪宫。 |
+| **手动切换** | `setDecadeIndex(index, {targetChildhoodYear})` | 直接跳转到指定大限 (0:童限, 1:第一大限...)。<br>💡 如果传入 `0` 看前几年的散装童限，**必须**带上第二个参数 `targetChildhoodYear` (你想看哪一年)，无法确定童限命宫落在哪宫。 |
 | | `setYear(year)` | 设定特定流年，重置下属月、日、时。 |
 | | `setMonth(month)` | 设定农历流月 (1:正月, 12:腊月)。 |
 | | `setHour(hourIndex)` | 设定时辰索引 (0:子, 1:丑...)。 |

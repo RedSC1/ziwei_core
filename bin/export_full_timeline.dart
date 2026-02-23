@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
-import 'package:bazi_core/bazi_core.dart';
 import 'package:ziwei_core/ziwei_core.dart';
 
 /// 完整时间线输出 Demo
