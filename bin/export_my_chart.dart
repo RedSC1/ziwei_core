@@ -23,28 +23,13 @@ void main() {
   // 设定推演时间：当前时刻
   manager.setPhysicalDate(AstroDateTime(9, 1, 28, 2, 30));
 
-  // 5. 【核心展示】获取年度流运清单 (Manifest)
-  final manifest = manager.currentManifest;
-
-  // 额外福利：获取当前大限内的 10 个流年列表（通常是用户点击某个大限后动态拉取）
-  final timeline = TimelineProvider(plate);
-  final currentDecadeIndex = manager.limitContext.decade?.decadeIndex ?? 1;
-  final decadeYears = timeline.getYears(currentDecadeIndex);
-
-  // 拼装一个给前端看的终极响应包，注意顺序：童限 -> 大限 -> 流年 -> 流月
-  final responsePayload = {
-    'childhoods': manifest.childhoods.map((e) => e.toJson()).toList(),
-    'decades': manifest.decades.map((e) => e.toJson()).toList(),
-    'current_decade_years': decadeYears.map((e) => e.toJson()).toList(),
-    'current_year_months': manifest.currentYearMonths
-        .map((e) => e.toJson())
-        .toList(),
-    'status': manifest.status.toJson(),
-  };
+  // 5. 【核心展示】获取年度流运清单全家桶 (Full Manifest)
+  // 现在可以直接调用 getFullManifest()，这套强类型结构体原生地包含了：童限、大限、流年展开、流月，全部自洽！
+  final manifest = manager.getFullManifest();
 
   print("--- 综合流运状态清单 (JSON) ---");
   final encoder = JsonEncoder.withIndent('  ');
-  print(encoder.convert(responsePayload));
+  print(encoder.convert(manifest.toJson()));
 
   print("\n==================================================");
   print("🚀 成功导出年度流运快照");

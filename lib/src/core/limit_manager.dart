@@ -50,6 +50,18 @@ class ZiweiLimitManager {
     return _timelineProvider.generateManifest(targetYear);
   }
 
+  /// 一键获取包含指定大限内所有流年的“全家桶”序列化清单 (Full JSON 专用)
+  ///
+  /// - [decadeIndex]: 目标大限索引，如果留空将自动尝试提取 limitContext 中此刻所处的大限，兜底指向第一大限。
+  TimelineManifest getFullManifest([int? decadeIndex]) {
+    int targetYear = currentDate?.solar.year ?? DateTime.now().year;
+    if (_currentContext.hasYear) {
+      targetYear = _currentContext.year!.year;
+    }
+    int dIdx = decadeIndex ?? _currentContext.decade?.decadeIndex ?? 1;
+    return _timelineProvider.getFullManifest(targetYear, dIdx);
+  }
+
   // --- 大限控制 (Decade) ---
 
   /// 切入指定大限，重置流年流月

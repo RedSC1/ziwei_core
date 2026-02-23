@@ -477,7 +477,7 @@ class TimelineProvider {
 
   /// 6. 生成某年度流运概览清单
   ///
-  /// 这是给 UI 渲染层提供的轻量化年度通行证
+  /// 这是给 UI 渲染层提供的轻量化年度通行证（不包含流年展开详情）
   TimelineManifest generateManifest(int currentYear) {
     final months = getMonths(currentYear);
     final bool isFused = months.isEmpty && plate.date.options.enableHistorical;
@@ -492,6 +492,22 @@ class TimelineProvider {
             ? "当前年份处于历史历法特殊更迭期（非建寅为正），流运数据已停用。如需强行排盘，请在配置中关闭“启用历史历法”选项。"
             : "正常",
       ),
+    );
+  }
+
+  /// 7. 获取包含当前大限所有流年的“全家桶”流运清单
+  ///
+  /// 专为一键导出、服务端 API 等场景设计，能够在一棵树中挂载大限内的所有流年对象。
+  /// - [currentYear] 当前物理年份
+  /// - [decadeIndex] 当前所处大限的索引 (1-12)
+  TimelineManifest getFullManifest(int currentYear, int decadeIndex) {
+    final manifest = generateManifest(currentYear);
+    return TimelineManifest(
+      childhoods: manifest.childhoods,
+      decades: manifest.decades,
+      currentYearMonths: manifest.currentYearMonths,
+      status: manifest.status,
+      currentDecadeYears: getYears(decadeIndex),
     );
   }
   // 注意：getYears 我们这里不全体输出，因为 120 个年份容易撑大 Payload。

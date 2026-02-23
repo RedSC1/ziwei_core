@@ -93,12 +93,17 @@ class ChildhoodNode {
 class TimelineManifest {
   final List<ChildhoodNode> childhoods;
   final List<DecadeNode> decades;
+
+  /// (可选) 用户当前处于哪个大限，如果是全量导出则挂载此大限下的 10 个流年
+  final List<YearNode>? currentDecadeYears;
+
   final List<MonthNode> currentYearMonths;
   final ManifestStatus status;
 
   TimelineManifest({
     required this.childhoods,
     required this.decades,
+    this.currentDecadeYears,
     required this.currentYearMonths,
     required this.status,
   });
@@ -106,6 +111,10 @@ class TimelineManifest {
   Map<String, dynamic> toJson() => {
     'childhoods': childhoods.map((e) => e.toJson()).toList(),
     'decades': decades.map((e) => e.toJson()).toList(),
+    if (currentDecadeYears != null)
+      'current_decade_years': currentDecadeYears!
+          .map((e) => e.toJson())
+          .toList(),
     'current_year_months': currentYearMonths.map((e) => e.toJson()).toList(),
     'status': status.toJson(),
   };
