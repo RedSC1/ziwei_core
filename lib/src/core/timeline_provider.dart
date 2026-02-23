@@ -254,11 +254,14 @@ class TimelineProvider {
         // Fallback
       }
 
+      // 月柱的历法地支：正月建寅(index=2)，二月建卯(index=3)...依次类推
+      DiZhi monthBranch = DiZhi.values[(m + 1) % 12];
+
       months.add(
         MonthNode(
           month: m,
           stem: fm.ganzhi.gan.name,
-          branch: fm.ganzhi.zhi.name,
+          branch: monthBranch.name,
           solarStart: solarStart.isNotEmpty ? solarStart : null,
           solarEnd: solarEnd.isNotEmpty ? solarEnd : null,
         ),
