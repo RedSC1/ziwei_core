@@ -215,13 +215,20 @@ class ZiweiLimitManager {
   // 就像用户指出的，依靠整数 +1 跨月、跨日、早晚子时切分会遇到历法逻辑死角。
   // 通过向底层 SolarTime 加入 Duration，重新过一遍八字引擎，能完美化解一切闰月/交截点！
 
-  /// 核心魔法：以给定的绝对物理 DateTime 为基准，自动解析并重构出此时天地相交的完整流运切片
+  /// 核心魔法：以给定的绝对物理时刻为基准，自动解析并重构出此时天地相交的完整流运切片
   ///
   /// 它会自动考虑原盘传承的所有“真太阳时配置、早晚子配置、地理经纬度偏差”。
   ///
-  /// - [time] 需要推演探勘的当前地球时刻
-  void setPhysicalDate(DateTime time) {
+  /// - [time] 允许传入常规的 [DateTime] 或是能表示公元前/远古时间的超级物理对象 [AstroDateTime]
+  void setPhysicalDate(dynamic time) {
+    if (time is! DateTime && time is! AstroDateTime) {
+      throw ArgumentError(
+        "setPhysicalDate requires a DateTime or AstroDateTime object.",
+      );
+    }
+
     // 1. 利用引擎彻底解析这个时间点，自动处理早晚子时、真太阳时等
+    // ZiweiDate.fromSolar 底层已经支持了 dynamic (DateTime 或 AstroDateTime) 智能解析
     currentDate = ZiweiDate.fromSolar(
       time,
       options: _basePlate.date.options, // 继承原盘的历法配置
@@ -244,8 +251,13 @@ class ZiweiLimitManager {
       setPhysicalDate(DateTime.now());
     }
 
-    // 在底层的物理时间上加上增量
-    final nextTime = currentDate!.solar.toDateTime()!.add(duration);
+    // 在底层的物理时间上加上增量 (不使用 DateTime 避免 BC 时期溢出)
+    final j2000 = currentDate!.solar.toJ2000();
+
+    // Duration.inMinutes / (24 * 60) 可以得到浮点天数 (JD)
+    final offsetDays = duration.inMinutes / 1440.0;
+
+    final nextTime = AstroDateTime.fromJ2000(j2000 + offsetDays);
     setPhysicalDate(nextTime);
   }
 
@@ -282,25 +294,29 @@ class ZiweiLimitManager {
 
     // 如果当前处于“晚子时”(23:00~24:00)，其实它属于昨天的末尾，但 date 已经算作“子时=0”了。
     // 为了找准正中心，我们以“当前的实际阳历日期”为基准，将时分秒强行对齐到该地支的正中心！
-    int centerHour = branchIndex * 2;
+    // 组合出当前日期的纯洁“0点0分”
+    AstroDateTime startOfDay = AstroDateTime(
+      solar.year,
+      solar.month,
+      solar.day,
+      0,
+      0,
+      0,
+    );
 
-    DateTime centerTime;
-    if (branchIndex == 0 && solar.hour >= 23) {
-      // 晚子时特例：它的正中心理论上是 24:00，但在 DateTime 里等于隔天的 00:00
-      centerTime = DateTime(
-        solar.year,
-        solar.month,
-        solar.day,
-      ).add(const Duration(days: 1));
-    } else {
-      // 常规时辰中心：直接对其当天的 centerHour
-      centerTime = DateTime(solar.year, solar.month, solar.day, centerHour);
-    }
+    // 计算出靶心时刻 (目标时辰的正中心小时)
+    // 如果是早子时 (hour < 1)，中心算 0 点。晚子时暂且落入 0 点，因为跨天交接由下一行加权。
+    double targetCenterHour = (branchIndex == 0) ? 0.0 : (branchIndex * 2.0);
 
-    // 此时 centerTime 是当前时辰的“绝对中心靶心”
-    // 直接加上增量，确保稳稳落入下一个靶心，绝不跨区！
-    final nextTargetCenter = centerTime.add(Duration(hours: hoursDelta));
-    setPhysicalDate(nextTargetCenter);
+    // 我们现在所处在这个靶心时刻的正中心 JD
+    final centerJd = startOfDay.toJ2000() + (targetCenterHour / 24.0);
+
+    // 偏移
+    final nextCenterJd = centerJd + (hoursDelta / 24.0);
+    final targetAstro = AstroDateTime.fromJ2000(nextCenterJd);
+
+    // 穿梭时光机，发射！
+    setPhysicalDate(targetAstro);
   }
 
   void _rebuildContextFromCurrentDate() {
