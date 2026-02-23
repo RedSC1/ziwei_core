@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'package:ziwei_core/ziwei_core.dart';
-import 'package:bazi_core/bazi_core.dart';
-import 'package:ziwei_core/src/data/limit.dart'; // 用于读取未公开的大限和流月工厂方法
 
 void main() {
   print("==================================================");
@@ -13,72 +11,41 @@ void main() {
   final ruleset = ConfigLoader.getDefault();
 
   // 2. 设定出生时间
-  final birthTime = DateTime(2004, 2, 28, 12, 30);
+  final birthTime = DateTime(1, 1, 28, 2, 30);
   final zDate = ZiweiDate.fromSolar(birthTime, gender: Gender.male);
 
   // 3. 驱动引擎计算命盘主体 (原局紫微盘)
   final plate = ZiweiEngine.calculate(zDate, ruleset);
 
-  // 4. 时光机穿梭到此刻 DateTime.now()
-  // 首先需要把当前的时间转化为紫微历法底层时间，以获取准确的年份和农历月份
-  final now = DateTime.now();
-  final zNowDate = ZiweiDate.fromSolar(
-    now,
-    gender: Gender.male,
-    options: plate.date.options,
-  );
+  // 4. 使用 LimitManager 开启流运引擎
+  final manager = ZiweiLimitManager(plate);
 
-  // 驱动流运切片引擎 (推演到：流年、流月、流日、流时)
-  final limitContext = TimeMachine.travel(
-    plate,
-    year: zNowDate.lunar.lunarYear,
-    month: zNowDate.lunar.month,
-    day: zNowDate.lunar.day,
-    dayGanZhi: zNowDate.bazi.day, // 推导流日和流时必须有当日的基础干支坐标
-    hourIndex: zNowDate.timeIndex,
-  );
+  // 设定推演时间：当前时刻
+  manager.setPhysicalDate(AstroDateTime(9, 1, 28, 2, 30));
 
-  // 💥 关键点: 借助上下文计算得出附带流曜与流派四化的「动态流盘」
-  final dynamicPlate = ZiweiEngine.calculateDynamic(limitContext);
+  // 5. 【核心展示】获取年度流运清单 (Manifest)
+  final manifest = manager.currentManifest;
 
-  // 5. 组建给前端的时间导航条元数据 (Timeline Manifest)
-  // 借助统一门面 TimelineProvider，让引擎依据底盘的历法规则，帮前端一键生成！
+  // 额外福利：获取当前大限内的 10 个流年列表（通常是用户点击某个大限后动态拉取）
   final timeline = TimelineProvider(plate);
-  int currentYear = limitContext.year!.year;
+  final currentDecadeIndex = manager.limitContext.decade?.decadeIndex ?? 1;
+  final decadeYears = timeline.getYears(currentDecadeIndex);
 
-  // 6. 将结果转换为纯净数据字典
-  final result = {
-    // 实际业务中，你可以只输出 dynamic_plate，这是被贴满了流年四化的最终盘面
-    "dynamic_plate": dynamicPlate.toJson(),
-
-    // 附带流运的干支及游标坐标数据
-    "flow_context": limitContext.toJson(),
-
-    // 🕒 完整的历法时间轴示例 (前端构建导航的基础)
-    "timeline_samples": {
-      "decades": timeline.getDecades(),
-      "years_in_current_decade": timeline.getYears(
-        limitContext.decade?.decadeIndex ?? 1,
-      ),
-      "months_in_current_year": timeline.getMonths(currentYear),
-      "days_in_current_month": timeline.getDays(
-        currentYear,
-        limitContext.month?.month ?? 1,
-      ),
-      "hours_in_current_day": timeline.getHours(
-        limitContext.day?.ganzhi ?? zNowDate.bazi.day,
-      ),
-    },
-
-    // 送给前端画“左右滑动导航栏”用的极简日历元数据
-    "timeline_manifest": timeline.generateManifest(currentYear),
+  // 拼装一个给前端看的终极响应包，注意顺序：大限 -> 流年 -> 流月
+  final responsePayload = {
+    'decades': manifest.decades.map((e) => e.toJson()).toList(),
+    'current_decade_years': decadeYears.map((e) => e.toJson()).toList(),
+    'current_year_months': manifest.currentYearMonths
+        .map((e) => e.toJson())
+        .toList(),
+    'status': manifest.status.toJson(),
   };
 
-  final prettyJson = JsonEncoder.withIndent('  ').convert(result);
-
-  print(prettyJson);
+  print("--- 综合流运状态清单 (JSON) ---");
+  final encoder = JsonEncoder.withIndent('  ');
+  print(encoder.convert(responsePayload));
 
   print("\n==================================================");
-  print("✅ 控制台输出流盘完成！'flow_context' 里包含了精准此时此刻的漫游切片坐标。");
+  print("🚀 成功导出年度流运快照");
   print("==================================================");
 }
