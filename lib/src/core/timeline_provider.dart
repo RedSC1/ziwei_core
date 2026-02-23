@@ -57,23 +57,23 @@ class TimelineProvider {
   /// 注意：如果刚好是1岁起运，该列表为空。
   List<ChildhoodNode> getChildhood() {
     List<ChildhoodNode> childhoods = [];
-    int startDecadeAge = plate.elementBureau.number; // 水二局=2岁, 木三局=3岁...
-    int birthYear = plate.date.solar.year;
-
-    // 童限年数 = 起运年龄 - 1
+    int startDecadeAge = plate.elementBureau.number;
+    int birthYear = Decade.getEffectiveBirthYear(plate);
     int childhoodYearsCount = startDecadeAge - 1;
 
     for (int i = 0; i < childhoodYearsCount; i++) {
       int currentYear = birthYear + i;
-      int age = i + 1; // 虚岁
-      // 童限的宫位并非物理流年，而是由“小限”负责在盘面上寻找落宫干支
-      var smallLimit = SmallLimit.create(age, plate);
+      int age = i + 1;
+
+      // 直接调用底层已有的童限引擎，它已内置"一命二财三疾厄"跳宫口诀
+      var childhood = Decade.createChildhood(currentYear, plate);
+
       childhoods.add(
         ChildhoodNode(
           age: age,
           year: currentYear,
-          stem: smallLimit.ganzhi.gan.name,
-          branch: smallLimit.ganzhi.zhi.name,
+          stem: childhood.ganzhi.gan.name,
+          branch: childhood.ganzhi.zhi.name,
         ),
       );
     }
