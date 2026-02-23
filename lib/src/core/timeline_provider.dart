@@ -505,13 +505,30 @@ class TimelineProvider {
   /// - [decadeIndex] 当前所处大限的索引 (1-12)
   TimelineManifest getFullManifest(int currentYear, int decadeIndex) {
     final manifest = generateManifest(currentYear);
+
+    List<YearNode> decadeYears;
+    if (decadeIndex == 0) {
+      // 童限 (index 0) 并非一个十年大限段，但为了在 UI 上连贯展示这"散装"的一年
+      // 这里构建一个只有这一年的单元素数组兜底输出
+      var fy = FlowYear.createByYear(currentYear, plate);
+      decadeYears = [
+        YearNode(
+          year: currentYear,
+          stem: fy.ganzhi.gan.name,
+          branch: fy.ganzhi.zhi.name,
+        ),
+      ];
+    } else {
+      // 正常完整十年大限展开
+      decadeYears = getYears(decadeIndex);
+    }
+
     return TimelineManifest(
       childhoods: manifest.childhoods,
       decades: manifest.decades,
       currentYearMonths: manifest.currentYearMonths,
       status: manifest.status,
-      // 童限 (index 0) 并非一个十年大限段，不支持展开 10 年流年表
-      currentDecadeYears: decadeIndex == 0 ? [] : getYears(decadeIndex),
+      currentDecadeYears: decadeYears,
     );
   }
   // 注意：getYears 我们这里不全体输出，因为 120 个年份容易撑大 Payload。

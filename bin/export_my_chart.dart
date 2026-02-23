@@ -10,7 +10,7 @@ void main() {
   final ruleset = ConfigLoader.getDefault();
 
   // 2. 设定出生时间
-  final birthTime = AstroDateTime(1, 1, 8, 7, 30);
+  final birthTime = AstroDateTime(2004, 1, 8, 7, 30);
   final zDate = ZiweiDate.fromSolar(birthTime, gender: Gender.male);
 
   // 3. 驱动引擎计算命盘主体 (原局紫微盘)
@@ -20,7 +20,7 @@ void main() {
   final manager = ZiweiLimitManager(plate);
 
   // 设定推演时间：当前时刻
-  manager.setPhysicalDate(AstroDateTime(9, 8, 8, 7, 30));
+  manager.setPhysicalDate(AstroDateTime(2004, 8, 8, 7, 30));
 
   // 5. 【核心展示】获取年度流运清单全家桶 (Full Manifest)
   // 现在可以直接调用 getFullManifest()，这套强类型结构体原生地包含了：童限、大限、流年展开、流月，全部自洽！
