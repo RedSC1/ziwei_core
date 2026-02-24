@@ -1,3 +1,8 @@
+## 0.9.1
+
+- Fixed pub.dev directory naming issue (renamed `docs` to `doc`).
+- Exported `Location` class from `sxwnl_spa_dart` in main entry.
+
 ## 0.9.0
 
 - Initial public release on pub.dev.
