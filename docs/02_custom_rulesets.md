@@ -24,7 +24,7 @@ final plate = ZiweiEngine.calculate(birth, ruleset);
 **它的工作原理是"按需覆盖"**：你只传入你想改变的那部分 JSON，引擎会自动将其与默认规则集做深度合并，未传入的部分保持不变。
 
 > [!WARNING]
-> **构建完自定义 ruleset 后，必须把 `ruleset.calendarOptions` 同步传给 [ZiweiDate](./05_ziwei_date.md)**，否则日期解析和排盘引擎的历法配置会不一致，导致排出错误的盘且不报任何错误。
+> **构建完自定义 ruleset 后，必须把 `ruleset.calendarOptions` 同步传给 [ZiweiDate](./06_ziwei_date.md)**，否则日期解析和排盘引擎的历法配置会不一致，导致排出错误的盘且不报任何错误。
 > ```dart
 > final ruleset = ConfigLoader.overrideWith(...);
 > // ✅ 正确：将 ruleset 的历法选项同步给 date

@@ -1,0 +1,174 @@
+# 🔮 Ziwei Core
+
+[中文版 (Chinese)](./README.md) | **English**
+
+[![Pub Version](https://img.shields.io/pub/v/ziwei_core?color=blue&style=flat-square)](https://pub.dev/packages/ziwei_core)
+[![Dart SDK Version](https://badgen.net/pub/sdk-version/ziwei_core?style=flat-square)](https://pub.dev/packages/ziwei_core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
+Ziwei Core is a configuration-driven Ziwei Doushu (Purple Star Astrology) plotting engine supporting a massive 6000-year timeline (approx. 1000 BC to 5000 AD). Premiering in the Dart/Flutter ecosystem, its core utilizes a Dependency Injection (DI) architecture, achieving deep decoupling of algorithms and data. It supports dual-track mapping via "Memory Constants" and "Dynamic JSON," aiming to provide a lightning-fast, stateless, and highly extensible astrological calculation foundation for all platforms.
+
+This project relies on [bazi_core(dart)](https://github.com/RedSC1/bazi_core) to calculate solar terms, four pillars, and fetch lunar times, and [sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart) to calculate solar terms and Apparent Solar Time. The calculation engine has been verified to support from roughly 1000 BC to 5000 AD. Earlier/later times can theoretically be calculated, but precision may vary, limited by [sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart).
+
+---
+
+## ✨ Core Features
+
+- 🪐 **Pure Dart Architecture**: Runs lightning fast in Flutter environments (iOS/Android/Web) and pure Dart server-side environments without relying on platform-specific libraries like `dart:io`. Guarantees perfect compatibility across all Flutter Web and server environments.
+- 🌌 **High-Precision Ephemeris**: Integrates astronomical-grade calendar algorithms, automatically handling Apparent Solar Time correction, Early/Late Zi hour distinction, and leap month division (supports customized sects/branches). Ensures absolute precision across 7000 years of astrological chart generation.
+- ⚙️ **Smart JSON Patching**: Supports partial rule injections. Developers can hot-patch star logic or dynamically adjust star sets via small JSON snippets without modifying the core engine. This design ensures engine purity while providing an extremely lightweight path for secondary development across different astrological schools.
+
+---
+
+## 🚀 Quick Start
+
+> **💡 Complete Example Code**:
+> Want to experience directly stepping through Decade limits, flowing years, and even crossing day boundaries using flowing hours in the console? Run the demo code located in the `example` directory:
+> - [▶️ State Machine Managed Demo (limit_manager_demo.dart)](./example/limit_manager_demo.dart)
+> - [▶️ Foundational Static Flow Demo (time_machine_demo.dart)](./example/time_machine_demo.dart)
+
+### 1. Basic Chart Calculation (Origin Chart)
+
+For a detailed explanation of `ZiweiDate` construction, refer to [Core API Exhibition: ZiweiDate](./docs_en/06_ziwei_date.md).
+
+```dart
+import 'package:ziwei_core/ziwei_core.dart';
+
+void main() async {
+  // 1. Initialize the engine's default ruleset (No local file reading required)
+  final ruleset = ConfigLoader.getDefault();
+
+  // 2. Provide a Gregorian chronological time and gender
+  final birthday = AstroDateTime(2026, 2, 4, 19, 48);
+  final ziweiDate = ZiweiDate.fromSolar( // Creates Ziwei Date using Gregorian time
+    birthday,
+    gender: Gender.male,
+    options: ruleset.calendarOptions, 
+  );
+
+  // 3. Generate Chart with One Line
+  final plate = ZiweiEngine.calculate(ziweiDate, ruleset);
+
+  print('BaZi (Four Pillars): ${ziweiDate.bazi}');
+  print('Ming Zhu: ${plate.mingZhu} | Shen Zhu: ${plate.shenZhu}');
+  
+  // Minimalist access to Palaces
+  final mingPalace = plate.originMingPalace;
+  print("Ming Palace Branch: ${mingPalace.branch}");
+  print("Ming Palace Stars: ${mingPalace.allStars.map((s) => s.key).toList()}");
+}
+```
+
+### 2. Time Machine (Decade, Year, Month, Day, Hour Flows)
+
+Use [`ZiweiLimitManager`](./example/limit_manager_demo.dart) to manage dynamic plates (Decade, Year, Month, Day, and Hour rules):
+
+```dart
+// Give the base plate to the state manager
+final manager = ZiweiLimitManager(plate);
+
+// Fast-forward to May 2026 (Lunar) and extract the plate directly
+manager.setYear(2026);
+manager.setMonth(5);
+
+ZiWeiPlate monthPlate = manager.dynamicPlate;
+print("This month's Ming Palace Branch: ${monthPlate.monthMingPalace?.branch}");
+
+// ------------------------------------------
+// 📅 Derive multi-layered flows based directly on physical timestamps
+manager.setPhysicalDate(DateTime.now());
+
+// UI Event: User clicks "Next Hour"
+manager.nextHour(); 
+
+// Render the plate, the underlying engine handles the "Five Rats Finding Hours" and cross-midnight splitting automatically
+ZiWeiPlate currentPlate = manager.dynamicPlate;
+```
+
+---
+
+## 🛠 Advanced Features: Smart Patching via JSON
+
+You can alter a specific star's rule by injecting a partial JSON snippet (for details refer to [Configuration Override and Sect Customization](./docs_en/02_custom_rulesets.md) and [JSON Constants Enum Reference](./docs_en/07_json_value_reference.md)):
+
+```dart
+String myCustomStarsJson = '''
+[
+  {
+    "key": "ziwei",
+    "type": "major",
+    "rule": {
+      "type": "lookup",
+      "param": "bureau",
+      "mapping": { "2": 1, "3": 2, "4": 3, "5": 4, "6": 5 }
+    }
+  }
+]
+''';
+
+// The position rule of Ziwei is modified, while the other ~100 stars remain completely untouched!
+final newRuleset = ConfigLoader.overrideWith(
+  baseRuleset: ConfigLoader.getDefault(),
+  starsJson: myCustomStarsJson,
+);
+```
+
+### Modifying Calendar Rules (main_rules.json)
+
+Beyond stars, you can inject `mainRulesJson` to override the lowest-level runtime mechanisms on the fly, such as turning Early/Late Zi hour distinction on or off, or shifting the bounds of SiHua triggers (detailed in [Default Configuration file `default.json`](./docs_en/03_config_file.md)):
+
+```dart
+String myCalendarConfig = '''
+{
+  "calendar": {
+    "split_rat_hour": false, // Hot Reload: forcefully disable internal Zi hour splitting
+    "leap_month_strategy": "split_by_15th" // Change Leap Month ruleset
+  }
+}
+''';
+
+final customCalendarRuleset = ConfigLoader.overrideWith(
+  baseRuleset: ConfigLoader.getDefault(),
+  mainRulesJson: myCalendarConfig, 
+);
+```
+---
+
+## 🏛 Core Architecture Diagram
+
+```mermaid
+graph TD
+    A1[sxwnl_spa_dart<br/>High-Precision Astronomy] --> B(TimeAdapter);
+    A2[bazi_core<br/>Bazi Engine] --> B;
+    B -->|Lunar Calculation| C(ZiweiDate);
+    Z[ConfigLoader / Ruleset JSONs] --> D;
+    C --> D[ZiweiEngine];
+    D --> E(ZiWeiPlate);
+    E --> F[ZiweiLimitManager];
+    T2[Physical AstroDateTime Stepper] --> F;
+    F -->|calculateDynamic| G((Dynamic Plate w/ Flow Stars / Sihua));
+```
+
+## ⚖️ Developer Notes
+
+Given the numerous sects of Ziwei Doushu, distinct ancient texts, and limited personal capacity, please note:
+
+- **Algorithm Verification**: The algorithm for star brightness (Miao/Wang/Li/Xian) and placements of minor auxiliary stars heavily relies on mainstream astrological sites and AI-assisted cross-validation. Not all ancient texts have been exhaustively cross-referenced frame by frame.
+- **Test Coverage**: While automated unit test suites are available, the millions of combination states limit our guarantee over edge cases across deep astronomical shifts.
+- **Reporting Issues**: If generated charts deviate from expectations or you have enhancement suggestions, please file an Issue. Every metric of feedback makes Ziwei Core structurally stronger.
+
+## 🚀 Roadmap
+
+- [x] **API & Architecture Documentation**: Successfully rewritten, refer to the [Core API Reference](./docs_en/04_api_reference.md) for architectural and API details.
+- [ ] **Sect Deep Support**: Implement Zhongzhou, Flying Star, and other major sects' calculation algorithms.
+- [ ] **Sect Configuration Presets**: Package more mainstream sect SiHua and brightness rulesets by default.
+- [ ] **Translation & i18n**: Expand language tags and JSON dictionaries for complete internationalization.
+- [ ] **Test Expansions**: Incorporate deep edge-case matrices to test algorithm resilience.
+
+## ⚠️ Disclaimer
+
+This library is intended for astronomical research and calculation studies. The author is not legally responsible for any predictions, decisions, or actions taken based on this library's output. Please treat astrological logic rationally, respect science, and remember your life is in your own hands.
+
+## 📜 License
+
+Ziwei Core is available under the MIT open source license. If this tool helped you, please consider leaving a ⭐!

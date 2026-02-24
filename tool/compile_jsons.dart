@@ -29,9 +29,9 @@ void main(List<String> args) async {
   sb.writeln('// 自动生成的文件，请勿手动修改 (Generated File)');
   sb.writeln('//');
   sb.writeln(
-    '// 运行 `dart run tool/compile_jsons.dart \$inputDir \$outputFileUrl \$className` 更新此文件',
+    '// 运行 `dart run tool/compile_jsons.dart $inputDir $outputFileUrl $className` 更新此文件',
   );
-  sb.writeln('class \$className {');
+  sb.writeln('class $className {');
 
   final files = assetsDir.listSync().whereType<File>().toList();
   for (var file in files) {

@@ -1,6 +1,6 @@
 # 配置文件说明 (Config File Guide)
 
-引擎的所有核心规则都存储在 JSON 文件中。本文说明如何加载这些文件，以及每个文件的结构格式。
+引擎的所有核心规则都存储在 JSON 文件中。本文说明如何加载这些文件，以及每个文件的结构格式。各字段的**可选值**详见 [JSON 字段值速查手册](./07_json_value_reference.md)。
 
 ---
 
@@ -184,18 +184,30 @@ JSON 数组，每项定义一颗星的安放逻辑。
 }
 ```
 
+**`calendar` 字段可用值：**
+
+| 字段 | 类型 | 可用值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `split_rat_hour` | `bool` | `true` / `false` | 是否区分早晚子时 |
+| `leap_month_strategy` | `string` | `"split"` / `"current"` / `"as_next"` | `split`=15日前后分属，`current`=全算上月，`as_next`=全算下月 |
+| `wu_hu_dun_boundary` | `string` | `"lunar"` / `"solar"` | 五虎遁推宫干的历法基准 |
+| `sihua_boundary` | `string` | `"lunar"` / `"solar"` | 生年四化的历法基准 |
+| `childhood_decade` | `string` | `"skip"` / `"regular"` | `skip`=口诀跳跃派，`regular`=一年一格顺延派 |
+| `flowLimit_boundary` | `string` | `"lunar"` / `"solar"` | 流月/流日的分界线 |
+| `enable_historical` | `bool` | `true` / `false` | 是否开启历史历法保护 |
+
 ---
 
 ### 6. `masters.json` — 命主 / 身主起例（可选）
 
+命主查命宫地支索引，身主查年地支索引。`boundary` 控制身主取农历年支还是节气年支。
+
 ```json
 {
   "ming_zhu": {
-    "anchor": "destiny_palace",
     "table": { "0": "tanlang", "1": "jumen", ... }
   },
   "shen_zhu": {
-    "anchor": "year",
     "boundary": "lunar",
     "table": { "0": "lingxing", "1": "tianxiang", ... }
   }

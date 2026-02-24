@@ -564,12 +564,11 @@ class TimelineProvider {
       currentDayHours: hours,
       status: ManifestStatus(
         isHistoricalRedZone: isFused,
-        note: isFused
-            ? "当前年份处于历史历法特殊更迭期，流运数据已停用。"
-            : "正常",
+        note: isFused ? "当前年份处于历史历法特殊更迭期，流运数据已停用。" : "正常",
       ),
     );
   }
+
   /// 由阳历日期推算日干支 (60甲子日循环)
   ///
   /// 基于 J2000 纪元：2000-01-01 12:00 = 戊午日 (戊=4, 午=6)

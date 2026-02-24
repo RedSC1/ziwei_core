@@ -24,33 +24,39 @@
 
 ## ZiweiDate
 
-出生时间定义，同时包含完整的农历/八字/节气解析结果。详细说明（含 `CalendarOptions` 全字段、经纬度真太阳时及踩坑指南）请参阅 [ZiweiDate 详细说明](./05_ziwei_date.md)。
+出生时间定义，同时包含完整的农历/八字/节气解析结果。详细说明（含 `CalendarOptions` 全字段、经纬度真太阳时及踩坑指南）请参阅 [ZiweiDate 详细说明](./06_ziwei_date.md)。
 
 ### 构造
 
-```dart
-// 阳历输入（支持 DateTime 或 AstroDateTime，AstroDateTime 支持公元前）
-final date = ZiweiDate.fromSolar(
-  AstroDateTime(1990, 5, 20, 14, 30),
-  gender: Gender.female,
-);
-```
+三种方式，按输入格式选择：
 
-常用可选参数：
-- `options`: `CalendarOptions` — 覆盖历法开关（节气界标、早晚子时等）
-- `location`: 地理经纬度（用于真太阳时修正）
+| 方法 | 用途 |
+| :--- | :--- |
+| `ZiweiDate.fromSolar(dt, {...})` | 阳历输入（最常用）。`dt` 支持 `AstroDateTime`（公元前可用）或 `DateTime`。 |
+| `ZiweiDate.fromLunar(year, month, day, h, m, s, isLeap, {...})` | 农历输入。月份用整数，`isLeap` 标记闰月。 |
+| `ZiweiDate.fromStringLunar(year, monthString, day, h, m, s, {...})` | 中文月份字符串（如 `"正"`, `"闰五"`, `"后九"`）。 |
+
+三者共有的可选参数：
+- `gender`: 性别，默认 `Gender.male`
+- `options`: 历法开关（自定义 ruleset 时必须传 `ruleset.calendarOptions`）
+- `location`: 经纬度，默认 `(120E, 30N)`
+- `timeZone`: 时区，默认 `8.0`
+- `useTrueSolarTime`: 是否启用真太阳时，默认 `true`
 
 ### 主要 Getters
 
 | 属性 | 类型 | 说明 |
 | :--- | :--- | :--- |
 | `solar` | `AstroDateTime` | 阳历时间 |
+| `trueSolarTime` | `AstroDateTime?` | 真太阳时修正后的时间（可选） |
 | `lunar` | `LunarDate` | 农历时间（含是否闰月、月份、日） |
 | `bazi` | `BaZi` | 四柱八字（年月日时的天干地支） |
-| `solarDay` | `int` | 节气日序（该年节气历第几天，用于流日推算） |
-| `timeIndex` | `int` | 时辰索引（子=0, 丑=1...，支持早晚子时） |
+| `solarDay` | `int` | 节气日序（该年节气历第几天） |
+| `timeIndex` | `int` | 时辰索引（子=0, 丑=1...） |
 | `options` | `CalendarOptions` | 当前生效的历法配置 |
-| `gender` | `Gender` | 性别（`Gender.male` / `Gender.female`） |
+| `gender` | `Gender` | 性别 |
+| `location` | `Location` | 地理观测点 |
+| `timeZone` | `double` | 时区（UTC 偏移小时数） |
 
 ---
 
@@ -135,6 +141,15 @@ provider.getManifest(year: 2026, decadeIndex: 3);
 provider.getManifest(year: 2026, month: 2, day: 5);
 ```
 
+**`getManifest` 参数：**
+
+| 参数 | 类型 | 说明 |
+| :--- | :--- | :--- |
+| `year` | `int?` | 传入后挂载流月，并自动推断所属大限/流年 |
+| `decadeIndex` | `int?` | 覆盖大限自动推断（`0`=童限，`1`=第一大限...） |
+| `month` | `int?` | 传入后挂载流日（需同时传 `year`） |
+| `day` | `int?` | 传入后挂载流时（需同时传 `year` + `month`） |
+
 `getManifest` 返回 `TimelineManifest`，包含：
 
 | 字段 | 类型 | 说明 |
@@ -161,11 +176,11 @@ final manager = ZiweiLimitManager(plate);
 
 | 属性/方法 | 返回 | 说明 |
 | :--- | :--- | :--- |
-| `dynamicPlate` | `ZiWeiPlate` | **当前时刻的限流动态盘**（每次调用均返回新克隆，不污染原盘） |
+| `dynamicPlate` | `ZiWeiPlate` | **当前已设定的时间切片对应的限流动态盘**（基于 `setYear`/`setMonth` 等设定的流运状态，每次调用返回新克隆，不污染原盘） |
 | `basePlate` | `ZiWeiPlate` | 原局命盘（不变） |
 | `limitContext` | `LimitContext` | 当前流运上下文（含大限/年/月/日/时对象） |
 | `currentManifest` | `TimelineManifest` | 当前年份的流月时间线清单 |
-| `getFullManifest([decadeIndex])` | `TimelineManifest` | 包含当前大限流年在内的完整时间线清单 |
+| `getManifest([decadeIndex])` | `TimelineManifest` | 包含当前大限流年在内的完整时间线清单（`currentManifest` 的可控版本） |
 
 ### 时间切换
 
@@ -214,6 +229,17 @@ palace.hasStar('ziwei');
 // 序列化单个宫位
 palace.toJson(brightnessLabels: ruleset.brightnessLabels);
 ```
+
+---
+
+## TimeMachine
+
+`LimitContext` 的快捷工厂类，用于跳过 `ZiweiLimitManager` 直接构建流运上下文。通常不需要直接使用，除非你需要细粒度控制 `LimitContext` 或进行批量计算。
+
+| 方法 | 说明 |
+| :--- | :--- |
+| `TimeMachine.travel(plate, {year, month, day, hourIndex, dayGanZhi})` | 按年/月/日/时自动构建完整的 `LimitContext`（包含大限、小限、流年等） |
+| `TimeMachine.travelByMacro(plate, index, {targetYear})` | 按大限索引直接构建 `LimitContext`（`0`=童限，`1`=第一大限...） |
 
 ---
 

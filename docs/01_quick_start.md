@@ -80,7 +80,7 @@ print(full.currentDayHours);   // 该日流时
 print("历史红区状态: ${manifest.status.isHistoricalRedZone}");
 ```
 
-历史上有些时间段历法混乱，需要特殊处理，这里对于一些特殊时间段，暂时不支持流月及以下的推演，仅支持原局和大限流年的排盘，若要强行排流月流日流时盘，可以设置`"enable_historical": false`，详情见[实验性功能](./04_experimental_features.md)。
+历史上有些时间段历法混乱，需要特殊处理，这里对于一些特殊时间段，暂时不支持流月及以下的推演，仅支持原局和大限流年的排盘，若要强行排流月流日流时盘，可以设置`"enable_historical": false`，详情见[实验性功能](./05_experimental_features.md)。
 
 | 历史时期 | 时间范围 (近似) | 说明 |
 | :--- | :--- | :--- |
@@ -133,7 +133,7 @@ final hours = provider.getHours(firstDayGZ);
 | **快捷微调** | `nextDay() / previousDay()` | 快速翻转日期。 |
 | | `nextHour() / previousHour()` | 切换时辰，自动处理跨天逻辑。 |
 | **状态工具** | `reset()` | 彻底重置所有时间标记，回退到原局。 |
-| | `getFullManifest()` | 一键获取包含大限、流年、流月所有节点的 JSON 结构。 |
+| | `getManifest()` | 一键获取包含大限、流年、流月所有节点的 JSON 结构。 |
 
 ### 💫 获取流运动态星盘 (Retrieving Dynamic Flow Charts)
 

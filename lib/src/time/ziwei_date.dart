@@ -126,12 +126,14 @@ class ZiweiDate {
   /// - [gender] 性别。默认男
   /// - [options] 历法选项。
   /// - [timeZone] 基础参考时区。默认 `utc+8` 北京时间
+  /// - [useTrueSolarTime] 是否使用真太阳时。默认 `true`
   factory ZiweiDate.fromSolar(
     Object dt, {
     CalendarOptions? options,
     Gender gender = Gender.male,
     Location? location,
     double timeZone = 8,
+    bool useTrueSolarTime = true,
   }) {
     AstroDateTime solar;
     if (dt is AstroDateTime) {
@@ -148,6 +150,7 @@ class ZiweiDate {
       options: options,
       location: location,
       timeZone: timeZone,
+      useTrueSolarTime: useTrueSolarTime,
     );
   }
 
@@ -164,6 +167,7 @@ class ZiweiDate {
   /// - [options] 历法选项。
   /// - [location] 地理观测点。如果不传，默认为 `120E 30N`
   /// - [timeZone] 基础参考时区。默认 `utc+8` 北京时间
+  /// - [useTrueSolarTime] 是否使用真太阳时。默认 `true`
   factory ZiweiDate.fromLunar(
     int year,
     int month,
@@ -176,6 +180,7 @@ class ZiweiDate {
     Gender gender = Gender.male,
     Location? location,
     double timeZone = 8,
+    bool useTrueSolarTime = true,
   }) {
     // 把 options 透传给 Adapter
     return TimeAdapter.fromLunar(
@@ -190,6 +195,51 @@ class ZiweiDate {
       options: options,
       location: location,
       timeZone: timeZone,
+      useTrueSolarTime: useTrueSolarTime,
+    );
+  }
+
+  /// 从农历中文字符串创建本命基底构造。
+  ///
+  /// 适用于前端/数据库直接传入的中文月份字符串，如 `"正"`, `"闰五"`, `"后九"` 等格式。
+  /// 内置对颛顼古历 `"后九"` 等特殊月名的兼容。
+  ///
+  /// - [year] 农历物理年份
+  /// - [monthString] 中文农历月份字符串（如 `"正"`, `"闰二"`, `"腊"`, `"后九"`）
+  /// - [day] 农历初几
+  /// - [hour] 物理整点小时（0-23，非时辰索引）
+  /// - [minute] 生辰分
+  /// - [second] 生辰秒
+  /// - [gender] 性别。默认男
+  /// - [options] 历法选项
+  /// - [location] 地理观测点。默认 `120E 30N`
+  /// - [timeZone] 基础参考时区。默认 `utc+8`
+  /// - [useTrueSolarTime] 是否使用真太阳时。默认 `true`
+  factory ZiweiDate.fromStringLunar(
+    int year,
+    String monthString,
+    int day,
+    int hour,
+    int minute,
+    int second, {
+    CalendarOptions? options,
+    Gender gender = Gender.male,
+    Location? location,
+    double timeZone = 8,
+    bool useTrueSolarTime = true,
+  }) {
+    return TimeAdapter.fromStringLunar(
+      year,
+      monthString,
+      day,
+      hour,
+      minute,
+      second,
+      gender,
+      options: options,
+      location: location,
+      timeZone: timeZone,
+      useTrueSolarTime: useTrueSolarTime,
     );
   }
 

@@ -23,8 +23,8 @@ void main() {
   manager.setPhysicalDate(AstroDateTime(2004, 8, 8, 7, 30));
 
   // 5. 【核心展示】获取年度流运清单全家桶 (Full Manifest)
-  // 现在可以直接调用 getFullManifest()，这套强类型结构体原生地包含了：童限、大限、流年展开、流月，全部自洽！
-  final manifest = manager.getFullManifest();
+  // 现在可以直接调用 getManifest()，这套强类型结构体原生地包含了：童限、大限、流年展开、流月，全部自洽！
+  final manifest = manager.getManifest();
 
   print("--- 综合流运状态清单 (Timeline JSON) ---");
   final encoder = JsonEncoder.withIndent('  ');

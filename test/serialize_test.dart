@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:ziwei_core/ziwei_core.dart';
-import 'package:bazi_core/bazi_core.dart';
 
 void main() {
   group('JSON Serialization Tests', () {

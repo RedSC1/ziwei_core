@@ -1,6 +1,6 @@
 // 自动生成的文件，请勿手动修改 (Generated File)
 //
-// 运行 `dart run tool/compile_jsons.dart` 更新此文件
+// 运行 `dart run tool/compile_jsons.dart assets/config/default lib/src/config/default_jsons.dart DefaultJsons` 更新此文件
 class DefaultJsons {
   static const String brightness = r"""
 {
@@ -694,20 +694,36 @@ class DefaultJsons {
   static const String masters = r"""
 {
   "ming_zhu": {
-    "anchor": "destiny_palace",
     "table": {
-      "0": "tanlang", "1": "jumen", "2": "lucun", "3": "wenqu",
-      "4": "lianzhen", "5": "wuqu", "6": "pojun", "7": "wuqu",
-      "8": "lianzhen", "9": "wenqu", "10": "lucun", "11": "jumen"
+      "0": "tanlang",
+      "1": "jumen",
+      "2": "lucun",
+      "3": "wenqu",
+      "4": "lianzhen",
+      "5": "wuqu",
+      "6": "pojun",
+      "7": "wuqu",
+      "8": "lianzhen",
+      "9": "wenqu",
+      "10": "lucun",
+      "11": "jumen"
     }
   },
   "shen_zhu": {
-    "anchor": "year",
     "boundary": "lunar",
     "table": {
-      "0": "lingxing", "1": "tianxiang", "2": "tianliang", "3": "tiantong",
-      "4": "wenchang", "5": "tianji", "6": "huoxing", "7": "tianxiang",
-      "8": "tianliang", "9": "tiantong", "10": "wenchang", "11": "tianji"
+      "0": "lingxing",
+      "1": "tianxiang",
+      "2": "tianliang",
+      "3": "tiantong",
+      "4": "wenchang",
+      "5": "tianji",
+      "6": "huoxing",
+      "7": "tianxiang",
+      "8": "tianliang",
+      "9": "tiantong",
+      "10": "wenchang",
+      "11": "tianji"
     }
   }
 }

@@ -1,10 +1,12 @@
 # 🔮 Ziwei Core
 
+**中文版** | [English (README_EN)](./README_EN.md)
+
 [![Pub Version](https://img.shields.io/pub/v/ziwei_core?color=blue&style=flat-square)](https://pub.dev/packages/ziwei_core)
 [![Dart SDK Version](https://badgen.net/pub/sdk-version/ziwei_core?style=flat-square)](https://pub.dev/packages/ziwei_core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-Ziwei Core 是一款支持 6000 年超长时空跨度（约$-1000$ 至 $5000$）的配置驱动型紫微斗数排盘引擎。目前首发于 Dart/Flutter 生态，其核心采用了依赖注入（DI）架构，实现了算法与数据的深度解耦。支持“内存常量”与“动态 JSON”双轨加载，旨在为全平台提供一套极速、无状态、且高度可扩展的排盘算力底层。
+Ziwei Core 是一款支持 6000 年超长时空跨度（约 $-1000$ 至 $5000$）的配置驱动型紫微斗数排盘引擎。目前首发于 Dart/Flutter 生态，其核心采用了依赖注入（DI）架构，实现了算法与数据的深度解耦。支持“内存常量”与“动态 JSON”双轨加载，旨在为全平台提供一套极速、无状态、且高度可扩展的排盘算力底层。
 
 本项目使用[bazi_core(dart)](https://github.com/RedSC1/bazi_core)计算节气四柱、获取农历时间，[sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart)计算节气、真太阳时等。排盘时间经测试可以支持公元前约1000年到公元5000年，更早以及更远的时间理论上也可以计算，但是精度无法保证，具体精度受到[sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart)的限制。
 
@@ -20,7 +22,14 @@ Ziwei Core 是一款支持 6000 年超长时空跨度（约$-1000$ 至 $5000$）
 
 ## 🚀 极速上手 (Quick Start)
 
+> **💡 完整示例代码**：
+> 如需体验直接在控制台推演大限、流年甚至步进流时的完整过程，请运行 `example` 目录下的演示代码：
+> - [▶️ 状态机托管推演演示 (limit_manager_demo.dart)](./example/limit_manager_demo.dart)
+> - [▶️ 底层静态流运计算演示 (time_machine_demo.dart)](./example/time_machine_demo.dart)
+
 ### 1. 基础命盘推演（算原局）
+
+详细的紫微日期构建说明请参考 [核心 API 展示：ZiweiDate](./docs/06_ziwei_date.md)。
 
 ```dart
 import 'package:ziwei_core/ziwei_core.dart';
@@ -52,7 +61,7 @@ void main() async {
 
 ### 2. 时光机（算大限、流年、流月、流日、流时）
 
-使用`ZiweiLimitManager` 管理大限、流年、流月、流日、流时盘：
+使用[`ZiweiLimitManager`](./example/limit_manager_demo.dart) 管理大限、流年、流月、流日、流时盘：
 
 ```dart
 // 将底盘交给状态管理器
@@ -81,7 +90,7 @@ ZiWeiPlate currentPlate = manager.dynamicPlate;
 
 ## 🛠 高级功能：JSON 规则注入 (Smart Patching)
 
-你可以通过注入一段局部 JSON，来改变某一颗星星的规则：
+你可以通过注入一段局部 JSON，来改变某一颗星星的规则（详情请参考 [配置覆盖与自定义流派说明](./docs/02_custom_rulesets.md) 及 [JSON 常量枚举参考表](./docs/07_json_value_reference.md)）：
 
 ```dart
 String myCustomStarsJson = '''
@@ -107,14 +116,14 @@ final newRuleset = ConfigLoader.overrideWith(
 
 ### 修改历法规则 (main_rules.json)
 
-不仅是星星，你还可以通过注入 `mainRulesJson` 实时覆盖引擎最底层的运作机制，比如开启早晚子时、修改五虎遁和四化的界限基准等：
+不仅是星星，你还可以通过注入 `mainRulesJson` 实时覆盖引擎最底层的运作机制，比如开启早晚子时、修改五虎遁和四化的界限基准等（详见 [配置文件 `default.json` 详解](./docs/03_config_file.md)）：
 
 ```dart
 String myCalendarConfig = '''
 {
   "calendar": {
     "split_rat_hour": false, // 热重载：强制全局关闭早晚子区分
-    "leap_month_strategy": "split_by_15th" // 切换闰月算法为：月中剥离法
+    "leap_month_strategy": "split_by_15th" // 切换闰月算法
   }
 }
 ''';
@@ -151,7 +160,7 @@ graph TD
 
 ## 🚀 待完善与未来规划 (Roadmap)
 
-- [ ] **API 文档升级**：已上线 [API & JSON 开发指南](./docs/API_AND_JSON_GUIDE.md)。
+- [x] **API 与架构文档**：已完整重构，请查阅 [核心 API 参考手册](./docs/04_api_reference.md) 了解引擎架构与 API 细节。
 - [ ] **多流派深度支持**：实现中州派、飞星派等派别的排盘逻辑和排盘算法。
 - [ ] **多流派配置预设**：内置更多主流派别的四化与亮度规则集。
 - [ ] **多语言支持 (i18n)**：支持星曜、宫位名的多语种切换。
