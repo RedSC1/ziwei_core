@@ -478,66 +478,98 @@ class TimelineProvider {
     return hours;
   }
 
-  /// 6. 生成某年度流运概览清单
+  /// 6. 统一流运快照生成器
   ///
-  /// 这是给 UI 渲染层提供的轻量化年度通行证（不包含流年展开详情）
-  TimelineManifest generateManifest(int currentYear) {
-    final months = getMonths(currentYear);
-    final bool isFused = months.isEmpty && plate.date.options.enableHistorical;
+  /// 按深度级联返回数据：大限/童限始终包含，其余层级按传参决定。
+  /// - [year]: 传了 → 挂载该年 12 个流月，并自动推断大限挂载流年
+  /// - [decadeIndex]: 传了 → 覆盖自动推断，用指定大限挂载流年
+  /// - [month]: 传了 → 挂载该月的流日 (需要 year)
+  /// - [day]: 传了 → 挂载该日的流时 (需要 month)
+  TimelineManifest getManifest({
+    int? year,
+    int? decadeIndex,
+    int? month,
+    int? day,
+  }) {
+    // === 始终返回：大限 + 童限 ===
+    final childhoods = getChildhood();
+    final decades = getDecades();
+
+    // === 熔断检查 ===
+    bool isFused = false;
+    if (year != null) {
+      final bool enableHist = plate.date.options.enableHistorical;
+      if (enableHist) {
+        final sampleDate = AstroDateTime(year, 6, 15, 12, 0, 0);
+        isFused = _isRedZone(sampleDate);
+      }
+    }
+
+    // === 流年 (大限内的 10 个流年) ===
+    List<YearNode>? decadeYears;
+    int? resolvedDecadeIndex = decadeIndex;
+
+    if (year != null && resolvedDecadeIndex == null) {
+      // 自动推断：year 落在哪个大限
+      final decade = Decade.createByYear(year, plate);
+      resolvedDecadeIndex = decade.decadeIndex;
+    }
+
+    if (resolvedDecadeIndex != null) {
+      if (resolvedDecadeIndex == 0) {
+        // 童限：构建当年的单元素兜底
+        int targetYear = year ?? Decade.getEffectiveBirthYear(plate);
+        var fy = FlowYear.createByYear(targetYear, plate);
+        decadeYears = [
+          YearNode(
+            year: targetYear,
+            stem: fy.ganzhi.gan.name,
+            branch: fy.ganzhi.zhi.name,
+          ),
+        ];
+      } else {
+        decadeYears = getYears(resolvedDecadeIndex);
+      }
+    }
+
+    // === 流月 ===
+    List<MonthNode>? months;
+    if (year != null && !isFused) {
+      months = getMonths(year);
+    }
+
+    // === 流日 ===
+    List<DayNode>? days;
+    if (year != null && month != null && !isFused) {
+      days = getDays(year, month);
+    }
+
+    // === 流时 ===
+    List<HourNode>? hours;
+    if (days != null && day != null && day >= 1 && day <= days.length) {
+      final targetDay = days[day - 1];
+      final dayGZ = GanZhi(
+        TianGan.fromName(targetDay.stem),
+        DiZhi.fromName(targetDay.branch),
+      );
+      hours = getHours(dayGZ);
+    }
 
     return TimelineManifest(
-      childhoods: getChildhood(),
-      decades: getDecades(),
+      childhoods: childhoods,
+      decades: decades,
+      currentDecadeYears: decadeYears,
       currentYearMonths: months,
+      currentMonthDays: days,
+      currentDayHours: hours,
       status: ManifestStatus(
         isHistoricalRedZone: isFused,
         note: isFused
-            ? "当前年份处于历史历法特殊更迭期（非建寅为正），流运数据已停用。如需强行排盘，请在配置中关闭“启用历史历法”选项。"
+            ? "当前年份处于历史历法特殊更迭期，流运数据已停用。"
             : "正常",
       ),
     );
   }
-
-  /// 7. 获取包含当前大限所有流年的“全家桶”流运清单
-  ///
-  /// 专为一键导出、服务端 API 等场景设计，能够在一棵树中挂载大限内的所有流年对象。
-  /// - [currentYear] 当前物理年份
-  /// - [decadeIndex] 当前所处大限的索引 (1-12)
-  TimelineManifest getFullManifest(int currentYear, int decadeIndex) {
-    final manifest = generateManifest(currentYear);
-
-    List<YearNode> decadeYears;
-    if (decadeIndex == 0) {
-      // 童限 (index 0) 并非一个十年大限段，但为了在 UI 上连贯展示这"散装"的一年
-      // 这里构建一个只有这一年的单元素数组兜底输出
-      var fy = FlowYear.createByYear(currentYear, plate);
-      decadeYears = [
-        YearNode(
-          year: currentYear,
-          stem: fy.ganzhi.gan.name,
-          branch: fy.ganzhi.zhi.name,
-        ),
-      ];
-    } else {
-      // 正常完整十年大限展开
-      decadeYears = getYears(decadeIndex);
-    }
-
-    return TimelineManifest(
-      childhoods: manifest.childhoods,
-      decades: manifest.decades,
-      currentYearMonths: manifest.currentYearMonths,
-      status: manifest.status,
-      currentDecadeYears: decadeYears,
-    );
-  }
-  // 注意：getYears 我们这里不全体输出，因为 120 个年份容易撑大 Payload。
-  // 前端渲染"当前大限内部的10年"时，可以通过大限的 start_year 去纯手工 +1 计算即可，
-  // 因为流年的干支规律极度线性（十年一旬）。如果有需要也可以随时追加输出。
-  // getDays / getHours 也设计为按需调用，不在 manifest 里全量铺开。
-
-  // === 内部工具 ===
-
   /// 由阳历日期推算日干支 (60甲子日循环)
   ///
   /// 基于 J2000 纪元：2000-01-01 12:00 = 戊午日 (戊=4, 午=6)

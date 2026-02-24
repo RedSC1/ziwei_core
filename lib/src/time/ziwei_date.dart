@@ -54,6 +54,28 @@ class CalendarOptions {
       'enableHistorical': enableHistorical,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      other is CalendarOptions &&
+      splitRatHour == other.splitRatHour &&
+      leapRule == other.leapRule &&
+      wuHuDunBasedOn == other.wuHuDunBasedOn &&
+      siHuaBasedOn == other.siHuaBasedOn &&
+      childhoodRule == other.childhoodRule &&
+      flowLimitBasedOn == other.flowLimitBasedOn &&
+      enableHistorical == other.enableHistorical;
+
+  @override
+  int get hashCode => Object.hash(
+    splitRatHour,
+    leapRule,
+    wuHuDunBasedOn,
+    siHuaBasedOn,
+    childhoodRule,
+    flowLimitBasedOn,
+    enableHistorical,
+  );
 }
 
 /// **紫微基底日期对象 (Ziwei Date)**

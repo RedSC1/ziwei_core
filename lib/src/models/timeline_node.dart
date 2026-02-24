@@ -89,22 +89,34 @@ class ChildhoodNode {
   };
 }
 
-/// 流运时间轴年度通行证
+/// 流运时间轴快照
+///
+/// 按深度级联返回数据：大限/童限始终包含，其余层级按传参决定。
 class TimelineManifest {
   final List<ChildhoodNode> childhoods;
   final List<DecadeNode> decades;
 
-  /// (可选) 用户当前处于哪个大限，如果是全量导出则挂载此大限下的 10 个流年
+  /// (可选) 指定大限内的 10 个流年
   final List<YearNode>? currentDecadeYears;
 
-  final List<MonthNode> currentYearMonths;
+  /// (可选) 指定年份的 12 个流月
+  final List<MonthNode>? currentYearMonths;
+
+  /// (可选) 指定月份的流日列表
+  final List<DayNode>? currentMonthDays;
+
+  /// (可选) 指定日期的流时列表
+  final List<HourNode>? currentDayHours;
+
   final ManifestStatus status;
 
   TimelineManifest({
     required this.childhoods,
     required this.decades,
     this.currentDecadeYears,
-    required this.currentYearMonths,
+    this.currentYearMonths,
+    this.currentMonthDays,
+    this.currentDayHours,
     required this.status,
   });
 
@@ -115,7 +127,12 @@ class TimelineManifest {
       'current_decade_years': currentDecadeYears!
           .map((e) => e.toJson())
           .toList(),
-    'current_year_months': currentYearMonths.map((e) => e.toJson()).toList(),
+    if (currentYearMonths != null)
+      'current_year_months': currentYearMonths!.map((e) => e.toJson()).toList(),
+    if (currentMonthDays != null)
+      'current_month_days': currentMonthDays!.map((e) => e.toJson()).toList(),
+    if (currentDayHours != null)
+      'current_day_hours': currentDayHours!.map((e) => e.toJson()).toList(),
     'status': status.toJson(),
   };
 }

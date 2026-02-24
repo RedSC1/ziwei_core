@@ -18,6 +18,14 @@ class ZiweiEngine {
   static ZiWeiPlate calculate(ZiweiDate date, ZiweiRuleset ruleset) {
     ZiweiLogger.info("正在排盘: ${date.solar}...");
 
+    if (date.options != ruleset.calendarOptions) {
+      throw ArgumentError(
+        '❌ ZiweiDate.options 与 ZiweiRuleset.calendarOptions 不一致！\n'
+        '请先建好 ruleset，再将 ruleset.calendarOptions 传入 ZiweiDate.fromSolar/fromLunar，否则历法配置互相矛盾。\n'
+        '例：ZiweiDate.fromSolar(dt, options: ruleset.calendarOptions)',
+      );
+    }
+
     // 1-1. 安十二宫 (地支位置是固定的)
     List<Palace> palaces = List.generate(
       ZiweiConsts.palaceCount,
@@ -214,8 +222,8 @@ class ZiweiEngine {
       elementBureau: elementBureau, //五行局
       date: date,
       ruleset: ruleset,
-      effective_month: effectiveMonth,
-      effective_year: effectiveYear,
+      effectiveMonth: effectiveMonth,
+      effectiveYear: effectiveYear,
 
       mingZhu: mingZhuKey,
       shenZhu: shenZhuKey,

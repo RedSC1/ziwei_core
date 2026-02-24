@@ -47,7 +47,7 @@ class ZiweiLimitManager {
     if (_currentContext.hasYear) {
       targetYear = _currentContext.year!.year;
     }
-    return _timelineProvider.generateManifest(targetYear);
+    return _timelineProvider.getManifest(year: targetYear);
   }
 
   /// 一键获取包含指定大限内所有流年的“全家桶”序列化清单 (Full JSON 专用)
@@ -59,8 +59,8 @@ class ZiweiLimitManager {
       targetYear = _currentContext.year!.year;
     }
     // 如果没有被明确指定，且当前上下文中没有大限对象（说明在童限），兜底使用 0 (童限) 索引
-    int dIdx = decadeIndex ?? _currentContext.decade?.decadeIndex ?? 0;
-    return _timelineProvider.getFullManifest(targetYear, dIdx);
+    int? dIdx = decadeIndex ?? _currentContext.decade?.decadeIndex;
+    return _timelineProvider.getManifest(year: targetYear, decadeIndex: dIdx);
   }
 
   // --- 大限控制 (Decade) ---

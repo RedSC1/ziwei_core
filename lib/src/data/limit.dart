@@ -147,7 +147,7 @@ class Decade extends FlowLimit {
   /// - [plate] 命盘
   static int getEffectiveBirthYear(ZiWeiPlate plate) {
     if (plate.date.options.flowLimitBasedOn == Boundary.lunar) {
-      return plate.effective_year;
+      return plate.effectiveYear;
     } else {
       // 节气派：依靠 Bazi 四柱推断年份
       // bazi.year 仅提供干支。我们需要比对当年的干支和实际公历年的干支。
@@ -262,7 +262,7 @@ class FlowMonth extends FlowLimit {
     // 2. 计算【流年斗君】 (正月所在的宫位索引)
     // 规则：流年命宫起，逆数生月，顺数生时
     // (注意：这里用的是农历生月和生时索引)
-    int birthMonth = plate.effective_month;
+    int birthMonth = plate.effectiveMonth;
     int birthTimeIndex = plate.date.timeIndex;
 
     // 逆数月: - (month - 1)

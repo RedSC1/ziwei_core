@@ -17,8 +17,8 @@ import 'package:ziwei_core/src/config/ruleset.dart';
 /// - [date] 真正的命盘出生时间设定
 /// - [ruleset] 从JSON读取的排盘规则字典，详见 `ZiweiRuleset`
 /// - [elementBureau] 该命盘的五行局
-/// - [effective_month] 实际用于排盘的有效历法月
-/// - [effective_year] 实际用于排盘的有效历法年
+/// - [effectiveMonth] 实际用于排盘的有效历法月
+/// - [effectiveYear] 实际用于排盘的有效历法年
 /// - [mingZhu] 命主星
 /// - [shenZhu] 身主星
 ///
@@ -39,8 +39,8 @@ class ZiWeiPlate {
   final FiveElementBureau elementBureau;
   final ZiweiDate date;
   final ZiweiRuleset ruleset;
-  final int effective_month;
-  final int effective_year;
+  final int effectiveMonth;
+  final int effectiveYear;
 
   final String? mingZhu;
   final String? shenZhu;
@@ -101,8 +101,8 @@ class ZiWeiPlate {
     required this.elementBureau,
     required this.date,
     required this.ruleset,
-    required this.effective_month,
-    required this.effective_year,
+    required this.effectiveMonth,
+    required this.effectiveYear,
 
     required this.mingZhu,
     required this.shenZhu,
@@ -164,8 +164,8 @@ class ZiWeiPlate {
 
       // 3. 规则引用复制 (浅拷贝即可，因为规则是只读的)
       ruleset: ruleset,
-      effective_month: effective_month,
-      effective_year: effective_year,
+      effectiveMonth: effectiveMonth,
+      effectiveYear: effectiveYear,
 
       mingZhu: mingZhu,
       shenZhu: shenZhu,
@@ -220,8 +220,8 @@ class ZiWeiPlate {
     return {
       'meta': {
         'element_bureau': elementBureau.name,
-        'effective_year': effective_year,
-        'effective_month': effective_month,
+        'effective_year': effectiveYear,
+        'effective_month': effectiveMonth,
         'ming_zhu': mingZhu,
         'shen_zhu': shenZhu,
       },
