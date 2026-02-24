@@ -29,7 +29,7 @@ This project relies on [bazi_core(dart)](https://github.com/RedSC1/bazi_core) to
 
 ### 1. Basic Chart Calculation (Origin Chart)
 
-For a detailed explanation of `ZiweiDate` construction, refer to [Core API Exhibition: ZiweiDate](./docs_en/06_ziwei_date.md).
+For a detailed explanation of `ZiweiDate` construction, refer to [Core API Exhibition: ZiweiDate](./doc_en/06_ziwei_date.md).
 
 ```dart
 import 'package:ziwei_core/ziwei_core.dart';
@@ -89,7 +89,7 @@ ZiWeiPlate currentPlate = manager.dynamicPlate;
 
 ## 🛠 Advanced Features: Smart Patching via JSON
 
-You can alter a specific star's rule by injecting a partial JSON snippet (for details refer to [Configuration Override and Sect Customization](./docs_en/02_custom_rulesets.md) and [JSON Constants Enum Reference](./docs_en/07_json_value_reference.md)):
+You can alter a specific star's rule by injecting a partial JSON snippet (for details refer to [Configuration Override and Sect Customization](./doc_en/02_custom_rulesets.md) and [JSON Constants Enum Reference](./doc_en/07_json_value_reference.md)):
 
 ```dart
 String myCustomStarsJson = '''
@@ -115,7 +115,7 @@ final newRuleset = ConfigLoader.overrideWith(
 
 ### Modifying Calendar Rules (main_rules.json)
 
-Beyond stars, you can inject `mainRulesJson` to override the lowest-level runtime mechanisms on the fly, such as turning Early/Late Zi hour distinction on or off, or shifting the bounds of SiHua triggers (detailed in [Default Configuration file `default.json`](./docs_en/03_config_file.md)):
+Beyond stars, you can inject `mainRulesJson` to override the lowest-level runtime mechanisms on the fly, such as turning Early/Late Zi hour distinction on or off, or shifting the bounds of SiHua triggers (detailed in [Default Configuration file `default.json`](./doc_en/03_config_file.md)):
 
 ```dart
 String myCalendarConfig = '''
@@ -159,7 +159,7 @@ Given the numerous sects of Ziwei Doushu, distinct ancient texts, and limited pe
 
 ## 🚀 Roadmap
 
-- [x] **API & Architecture Documentation**: Successfully rewritten, refer to the [Core API Reference](./docs_en/04_api_reference.md) for architectural and API details.
+- [x] **API & Architecture Documentation**: Successfully rewritten, refer to the [Core API Reference](./doc_en/04_api_reference.md) for architectural and API details.
 - [ ] **Sect Deep Support**: Implement Zhongzhou, Flying Star, and other major sects' calculation algorithms.
 - [ ] **Sect Configuration Presets**: Package more mainstream sect SiHua and brightness rulesets by default.
 - [ ] **Translation & i18n**: Expand language tags and JSON dictionaries for complete internationalization.

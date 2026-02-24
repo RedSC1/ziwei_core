@@ -29,7 +29,7 @@ Ziwei Core 是一款支持 6000 年超长时空跨度（约 $-1000$ 至 $5000$�
 
 ### 1. 基础命盘推演（算原局）
 
-详细的紫微日期构建说明请参考 [核心 API 展示：ZiweiDate](./docs/06_ziwei_date.md)。
+详细的紫微日期构建说明请参考 [核心 API 展示：ZiweiDate](./doc/06_ziwei_date.md)。
 
 ```dart
 import 'package:ziwei_core/ziwei_core.dart';
@@ -90,7 +90,7 @@ ZiWeiPlate currentPlate = manager.dynamicPlate;
 
 ## 🛠 高级功能：JSON 规则注入 (Smart Patching)
 
-你可以通过注入一段局部 JSON，来改变某一颗星星的规则（详情请参考 [配置覆盖与自定义流派说明](./docs/02_custom_rulesets.md) 及 [JSON 常量枚举参考表](./docs/07_json_value_reference.md)）：
+你可以通过注入一段局部 JSON，来改变某一颗星星的规则（详情请参考 [配置覆盖与自定义流派说明](./doc/02_custom_rulesets.md) 及 [JSON 常量枚举参考表](./doc/07_json_value_reference.md)）：
 
 ```dart
 String myCustomStarsJson = '''
@@ -116,7 +116,7 @@ final newRuleset = ConfigLoader.overrideWith(
 
 ### 修改历法规则 (main_rules.json)
 
-不仅是星星，你还可以通过注入 `mainRulesJson` 实时覆盖引擎最底层的运作机制，比如开启早晚子时、修改五虎遁和四化的界限基准等（详见 [配置文件 `default.json` 详解](./docs/03_config_file.md)）：
+不仅是星星，你还可以通过注入 `mainRulesJson` 实时覆盖引擎最底层的运作机制，比如开启早晚子时、修改五虎遁和四化的界限基准等（详见 [配置文件 `default.json` 详解](./doc/03_config_file.md)）：
 
 ```dart
 String myCalendarConfig = '''
@@ -160,7 +160,7 @@ graph TD
 
 ## 🚀 待完善与未来规划 (Roadmap)
 
-- [x] **API 与架构文档**：已完整重构，请查阅 [核心 API 参考手册](./docs/04_api_reference.md) 了解引擎架构与 API 细节。
+- [x] **API 与架构文档**：已完整重构，请查阅 [核心 API 参考手册](./doc/04_api_reference.md) 了解引擎架构与 API 细节。
 - [ ] **多流派深度支持**：实现中州派、飞星派等派别的排盘逻辑和排盘算法。
 - [ ] **多流派配置预设**：内置更多主流派别的四化与亮度规则集。
 - [ ] **多语言支持 (i18n)**：支持星曜、宫位名的多语种切换。
