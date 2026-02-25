@@ -1,3 +1,9 @@
+## 0.9.2
+
+- 升级依赖 `bazi_core` 至 `^0.1.3`
+- 升级依赖 `sxwnl_spa_dart` 至 `^0.10.0`
+- 修复因 `bazi_core` 模型文件重构导致的内部引用路径问题。
+
 ## 0.9.1
 
 - Fixed pub.dev directory naming issue (renamed `docs` to `doc`).

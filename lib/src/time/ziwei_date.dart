@@ -6,8 +6,8 @@ import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 
 import 'time_adapter.dart';
 
-export 'package:bazi_core/src/models/gan_zhi.dart';
-export 'package:bazi_core/src/models/lunar_date.dart';
+export 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart'
+    show GanZhi, TianGan, DiZhi, LunarDate, BaZi;
 
 /// **历法选项 (Calendar Options)**
 ///
