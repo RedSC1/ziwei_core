@@ -166,22 +166,28 @@
 
 ### 其他常用星
 
+完整列表如下（共 39 颗）：
+
 | key | 星名 | key | 星名 |
 | :--- | :--- | :--- | :--- |
 | `hongluan` | 红鸾 | `tianxi` | 天喜 |
 | `tianxing` | 天刑 | `tianyao` | 天姚 |
-| `tianguan` | 天官 | `tianfu_star` | 天福 |
+| `tianguan` | 天官 | `tianfu_minor` | 天福 |
 | `jiekong` | 截空 | `xunkong` | 旬空 |
 | `tiancai` | 天才 | `tianshou` | 天寿 |
-| `feixing` | 蜚星 | `pozhui` | 破碎 |
+| `feilian` | 蜚廉 | `pozhui` | 破碎 |
 | `santai` | 三台 | `bazuo` | 八座 |
 | `enguang` | 恩光 | `tiangui` | 天贵 |
 | `tiande` | 天德 | `yuedu` | 月德 |
 | `longchi` | 龙池 | `fengge` | 凤阁 |
 | `tiankong` | 天空 | `tianku` | 天哭 |
 | `tianxu` | 天虚 | `huagai` | 华盖 |
-| `xianchi`| 咸池 | `guchenguasu` | 孤辰寡宿 |
-| `tiantao` | 天桃 | | |
-
-> [!NOTE]
-> 以上列表基于默认规则集，实际可用 key 以你的 `stars.json` 中定义的为准。自定义规则集可以自由增删星曜，只需保证 key 在各配置文件之间引用一致。
+| `xianchi` | 咸池 | `guchen` | 孤辰 |
+| `guasu` | 寡宿 | `taifu` | 台辅 |
+| `fenggao` | 封诰 | `yinsha` | 阴煞 |
+| `tianwu` | 天巫 | `tianyue_minor` | 天月 |
+| `tianchu` | 天厨 | `jieshen` | 解神 |
+| `nianjie` | 年解 | `dahao` | 大耗 |
+| `tianshang` | 天伤 | `tianshi` | 天使 |
+| `fuxun` | 副旬 | `fujie` | 副截 |
+| `tianfu_star` | 天福 | | |

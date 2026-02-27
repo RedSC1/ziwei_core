@@ -164,24 +164,30 @@ Below resides the pre-fabricated star keys running throughout the default shippe
 | `huoxing` | Huo Xing (Fire) | `lingxing` | Ling Xing (Bell) |
 | `dikong` | Di Kong (Void) | `dijie` | Di Jie (Robber) |
 
-### Minor Utility Anchors
+### Minor and Auxiliary Stars
+
+Complete list of all 39 minor stars:
 
 | Key | Translation | Key | Translation |
 | :--- | :--- | :--- | :--- |
 | `hongluan` | Hong Luan (Wedding) | `tianxi` | Tian Xi (Joy) |
 | `tianxing` | Tian Xing (Justice)| `tianyao` | Tian Yao (Romance)|
-| `tianguan` | Tian Guan (Promote)| `tianfu_star`| Tian Fu (Blessing) |
+| `tianguan` | Tian Guan (Promote)| `tianfu_minor`| Tian Fu (Blessing) |
 | `jiekong` | Jie Kong (Shatter)| `xunkong` | Xun Kong (Empty) |
 | `tiancai` | Tian Cai (Talent)| `tianshou` | Tian Shou (Age) |
-| `feixing` | Fei Xing (Gossip)| `pozhui` | Po Zhui (Shatter) |
+| `feilian` | Fei Lian (Gossip)| `pozhui` | Po Zhui (Shatter) |
 | `santai` | San Tai (Three Steps)| `bazuo` | Ba Zuo (Eight Seats)|
 | `enguang` | En Guang (Grace)| `tiangui` | Tian Gui (Honor) |
 | `tiande` | Tian De (Heaven De)| `yuedu` | Yue De (Moon De) |
 | `longchi` | Long Chi (Dragon) | `fengge` | Feng Ge (Phoenix) |
 | `tiankong` | Tian Kong (Sky) | `tianku` | Tian Ku (Cry) |
 | `tianxu` | Tian Xu (Void) | `huagai` | Hua Gai (Canopy) |
-| `xianchi`| Xian Chi (Pool) | `guchenguasu` | Gu Chen Gua Su(Alone) |
-| `tiantao` | Tian Tao (Peach) | | |
-
-> [!NOTE]
-> This framework serves solely as identical twins to the baked `.json` configurations. Expand and destroy dynamically per your independent sect guidelines via custom rule injections flawlessly.
+| `xianchi`| Xian Chi (Pool) | `guchen` | Gu Chen (Solitude) |
+| `guasu` | Gua Su (Widow) | `taifu` | Tai Fu (Platform) |
+| `fenggao` | Feng Gao (Seal) | `yinsha` | Yin Sha (Shadow) |
+| `tianwu` | Tian Wu (Shaman) | `tianyue_minor` | Tian Yue (Minor Moon) |
+| `tianchu` | Tian Chu (Kitchen) | `jieshen` | Jie Shen (Resolver) |
+| `nianjie` | Nian Jie (Year Resolver) | `dahao` | Da Hao (Great Depletion) |
+| `tianshang` | Tian Shang (Heavenly Damage) | `tianshi` | Tian Shi (Heavenly Messenger) |
+| `fuxun` | Fu Xun (Deputy Void) | `fujie` | Fu Jie (Deputy Intercept) |
+| `tianfu_star` | Tian Fu Star (Fortune) | | |

@@ -10,7 +10,7 @@
 
 ```yaml
 dependencies:
-  ziwei_core: ^0.9.1
+  ziwei_core: ^0.9.3
 ```
 
 运行 `dart pub get` 完成安装。

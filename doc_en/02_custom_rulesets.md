@@ -105,7 +105,7 @@ final ruleset = ConfigLoader.overrideWith(
 );
 ```
 
-Brightness value definitions: `6`=Miao `5`=Wang `4`=De `3`=Li `2`=Ping `1`=Bu/Xian `0`=Xian `-1`=None (Omit brightness rendering)
+Brightness value definitions: `6`=Miao `5`=Wang `4`=De `3`=Li `2`=Ping `1`=Bu `0`=Xian `-1`=None (Omit brightness rendering)
 
 ---
 

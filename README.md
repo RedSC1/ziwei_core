@@ -100,8 +100,8 @@ String myCustomStarsJson = '''
     "type": "major",
     "rule": {
       "type": "lookup",
-      "param": "bureau",
-      "mapping": { "2": 1, "3": 2, "4": 3, "5": 4, "6": 5 }
+      "anchor": "bureau",
+      "table": { "2": 1, "3": 2, "4": 3, "5": 4, "6": 5 }
     }
   }
 ]

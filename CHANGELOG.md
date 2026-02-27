@@ -1,3 +1,8 @@
+## 0.9.3
+
+- 优化文档：修复 README 及示例代码中 JSON 规则注入的格式错误（`param` → `anchor`, `mapping` → `table`）。
+- Docs: Fixed JSON rule injection format errors in README and examples (`param` → `anchor`, `mapping` → `table`).
+
 ## 0.9.2
 
 - 升级依赖 `bazi_core` 至 `^0.1.3`

@@ -10,7 +10,7 @@ Add the dependency in your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  ziwei_core: ^0.9.1 
+  ziwei_core: ^0.9.3
 ```
 
 Run `dart pub get` to complete the installation.
