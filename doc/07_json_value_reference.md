@@ -175,7 +175,7 @@
 | `tianguan` | 天官 | `tianfu_minor` | 天福 |
 | `jiekong` | 截空 | `xunkong` | 旬空 |
 | `tiancai` | 天才 | `tianshou` | 天寿 |
-| `feilian` | 蜚廉 | `pozhui` | 破碎 |
+| `feilian` | 蜚廉 | `posui` | 破碎 |
 | `santai` | 三台 | `bazuo` | 八座 |
 | `enguang` | 恩光 | `tiangui` | 天贵 |
 | `tiande` | 天德 | `yuedu` | 月德 |

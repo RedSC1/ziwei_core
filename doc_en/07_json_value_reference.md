@@ -175,7 +175,7 @@ Complete list of all 39 minor stars:
 | `tianguan` | Tian Guan (Promote)| `tianfu_minor`| Tian Fu (Blessing) |
 | `jiekong` | Jie Kong (Shatter)| `xunkong` | Xun Kong (Empty) |
 | `tiancai` | Tian Cai (Talent)| `tianshou` | Tian Shou (Age) |
-| `feilian` | Fei Lian (Gossip)| `pozhui` | Po Zhui (Shatter) |
+| `feilian` | Fei Lian (Gossip)| `posui` | Po Sui (Shatter) |
 | `santai` | San Tai (Three Steps)| `bazuo` | Ba Zuo (Eight Seats)|
 | `enguang` | En Guang (Grace)| `tiangui` | Tian Gui (Honor) |
 | `tiande` | Tian De (Heaven De)| `yuedu` | Yue De (Moon De) |
