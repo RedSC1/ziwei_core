@@ -166,7 +166,7 @@ Below resides the pre-fabricated star keys running throughout the default shippe
 
 ### Minor and Auxiliary Stars
 
-Complete list of all 39 minor stars:
+Complete list of all 38 minor stars:
 
 | Key | Translation | Key | Translation |
 | :--- | :--- | :--- | :--- |
