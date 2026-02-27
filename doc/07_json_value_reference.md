@@ -160,7 +160,7 @@
 | `wenqu` | 文曲 | `wenchang` | 文昌 |
 | `tiankui` | 天魁 | `tianyue` | 天钺 |
 | `lucun` | 禄存 | `tianma` | 天马 |
-| `qinyang` | 擎羊 | `tuoluo` | 陀罗 |
+| `qingyang` | 擎羊 | `tuoluo` | 陀罗 |
 | `huoxing` | 火星 | `lingxing` | 铃星 |
 | `dikong` | 地空 | `dijie` | 地劫 |
 
@@ -178,7 +178,7 @@
 | `feilian` | 蜚廉 | `posui` | 破碎 |
 | `santai` | 三台 | `bazuo` | 八座 |
 | `enguang` | 恩光 | `tiangui` | 天贵 |
-| `tiande` | 天德 | `yuedu` | 月德 |
+| `tiande` | 天德 | `yuede` | 月德 |
 | `longchi` | 龙池 | `fengge` | 凤阁 |
 | `tiankong` | 天空 | `tianku` | 天哭 |
 | `tianxu` | 天虚 | `huagai` | 华盖 |
@@ -190,4 +190,3 @@
 | `nianjie` | 年解 | `dahao` | 大耗 |
 | `tianshang` | 天伤 | `tianshi` | 天使 |
 | `fuxun` | 副旬 | `fujie` | 副截 |
-| `tianfu_star` | 天福 | | |

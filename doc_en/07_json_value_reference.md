@@ -160,7 +160,7 @@ Below resides the pre-fabricated star keys running throughout the default shippe
 | `wenqu` | Wen Qu (Arts) | `wenchang` | Wen Chang (Intellect) |
 | `tiankui` | Tian Kui (Noble) | `tianyue` | Tian Yue (Angel) |
 | `lucun` | Lu Cun (Treasure) | `tianma` | Tian Ma (Steed) |
-| `qinyang` | Qing Yang (Sword) | `tuoluo` | Tuo Luo (Drill) |
+| `qingyang` | Qing Yang (Sword) | `tuoluo` | Tuo Luo (Drill) |
 | `huoxing` | Huo Xing (Fire) | `lingxing` | Ling Xing (Bell) |
 | `dikong` | Di Kong (Void) | `dijie` | Di Jie (Robber) |
 
@@ -178,7 +178,7 @@ Complete list of all 39 minor stars:
 | `feilian` | Fei Lian (Gossip)| `posui` | Po Sui (Shatter) |
 | `santai` | San Tai (Three Steps)| `bazuo` | Ba Zuo (Eight Seats)|
 | `enguang` | En Guang (Grace)| `tiangui` | Tian Gui (Honor) |
-| `tiande` | Tian De (Heaven De)| `yuedu` | Yue De (Moon De) |
+| `tiande` | Tian De (Heaven De)| `yuede` | Yue De (Moon De) |
 | `longchi` | Long Chi (Dragon) | `fengge` | Feng Ge (Phoenix) |
 | `tiankong` | Tian Kong (Sky) | `tianku` | Tian Ku (Cry) |
 | `tianxu` | Tian Xu (Void) | `huagai` | Hua Gai (Canopy) |
@@ -190,4 +190,3 @@ Complete list of all 39 minor stars:
 | `nianjie` | Nian Jie (Year Resolver) | `dahao` | Da Hao (Great Depletion) |
 | `tianshang` | Tian Shang (Heavenly Damage) | `tianshi` | Tian Shi (Heavenly Messenger) |
 | `fuxun` | Fu Xun (Deputy Void) | `fujie` | Fu Jie (Deputy Intercept) |
-| `tianfu_star` | Tian Fu Star (Fortune) | | |
