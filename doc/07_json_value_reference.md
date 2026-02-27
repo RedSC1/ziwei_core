@@ -58,6 +58,8 @@
 
 > [!TIP]
 > 你还可以使用任何已安放的**星曜 key** 作为锚点（如 `"lucun"`），引擎会读取该星的当前宫位索引。
+>
+> 完整的 anchor 可选值列表请参考源码 `lib/src/core/star_locator.dart`。
 
 ### `rule.direction`（偏移方向）
 

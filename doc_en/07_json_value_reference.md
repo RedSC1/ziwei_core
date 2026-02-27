@@ -58,6 +58,8 @@ Anchors mandate the root coordinate the mathematical placement originates from. 
 
 > [!TIP]
 > You can additionally utilize **any valid Star Key** previously instantiated as an anchor (e.g., `"lucun"`), and the engine fetches that star's current palace index.
+>
+> For a complete list of available anchor values, refer to the source code `lib/src/core/star_locator.dart`.
 
 ### `rule.direction` (Trajectory Vector)
 
