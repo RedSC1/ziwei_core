@@ -8,3 +8,5 @@ pubspec.lock
 
 # Visual Studio Code
 .vscode
+
+.claude/
