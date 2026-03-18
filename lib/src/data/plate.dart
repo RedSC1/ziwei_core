@@ -41,6 +41,7 @@ class ZiWeiPlate {
   final ZiweiRuleset ruleset;
   final int effectiveMonth;
   final int effectiveYear;
+  final TDRpan tdrPan;
 
   final String? mingZhu;
   final String? shenZhu;
@@ -103,6 +104,7 @@ class ZiWeiPlate {
     required this.ruleset,
     required this.effectiveMonth,
     required this.effectiveYear,
+    required this.tdrPan,
 
     required this.mingZhu,
     required this.shenZhu,
@@ -166,6 +168,7 @@ class ZiWeiPlate {
       ruleset: ruleset,
       effectiveMonth: effectiveMonth,
       effectiveYear: effectiveYear,
+      tdrPan: tdrPan,
 
       mingZhu: mingZhu,
       shenZhu: shenZhu,

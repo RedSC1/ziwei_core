@@ -8,3 +8,9 @@ enum FiveElementBureau {
   int get number => const [2, 3, 4, 5, 6][index];
   String get label => const ['水二局', '木三局', '金四局', '土五局', '火六局'][index];
 }
+
+enum TDRpan {
+  tianPan, //天盘（默认）
+  diPan, //地盘
+  renPan, //人盘
+}

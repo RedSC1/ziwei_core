@@ -66,7 +66,7 @@ The core processing engine where all layout computations take place to spit out 
 
 | Method | Signature | Description |
 | :--- | :--- | :--- |
-| `calculate()` | `static ZiWeiPlate calculate(date, ruleset)` | Scaffolds the static Origin Chart based on birthday specifics and the designated ruleset. |
+| `calculate()` | `static ZiWeiPlate calculate(date, ruleset, {tdrPan})` | Scaffolds the static Origin Chart based on birthday specifics and the designated ruleset. `tdrPan` is optional, defaults to `TDRpan.tianPan` (Heaven Plate). Pass `diPan` (Earth Plate, Body Palace as Ming) or `renPan` (Human Plate, Fude Palace as Ming). |
 | `calculateDynamic()` | `static ZiWeiPlate calculateDynamic(LimitContext)` | Stacks specific timeline constraints (Decades, Flowing Years, etc.) over an Origin Chart generating a dynamic clone variant. Typically never invoked standalone—routed via `ZiweiLimitManager`. |
 
 ---
@@ -91,6 +91,7 @@ final role = plate.getRole(ZiweiScope.year, palaceIndex);
 | :--- | :--- |
 | `originMingPalace` | Origin limit Life Palace |
 | `bodyPalace` | Body Palace (Shen Gong) |
+| `tdrPan` | Current plate type (`tianPan` Heaven / `diPan` Earth / `renPan` Human) |
 | `decadeMingPalace` | Currently active Decade Life Palace (Yields null if subject hasn't reached an active decade yet) |
 | `yearMingPalace` | Currently active Flowing Year Life Palace |
 | `monthMingPalace` | Currently active Flowing Month Life Palace |
@@ -248,6 +249,7 @@ Surgical bypass component structuring `LimitContext` wrappers entirely dismissin
 | Enum | Common Attributes |
 | :--- | :--- |
 | `Gender` | `male`、`female` |
+| `TDRpan` | `tianPan` (Heaven)、`diPan` (Earth)、`renPan` (Human) |
 | `ZiweiScope` | `origin`、`decade`、`year`、`month`、`day`、`hour`、`smallLimit` |
 | `PalaceRole` | `ming` (Life)、`siblings` (Brothers)、`spouse` (Partner)、`children` (Offspring)... |
 | `Boundary` | `lunar` (Lunar)、`solar` (Solar Term boundaries) |

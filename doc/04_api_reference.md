@@ -66,7 +66,7 @@
 
 | 方法 | 签名 | 说明 |
 | :--- | :--- | :--- |
-| `calculate()` | `static ZiWeiPlate calculate(date, ruleset)` | 根据出生时间和规则集排原局命盘。 |
+| `calculate()` | `static ZiWeiPlate calculate(date, ruleset, {tdrPan})` | 根据出生时间和规则集排原局命盘。`tdrPan` 可选，默认 `TDRpan.tianPan`（天盘），可传 `diPan`（地盘，身宫为命宫）或 `renPan`（人盘，福德宫为命宫）。 |
 | `calculateDynamic()` | `static ZiWeiPlate calculateDynamic(LimitContext)` | 根据流运上下文在原盘上叠加大限/流年等，返回动态克隆盘。通常不需要直接调用，由 `ZiweiLimitManager` 封装。 |
 
 ---
@@ -91,6 +91,7 @@ final role = plate.getRole(ZiweiScope.year, palaceIndex);
 | :--- | :--- |
 | `originMingPalace` | 原局命宫 |
 | `bodyPalace` | 身宫 |
+| `tdrPan` | 当前盘类型（`tianPan` 天盘 / `diPan` 地盘 / `renPan` 人盘） |
 | `decadeMingPalace` | 当前大限命宫（未进入大限则为 null） |
 | `yearMingPalace` | 当前流年命宫 |
 | `monthMingPalace` | 当前流月命宫 |
@@ -248,6 +249,7 @@ palace.toJson(brightnessLabels: ruleset.brightnessLabels);
 | 枚举 | 常用值 |
 | :--- | :--- |
 | `Gender` | `male`、`female` |
+| `TDRpan` | `tianPan`（天盘）、`diPan`（地盘）、`renPan`（人盘） |
 | `ZiweiScope` | `origin`、`decade`、`year`、`month`、`day`、`hour`、`smallLimit` |
 | `PalaceRole` | `ming`（命）、`siblings`（兄弟）、`spouse`（夫妻）、`children`（子女）... |
 | `Boundary` | `lunar`（农历）、`solar`（节气） |

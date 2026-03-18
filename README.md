@@ -48,12 +48,12 @@ void main() async {
     options: ruleset.calendarOptions, 
   );
 
-  // 3. 一键出盘
+  // 3. 一键出盘（默认天盘）
   final plate = ZiweiEngine.calculate(ziweiDate, ruleset);
 
   print('节气八字: ${ziweiDate.bazi}');
   print('命主: ${plate.mingZhu} | 身主: ${plate.shenZhu}');
-  
+
   // 极简访问各个宫位
   final mingPalace = plate.originMingPalace;
   print("命宫位置: ${mingPalace.branch}");
@@ -61,7 +61,25 @@ void main() async {
 }
 ```
 
-### 2. 时光机（算大限、流年、流月、流日、流时）
+### 2. 天地人盘 (天盘 / 地盘 / 人盘)
+
+通过可选参数 `tdrPan` 切换排盘模式，默认为天盘：
+
+```dart
+// 天盘（默认，可省略）
+final tianPlate = ZiweiEngine.calculate(date, ruleset);
+
+// 地盘：以身宫为命宫重排
+final diPlate = ZiweiEngine.calculate(date, ruleset, tdrPan: TDRpan.diPan);
+
+// 人盘：以福德宫（命宫+2）为命宫重排
+final renPlate = ZiweiEngine.calculate(date, ruleset, tdrPan: TDRpan.renPan);
+```
+
+> 命宫位置变化会影响五行局的推算，因此三盘的五行局和星曜分布可能各不相同。
+> 完整示例请参考 [▶️ 天地人盘演示 (tdr_pan_demo.dart)](./example/tdr_pan_demo.dart)
+
+### 3. 时光机（算大限、流年、流月、流日、流时）
 
 使用[`ZiweiLimitManager`](./example/limit_manager_demo.dart) 管理大限、流年、流月、流日、流时盘：
 
@@ -98,13 +116,13 @@ ZiWeiPlate currentPlate = manager.dynamicPlate;
 String myCustomStarsJson = '''
 [
   {
-    "key": "ziwei",
-    "type": "major",
-    "rule": {
-      "type": "lookup",
-      "anchor": "bureau",
-      "table": { "2": 1, "3": 2, "4": 3, "5": 4, "6": 5 }
-    }
+      "key": "ziwei",
+      "type": "major",
+      "rule": {
+          "type": "anchor_offset",
+          "anchor": "ziwei",
+          "offset": 0
+      }
   }
 ]
 ''';
@@ -164,6 +182,7 @@ graph TD
 ## 🚀 待完善与未来规划 (Roadmap)
 
 - [x] **API 与架构文档**：已完整重构，请查阅 [核心 API 参考手册](./doc/04_api_reference.md) 了解引擎架构与 API 细节。
+- [x] **天地人盘支持**：通过 `TDRpan` 参数切换天盘、地盘（身宫为命宫）、人盘（福德宫为命宫）。
 - [ ] **多流派深度支持**：实现中州派、飞星派等派别的排盘逻辑和排盘算法。
 - [ ] **多流派配置预设**：内置更多主流派别的四化与亮度规则集。
 - [ ] **多语言支持 (i18n)**：支持星曜、宫位名的多语种切换。

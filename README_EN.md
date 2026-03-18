@@ -46,12 +46,12 @@ void main() async {
     options: ruleset.calendarOptions, 
   );
 
-  // 3. Generate Chart with One Line
+  // 3. Generate Chart with One Line (defaults to Heaven Plate)
   final plate = ZiweiEngine.calculate(ziweiDate, ruleset);
 
   print('BaZi (Four Pillars): ${ziweiDate.bazi}');
   print('Ming Zhu: ${plate.mingZhu} | Shen Zhu: ${plate.shenZhu}');
-  
+
   // Minimalist access to Palaces
   final mingPalace = plate.originMingPalace;
   print("Ming Palace Branch: ${mingPalace.branch}");
@@ -59,7 +59,25 @@ void main() async {
 }
 ```
 
-### 2. Time Machine (Decade, Year, Month, Day, Hour Flows)
+### 2. Heaven / Earth / Human Plates (天盘 / 地盘 / 人盘)
+
+Switch plate mode via the optional `tdrPan` parameter (defaults to Heaven Plate):
+
+```dart
+// Heaven Plate (default, can be omitted)
+final tianPlate = ZiweiEngine.calculate(date, ruleset);
+
+// Earth Plate: uses Body Palace as Ming Palace
+final diPlate = ZiweiEngine.calculate(date, ruleset, tdrPan: TDRpan.diPan);
+
+// Human Plate: uses Fude Palace (Ming + 2) as Ming Palace
+final renPlate = ZiweiEngine.calculate(date, ruleset, tdrPan: TDRpan.renPan);
+```
+
+> Changing the Ming Palace position affects the Five Element Bureau calculation, so the three plates may have different bureaus and star distributions.
+> See [▶️ TDR Pan Demo (tdr_pan_demo.dart)](./example/tdr_pan_demo.dart) for a complete example.
+
+### 3. Time Machine (Decade, Year, Month, Day, Hour Flows)
 
 Use [`ZiweiLimitManager`](./example/limit_manager_demo.dart) to manage dynamic plates (Decade, Year, Month, Day, and Hour rules):
 
@@ -160,6 +178,7 @@ Given the numerous sects of Ziwei Doushu, distinct ancient texts, and limited pe
 ## 🚀 Roadmap
 
 - [x] **API & Architecture Documentation**: Successfully rewritten, refer to the [Core API Reference](./doc_en/04_api_reference.md) for architectural and API details.
+- [x] **Heaven/Earth/Human Plate Support**: Switch between Heaven (天盘), Earth (地盘, Body Palace as Ming), and Human (人盘, Fude Palace as Ming) plates via the `TDRpan` parameter.
 - [ ] **Sect Deep Support**: Implement Zhongzhou, Flying Star, and other major sects' calculation algorithms.
 - [ ] **Sect Configuration Presets**: Package more mainstream sect SiHua and brightness rulesets by default.
 - [ ] **Translation & i18n**: Expand language tags and JSON dictionaries for complete internationalization.

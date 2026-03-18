@@ -13,9 +13,42 @@ import 'package:ziwei_core/src/enums/consts.dart';
 import 'package:ziwei_core/src/enums/scope.dart';
 import 'package:ziwei_core/src/time/ziwei_date.dart';
 
+/// **紫微斗数排盘引擎 (Ziwei Doushu Calculation Engine)**
+///
+/// 核心无状态计算引擎，负责将出生时间 ([ZiweiDate]) 与规则集 ([ZiweiRuleset])
+/// 转化为完整的命盘数据 ([ZiWeiPlate])。
+///
+/// 提供两个入口：
+/// - [calculate] — 排原局静态命盘（天盘/地盘/人盘）
+/// - [calculateDynamic] — 在原盘基础上叠加大限、流年等运限，返回动态克隆盘
+///
+/// 所有方法均为 `static`，引擎本身不持有任何状态。
 class ZiweiEngine {
-  /// 1. 排本命盘
-  static ZiWeiPlate calculate(ZiweiDate date, ZiweiRuleset ruleset) {
+  /// 排原局命盘 (Calculate Origin Chart)
+  ///
+  /// 根据出生时间和规则集，完成以下计算流程：
+  /// 1. 安十二宫（地支固定）
+  /// 2. 闰月归一化处理
+  /// 3. 安命身宫（受 [tdrPan] 影响）
+  /// 4. 五虎遁安宫干
+  /// 5. 定五行局
+  /// 6. 安紫微天府 → 全盘星曜
+  /// 7. 安生年四化
+  ///
+  /// 参数：
+  /// - [date] 出生时间，需通过 [ZiweiDate.fromSolar] 等方式构建
+  /// - [ruleset] 规则集，通过 [ConfigLoader] 获取或自定义
+  /// - [tdrPan] 盘类型，默认 [TDRpan.tianPan]（天盘）：
+  ///   - `tianPan` — 天盘（标准排法）
+  ///   - `diPan` — 地盘（以身宫为命宫重排）
+  ///   - `renPan` — 人盘（以福德宫为命宫重排）
+  ///
+  /// 返回完整的 [ZiWeiPlate] 命盘对象。
+  static ZiWeiPlate calculate(
+    ZiweiDate date,
+    ZiweiRuleset ruleset, {
+    TDRpan tdrPan = TDRpan.tianPan,
+  }) {
     ZiweiLogger.info("正在排盘: ${date.solar}...");
 
     if (date.options != ruleset.calendarOptions) {
@@ -81,6 +114,7 @@ class ZiweiEngine {
     final (int lifeIndex, int bodyIndex) = _calLifeAndBodyPalace(
       date,
       effectiveMonth,
+      tdrPan,
     );
 
     // step2: 五虎遁安放干支
@@ -225,6 +259,8 @@ class ZiweiEngine {
       effectiveMonth: effectiveMonth,
       effectiveYear: effectiveYear,
 
+      tdrPan: tdrPan,
+
       mingZhu: mingZhuKey,
       shenZhu: shenZhuKey,
 
@@ -365,7 +401,11 @@ class ZiweiEngine {
     }
   }
 
-  static (int, int) _calLifeAndBodyPalace(ZiweiDate date, int effectiveMonth) {
+  static (int, int) _calLifeAndBodyPalace(
+    ZiweiDate date,
+    int effectiveMonth,
+    TDRpan tdrPan,
+  ) {
     int monthOffset = effectiveMonth - 1; // 语义：相对于“正月”的偏移量
     int hourStep = date.timeIndex; // 子时=0, from getter
     int lifeIndex = ZiweiConsts.fixIndex(
@@ -375,7 +415,14 @@ class ZiweiEngine {
     int bodyIndex = ZiweiConsts.fixIndex(
       ZiweiConsts.yinIndex + monthOffset + hourStep,
     );
-    return (lifeIndex, bodyIndex);
+    switch (tdrPan) {
+      case TDRpan.diPan: //身宫当命宫
+        return (bodyIndex, bodyIndex);
+      case TDRpan.renPan: //福德宫当命宫
+        return ((lifeIndex + 2) % 12, bodyIndex);
+      default:
+        return (lifeIndex, bodyIndex);
+    }
   }
 
   static void _assignPalaceStems(int yearGanIndex, List<Palace> palaces) {
