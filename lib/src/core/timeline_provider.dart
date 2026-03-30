@@ -424,12 +424,13 @@ class TimelineProvider {
 
   /// 5. 获取指定日干支的流时表
   ///
-  /// 根据 `splitRatHour` 配置返回 12 或 13 个时辰条目。
+  /// 根据 `ratHourMode` 配置返回 12 或 13 个时辰条目。
   /// 13 个条目时：早子(0) + 丑(1)~亥(11) + 晚子(12)
   ///
   /// - [dayGanZhi]: 该日的日柱干支（用于五鼠遁推算时辰天干）
   List<HourNode> getHours(GanZhi dayGanZhi) {
-    final splitRat = plate.ruleset.calendarOptions.splitRatHour;
+    final ratHourMode = plate.ruleset.calendarOptions.ratHourMode;
+    final splitRat = ratHourMode != RatHourMode.noSplit;
     List<HourNode> hours = [];
 
     int startRatStemIndex = (dayGanZhi.gan.index % 5) * 2;

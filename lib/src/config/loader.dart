@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart' show RatHourMode;
 import 'package:ziwei_core/src/core/logger.dart';
 import 'package:ziwei_core/src/data/star.dart';
 import 'package:ziwei_core/src/enums/star_enums.dart';
@@ -380,7 +381,8 @@ class ConfigLoader {
     }
 
     final calMap = _requireMap(decoded, 'calendar');
-    final splitRat = _requireBool(calMap, 'split_rat_hour');
+    final ratHourModeStr = _requireString(calMap, 'rat_hour_mode');
+    final ratHourMode = _parseRatHourMode(ratHourModeStr);
     final leapStr = _requireString(calMap, 'leap_month_strategy');
     final leapRule = _parseLeapRule(leapStr);
     final wuHuStr = _requireString(calMap, 'wu_hu_dun_boundary');
@@ -397,7 +399,7 @@ class ConfigLoader {
     final enableHistorical = _requireBool(calMap, 'enable_historical');
 
     return CalendarOptions(
-      splitRatHour: splitRat,
+      ratHourMode: ratHourMode,
       leapRule: leapRule,
       wuHuDunBasedOn: wuHuBoundary,
       siHuaBasedOn: siHuaBoundary,
@@ -465,6 +467,19 @@ class ConfigLoader {
         return ChildhoodRole.regular;
       default:
         throw ArgumentError('❌ Invalid childhood_decade: $str');
+    }
+  }
+
+  static RatHourMode _parseRatHourMode(String str) {
+    switch (str) {
+      case 'noSplit':
+        return RatHourMode.noSplit;
+      case 'todayGan':
+        return RatHourMode.todayGan;
+      case 'tomorrowGan':
+        return RatHourMode.tomorrowGan;
+      default:
+        throw ArgumentError('❌ Invalid rat_hour_mode: $str');
     }
   }
 

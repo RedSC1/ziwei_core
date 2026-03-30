@@ -9,7 +9,7 @@ void main() {
       expect(base.siHuaRules.isNotEmpty, true);
       expect(base.flowDefinitions.isNotEmpty, true);
       expect(base.brightnessLabels.isNotEmpty, true);
-      expect(base.calendarOptions.splitRatHour, isNotNull);
+      expect(base.calendarOptions.ratHourMode, isNotNull);
     });
 
     test('overrideWith() merges custom Sihua cleanly without affecting base', () {

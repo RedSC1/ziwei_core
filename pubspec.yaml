@@ -9,8 +9,10 @@ environment:
 # Add regular dependencies here.
 dependencies:
   tuple: ^2.0.2
-  sxwnl_spa_dart: ^0.15.1
-  bazi_core: ^0.4.5
+  sxwnl_spa_dart:
+    path: ../sxwnl_dart
+  bazi_core:
+    path: ../bazi_core
 
 dev_dependencies:
   lints: ^6.0.0

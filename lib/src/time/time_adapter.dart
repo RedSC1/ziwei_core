@@ -32,25 +32,22 @@ class TimeAdapter {
       clockTime: solarDate,
       location: loc, // 经纬度
       timezone: timeZone, // 时区
-      splitByRatHour: opt.splitRatHour, // 是否早晚子时
+      ratHourMode: opt.ratHourMode, // 早晚子时处理模式
       useTrueSolarTime: utst, // 默认使用真太阳时
     );
 
     // 2. 使用 bazi_core 的 TimeAdaptor 计算八字
-    final bazi = TimeAdaptor.fromSolar(
-      timePack,
-      splitRatHour: opt.splitRatHour,
-    );
+    final bazi = TimeAdaptor.fromSolar(timePack);
 
     // 3. 使用 bazi_core 的 LunarDate 计算农历
     final lunarDate = LunarDate.fromSolar(
       timePack.virtualTime, // 注意：农历基于排盘时间（可能因早晚子时调整）
-      splitRatHour: opt.splitRatHour,
+      ratHourMode: opt.ratHourMode,
     );
 
     // 4. 计算 solarDay (上个节令后第几天)
     // 寻找 currentJ2k 之前的最近一个节令
-    final solarDay = _getSolarDay(timePack, splitByRatHour: opt.splitRatHour);
+    final solarDay = _getSolarDay(timePack, ratHourMode: opt.ratHourMode);
 
     return ZiweiDate(
       solar: solarDate,
@@ -218,21 +215,21 @@ class TimeAdapter {
     );
   }
 
-  static int _getSolarDay(TimePack timePack, {bool splitByRatHour = false}) {
-    // 1. 算出“排盘钟”和“北京钟”之间的物理差值
+  static int _getSolarDay(TimePack timePack, {RatHourMode ratHourMode = RatHourMode.noSplit}) {
+    // 1. 算出”排盘钟”和”北京钟”之间的物理差值
     // 这个差值已经包含了：时区差 + 经度差 + 均时差（如果开了真太阳）
     final double bjJd = timePack.bjClt.toJ2000();
     final double virtualJd = timePack.virtualTime.toJ2000();
     final double clockOffset = virtualJd - bjJd;
 
-    // 2. 获取北京时间的节气 JD，并平移到“排盘钟”的参照系
+    // 2. 获取北京时间的节气 JD，并平移到”排盘钟”的参照系
     final double jieBjJd = getPrevJie(timePack.bjClt)!.dateTime.toJ2000();
     final double jieVirtualJd = jieBjJd + clockOffset; // 核心：让节气坐标与排盘时刻同频
 
-    // 3. 处理早晚子时逻辑（确定“逻辑今天”）
+    // 3. 处理早晚子时逻辑（确定”逻辑今天”）
     double currentLogicalJd = virtualJd;
-    if (!splitByRatHour && timePack.virtualTime.hour >= 23) {
-      // 如果不分早晚子且是晚子时，逻辑上这人已经活在“明天”了
+    if (ratHourMode == RatHourMode.noSplit && timePack.virtualTime.hour >= 23) {
+      // 如果不分早晚子且是晚子时，逻辑上这人已经活在”明天”了
       // 这里的 +1/24 是为了让 JD 跨过凌晨那个坎，从而改变 Day ID
       currentLogicalJd += (1.0 / 24.0);
     }

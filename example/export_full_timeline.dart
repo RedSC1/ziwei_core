@@ -48,7 +48,7 @@ void main() {
     );
     final hours = provider.getHours(firstDayGanZhi);
     print(
-      "时辰总数: ${hours.length} (splitRatHour=${plate.ruleset.calendarOptions.splitRatHour})",
+      "时辰总数: ${hours.length} (ratHourMode=${plate.ruleset.calendarOptions.ratHourMode.name})",
     );
     print(encoder.convert(hours.map((h) => h.toJson()).toList()));
   }

@@ -18,6 +18,6 @@ export 'src/time/ziwei_date.dart'; // Exports BaZi/LunarDate/GanZhi from BaziCor
 export 'src/config/schemas/flow_definition.dart'; // EXPORT SCHEMAS
 export 'src/config/schemas/star_rule.dart'; // EXPORT SCHEMAS
 export 'src/models/timeline_node.dart';
-export 'package:bazi_core/bazi_core.dart';
+export 'package:bazi_core/bazi_core.dart' hide Decade, FlowHour, FlowDay, FlowMonth, FlowYear;
 export 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart'
-    show AstroDateTime, Location;
+    show AstroDateTime, Location, RatHourMode;

@@ -23,7 +23,7 @@ export 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart'
 /// - [flowLimitBasedOn] 流运盘是以农历(lunar)还是节气(solar)为分界 默认: lunar
 /// - [enableHistorical] 是否启用特殊历史历法兼容（颛顼历后九月等） 默认: true
 class CalendarOptions {
-  final bool splitRatHour; // 早晚子时
+  final RatHourMode ratHourMode; // 早晚子时处理模式
   final LeapMonthRule leapRule; // 闰月规则
   final Boundary wuHuDunBasedOn; //五虎遁按照农历还是节气
   final Boundary siHuaBasedOn; //四化按照农历还是节气
@@ -33,7 +33,7 @@ class CalendarOptions {
   final bool enableHistorical; // 是否启用特殊历法（建子月/建丑月等历史历法调整）
 
   const CalendarOptions({
-    this.splitRatHour = false,
+    this.ratHourMode = RatHourMode.noSplit,
     //默认
     this.leapRule = LeapMonthRule.splitAt15,
     this.wuHuDunBasedOn = Boundary.lunar,
@@ -45,7 +45,7 @@ class CalendarOptions {
 
   Map<String, dynamic> toJson() {
     return {
-      'splitRatHour': splitRatHour,
+      'ratHourMode': ratHourMode.name,
       'leapRule': leapRule.name,
       'wuHuDunBasedOn': wuHuDunBasedOn.name,
       'siHuaBasedOn': siHuaBasedOn.name,
@@ -58,7 +58,7 @@ class CalendarOptions {
   @override
   bool operator ==(Object other) =>
       other is CalendarOptions &&
-      splitRatHour == other.splitRatHour &&
+      ratHourMode == other.ratHourMode &&
       leapRule == other.leapRule &&
       wuHuDunBasedOn == other.wuHuDunBasedOn &&
       siHuaBasedOn == other.siHuaBasedOn &&
@@ -68,7 +68,7 @@ class CalendarOptions {
 
   @override
   int get hashCode => Object.hash(
-    splitRatHour,
+    ratHourMode,
     leapRule,
     wuHuDunBasedOn,
     siHuaBasedOn,

@@ -4,7 +4,7 @@
 class DefaultJsons {
   static const String brightness = r"""
 {
-  "_comment": "亮度映射: 6=庙(Miao), 5=旺(Wang), 4=得(De), 3=利(Li), 2=平(Ping), 1=不/闲(Bu/Xian), 0=陷(Xian), -1=无. 索引0为子宫，依次顺行。",
+  "_comment": "亮度映射: 6=庙(Miao), 5=旺(Wang), 4=得(De), 3=利(Li), 2=平(Ping), 1=不(Bu), 0=陷(Xian), -1=无. 索引0为子宫，依次顺行。",
   "ziwei":    [2, 6, 6, 5, 4, 5, 6, 6, 5, 5, 4, 5],
   "tianji":   [6, 0, 4, 5, 3, 2, 6, 0, 4, 5, 3, 2],
   "taiyang":  [0, 1, 5, 6, 5, 5, 5, 4, 4, 2, 1, 0],
@@ -670,7 +670,7 @@ class DefaultJsons {
   static const String mainRules = r"""
 {
   "calendar": {
-    "split_rat_hour": false,
+    "rat_hour_mode": "noSplit",
     "leap_month_strategy": "split",
     "wu_hu_dun_boundary": "lunar",
     "sihua_boundary": "lunar",
