@@ -4,13 +4,16 @@ import 'package:ziwei_core/src/data/limit.dart';
 import 'package:ziwei_core/src/data/plate.dart';
 import 'package:ziwei_core/src/models/timeline_node.dart';
 
+/// 农历月条目内部结构 (record 类型)
+typedef _MonthEntry = ({String name, bool isLeap, int logicalMonth, int dx});
+
 /// **历法时间轴生成器 (Timeline Provider)**
 ///
-/// 专为前端 UI 层和跨平台序列化设计的“数据骨架装配车间”。
+/// 专为前端 UI 层和跨平台序列化设计的”数据骨架装配车间”。
 /// 当初始化绑定了一个确定的 [ZiWeiPlate] 命盘后，它会严格遵守该盘自带的
 /// 五虎遁流派、闰月规则、节气界标（如 `flowLimit_boundary` 配置）等命理 DNA，
 /// 从而保证生成出来的大限/流年/流月/流日表，在任何时间刻度下其历法都是**统一且严谨**的，
-/// 不会出现“流月查了节气，却拿阴历套流日”的历法撕裂缺陷。
+/// 不会出现”流月查了节气，却拿阴历套流日”的历法撕裂缺陷。
 class TimelineProvider {
   final ZiWeiPlate plate;
 
@@ -154,117 +157,171 @@ class TimelineProvider {
       }
     }
 
-    for (int m = 1; m <= 12; m++) {
-      // 内部通过 ZiweiDate 的历法和五虎遁，结合流年斗君，确保算出的干支绝对正确
-      var fm = FlowMonth.create(m, targetYear, plate);
+    if (isSolarBoundary) {
+      // ==============================
+      // 节气(太阳)流月模式：固定 12 个月，无闰月概念
+      // ==============================
+      for (int m = 1; m <= 12; m++) {
+        var fm = FlowMonth.create(m, targetYear, plate);
+        final startAstro = yearJies[m - 1];
+        final endAstroExclusive = yearJies[m];
 
-      // 计算该农历月的物理起始与终结时间，用作给其他流派引擎（如八字）的发号令
-      String solarStart = "";
-      String solarEnd = "";
-      int daysInMonth = 30; // 兜底
+        final solarStart =
+            "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')} ${startAstro.hour.toString().padLeft(2, '0')}:${startAstro.minute.toString().padLeft(2, '0')}:${startAstro.second.toString().padLeft(2, '0')}";
+        final solarEnd =
+            "${endAstroExclusive.year}-${endAstroExclusive.month.toString().padLeft(2, '0')}-${endAstroExclusive.day.toString().padLeft(2, '0')} ${endAstroExclusive.hour.toString().padLeft(2, '0')}:${endAstroExclusive.minute.toString().padLeft(2, '0')}:${endAstroExclusive.second.toString().padLeft(2, '0')}";
 
-      try {
-        if (isSolarBoundary) {
-          // ==============================
-          // 节气(太阳)流月模式 (类似八字库运势)
-          // ==============================
-          final startAstro = yearJies[m - 1];
-          final endAstroExclusive = yearJies[m];
+        final cnName = _logicalMonthToCn(m);
+        months.add(
+          MonthNode(
+            month: m,
+            monthName: cnName,
+            displayLabel: "${cnName}月",
+            isLeap: false,
+            stem: fm.ganzhi.gan.name,
+            branch: fm.ganzhi.zhi.name,
+            solarStart: solarStart,
+            solarEnd: solarEnd,
+          ),
+        );
+      }
+    } else {
+      // ==============================
+      // 阴历(太阴)流月模式：用 SSQ 获取真实月份列表（含闰月，可达 13-14 个月）
+      // ==============================
+      // 农历年可能跨越两个SSQ周期，需要查询两个年份的SSQ结果
+      final ssqResult1 = SSQ().calcY(AstroDateTime(targetYear, 6, 1).toJ2000());
+      final ssqResult2 = SSQ().calcY(AstroDateTime(targetYear + 1, 6, 1).toJ2000());
 
-          // 掰到正午再相减，消除时分秒造成的 ±1 天偏移（兼容公元前）
-          final startNoon = AstroDateTime(
-            startAstro.year,
-            startAstro.month,
-            startAstro.day,
-            12,
-            0,
-            0,
-          ).toJ2000();
-          final endNoon = AstroDateTime(
-            endAstroExclusive.year,
-            endAstroExclusive.month,
-            endAstroExclusive.day,
-            12,
-            0,
-            0,
-          ).toJ2000();
-          daysInMonth = (endNoon - startNoon).round();
+      // 合并两个SSQ结果（去除重复月份）
+      final List<String> combinedYm = [];
+      final List<int> combinedDx = [];
+      final List<bool> combinedLeap = [];
 
-          solarStart =
-              "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')} ${startAstro.hour.toString().padLeft(2, '0')}:${startAstro.minute.toString().padLeft(2, '0')}:${startAstro.second.toString().padLeft(2, '0')}";
+      // 先添加第一个SSQ的结果
+      for (int i = 0; i < ssqResult1.ym.length; i++) {
+        combinedYm.add(ssqResult1.ym[i]);
+        combinedDx.add(ssqResult1.dx[i]);
+        combinedLeap.add(ssqResult1.leap > 0 && i == ssqResult1.leap);
+      }
 
-          // 八字的结束也是交节时刻！不是当天的0点！严格来说结束时刻就是 endAstroExclusive!
-          solarEnd =
-              "${endAstroExclusive.year}-${endAstroExclusive.month.toString().padLeft(2, '0')}-${endAstroExclusive.day.toString().padLeft(2, '0')} ${endAstroExclusive.hour.toString().padLeft(2, '0')}:${endAstroExclusive.minute.toString().padLeft(2, '0')}:${endAstroExclusive.second.toString().padLeft(2, '0')}";
+      // 再添加第二个SSQ的结果中不属于第一个SSQ的部分
+      // 找到第一个SSQ最后一个非闰月（通常是十一月或腊月）
+      String? lastMonth1;
+      for (int i = ssqResult1.ym.length - 1; i >= 0; i--) {
+        final isLeap = ssqResult1.leap > 0 && i == ssqResult1.leap;
+        if (!isLeap) {
+          lastMonth1 = ssqResult1.ym[i];
+          break;
+        }
+      }
+
+      // 从第二个SSQ中找到lastMonth1之后的位置，添加后续月份
+      bool foundOverlap = false;
+      for (int i = 0; i < ssqResult2.ym.length; i++) {
+        final rawName = ssqResult2.ym[i];
+        final isLeap = ssqResult2.leap > 0 && i == ssqResult2.leap;
+
+        if (!foundOverlap) {
+          // 跳过重复的月份（直到找到lastMonth1）
+          if (rawName == lastMonth1 && !isLeap) {
+            foundOverlap = true;
+          }
+          continue;
+        }
+
+        combinedYm.add(rawName);
+        combinedDx.add(ssqResult2.dx[i]);
+        combinedLeap.add(isLeap);
+      }
+
+      // 从合并后的结果中提取属于 targetYear 的月份序列
+      // 找到第一个正月开始，到下一个正月之前结束
+      final List<_MonthEntry> yearMonths = [];
+      bool seenZhengYue = false;
+
+      for (int i = 0; i < combinedYm.length; i++) {
+        final rawName = combinedYm[i];
+        final bool isLeap = combinedLeap[i];
+
+        int logicalMonth;
+        bool isLeapMonth = isLeap; // 默认使用 SSQ 的闰月标记
+
+        if (rawName == '十三') {
+          logicalMonth = 12; // 十三月视为闰腊月，和十二月共享逻辑月号
+          isLeapMonth = true;
+        } else if (rawName == '后九') {
+          logicalMonth = 9; // 后九月视为闰九月，和九月共享逻辑月号
+          isLeapMonth = true;
+        } else if (rawName == '拾贰') {
+          logicalMonth = 12; // 拾贰视为闰腊月，和十二月共享逻辑月号
+          isLeapMonth = true;
         } else {
-          // ==============================
-          // 阴历(太阴)流月模式 (传统紫微纯阴历)
-          // ==============================
-          const cnMonths = [
-            "",
-            "正",
-            "二",
-            "三",
-            "四",
-            "五",
-            "六",
-            "七",
-            "八",
-            "九",
-            "十",
-            "冬",
-            "腊",
-            "十三",
-          ];
-          String queryStr = (m >= 1 && m <= 13) ? cnMonths[m] : m.toString();
+          logicalMonth = _cnToLogicalMonth(rawName);
+        }
 
-          final ln0 = LunarDate.fromString(targetYear, queryStr, 1);
+        // 正月标志该年开始
+        if (!seenZhengYue && logicalMonth == 1 && !isLeapMonth) seenZhengYue = true;
+        if (!seenZhengYue) continue;
+
+        // 遇到下一年的正月（非闰）时停止
+        if (logicalMonth == 1 && !isLeapMonth && yearMonths.isNotEmpty) break;
+
+        yearMonths.add((
+          name: isLeapMonth ? '闰$rawName' : rawName,
+          isLeap: isLeapMonth,
+          logicalMonth: logicalMonth,
+          dx: combinedDx[i],
+        ));
+      }
+
+      // 按顺序构建 MonthNode
+      // 闰月使用与前一个非闰月相同的逻辑月号
+      int currentLogicalMonth = 0;
+      for (int idx = 0; idx < yearMonths.length; idx++) {
+        final entry = yearMonths[idx];
+
+        // 如果不是闰月，递增逻辑月号
+        if (!entry.isLeap) {
+          currentLogicalMonth++;
+        }
+        // 如果是闰月，保持 currentLogicalMonth 不变（与前一个月相同）
+
+        final int m = currentLogicalMonth;
+        final int flowIndex = idx + 1; // 流月序号 1~13（用于计算宫位）
+        var fm = FlowMonth.create(flowIndex, targetYear, plate);
+
+        String solarStart = "";
+        String solarEnd = "";
+        try {
+          final isLeapQuery = entry.isLeap;
+          final cleanName = entry.isLeap ? entry.name.replaceFirst('闰', '') : entry.name;
+          final ln0 = LunarDate.fromString(targetYear, cleanName, 1, isLeap: isLeapQuery);
           final startAstro = ln0.toSolar;
           solarStart =
               "${startAstro.year}-${startAstro.month.toString().padLeft(2, '0')}-${startAstro.day.toString().padLeft(2, '0')}";
 
-          // 直接由于没有提供 LunarDate API 的天数求法，但根据常识: 农历第二个月是小月29天，可以用 LunarDate(查询本月天数计算)
-          // 但由于我们没有办法拿到当月天数，所以只能根据下一个月的初一减去本月初一获得!
-          String nextMonthStr = (m + 1 >= 1 && m + 1 <= 12)
-              ? cnMonths[m + 1]
-              : "正";
-          int nextYear = m == 12 ? targetYear + 1 : targetYear;
-          try {
-            final ln1 = LunarDate.fromString(nextYear, nextMonthStr, 1);
-            final endAstroExclusive = ln1.toSolar;
-            daysInMonth =
-                endAstroExclusive.toJ2000().toInt() -
-                startAstro.toJ2000().toInt();
-
-            final endAstro = AstroDateTime.fromJ2000(
-              startAstro.toJ2000() + daysInMonth - 1,
-            );
-            solarEnd =
-                "${endAstro.year}-${endAstro.month.toString().padLeft(2, '0')}-${endAstro.day.toString().padLeft(2, '0')}";
-          } catch (e) {
-            final endAstro = AstroDateTime.fromJ2000(
-              startAstro.toJ2000() + daysInMonth - 1,
-            ); // fallback to 30
-            solarEnd =
-                "${endAstro.year}-${endAstro.month.toString().padLeft(2, '0')}-${endAstro.day.toString().padLeft(2, '0')}";
-          }
+          final daysInMonth = entry.dx;
+          final endAstro = AstroDateTime.fromJ2000(startAstro.toJ2000() + daysInMonth - 1);
+          solarEnd =
+              "${endAstro.year}-${endAstro.month.toString().padLeft(2, '0')}-${endAstro.day.toString().padLeft(2, '0')}";
+        } catch (_) {
+          // Fallback: leave solarStart/solarEnd empty
         }
-      } catch (e) {
-        // Fallback
+
+        months.add(
+          MonthNode(
+            month: m,
+            monthName: entry.name,
+            displayLabel: entry.isLeap ? entry.name : "${entry.name}月",
+            isLeap: entry.isLeap,
+            stem: fm.ganzhi.gan.name,
+            branch: fm.ganzhi.zhi.name,
+            solarStart: solarStart.isNotEmpty ? solarStart : null,
+            solarEnd: solarEnd.isNotEmpty ? solarEnd : null,
+          ),
+        );
       }
-
-      // 月柱的历法地支：正月建寅(index=2)，二月建卯(index=3)...依次类推
-      DiZhi monthBranch = DiZhi.values[(m + 1) % 12];
-
-      months.add(
-        MonthNode(
-          month: m,
-          stem: fm.ganzhi.gan.name,
-          branch: monthBranch.name,
-          solarStart: solarStart.isNotEmpty ? solarStart : null,
-          solarEnd: solarEnd.isNotEmpty ? solarEnd : null,
-        ),
-      );
     }
     return months;
   }
@@ -272,11 +329,11 @@ class TimelineProvider {
   /// 4. 获取指定月份的流日表
   ///
   /// 返回该月每一天的阳历日期与日干支，供前端画日历格子。
-  /// 4. 获取指定流年、流月的流日表
   ///
-  /// - [year]: 对应的年份
+  /// - [targetYear]: 对应的年份
   /// - [month]: 1-12 对应的流月序号
-  List<DayNode> getDays(int targetYear, int month) {
+  /// - [isLeap]: 是否闰月（用于区分六月和闰六月）
+  List<DayNode> getDays(int targetYear, int month, {bool isLeap = false}) {
     int dayCount = 30; // 默认30天检查是否处于历史红区且开启了历史模式
     final bool enableHist = plate.date.options.enableHistorical;
     if (enableHist) {
@@ -344,53 +401,105 @@ class TimelineProvider {
         ).toJ2000();
         dayCount = (endNoon - startNoon).round();
       } else {
-        // 农历模式
-        const cnMonths = [
-          "",
-          "正",
-          "二",
-          "三",
-          "四",
-          "五",
-          "六",
-          "七",
-          "八",
-          "九",
-          "十",
-          "冬",
-          "腊",
-          "十三",
-        ];
-        String queryStr = (month >= 1 && month <= 13)
-            ? cnMonths[month]
-            : month.toString();
-        final ln0 = LunarDate.fromString(targetYear, queryStr, 1);
+        // 农历模式：用 SSQ 获取真实月份序列（正确处理闰月）
+        final ssqResult = SSQ().calcY(AstroDateTime(targetYear, 6, 1).toJ2000());
+
+        // 从 SSQ 结果中提取属于 targetYear 的月份序列
+        // 根据 month（逻辑月号）和 isLeap 找到对应月份
+        bool seenZhengYue = false;
+        int currentLogicalMonth = 0;
+        String? targetMonthName;
+        String? nextMonthName;
+        int? targetDx;
+        bool foundTarget = false;
+
+        for (int i = 0; i < ssqResult.ym.length; i++) {
+          final rawName = ssqResult.ym[i];
+          final bool monthIsLeap = ssqResult.leap > 0 && i == ssqResult.leap;
+
+          int logicalMonth;
+          if (rawName == '十三') {
+            logicalMonth = 13;
+          } else if (rawName == '后九') {
+            logicalMonth = 9;
+          } else if (rawName == '拾贰') {
+            logicalMonth = 12;
+          } else {
+            logicalMonth = _cnToLogicalMonth(rawName);
+          }
+
+          if (!seenZhengYue && logicalMonth == 1 && !monthIsLeap) {
+            seenZhengYue = true;
+          }
+          if (!seenZhengYue) continue;
+
+          // 如果不是闰月，递增逻辑月号
+          if (!monthIsLeap) {
+            currentLogicalMonth++;
+          }
+
+          // 检查是否匹配目标月份
+          if (currentLogicalMonth == month && monthIsLeap == isLeap) {
+            targetMonthName = monthIsLeap ? '闰$rawName' : rawName;
+            targetDx = ssqResult.dx[i];
+            foundTarget = true;
+          } else if (foundTarget) {
+            // 已找到目标，当前是下一个月
+            nextMonthName = monthIsLeap ? '闰$rawName' : rawName;
+            break;
+          }
+
+          // 腊月之后停止（如果还没找到目标）
+          if (logicalMonth == 12 && !monthIsLeap && foundTarget) break;
+        }
+
+        if (targetMonthName == null) {
+          throw Exception('无法找到月份 $month isLeap=$isLeap 对应的农历月');
+        }
+
+        // 计算本月起始日期
+        final cleanName = isLeap
+            ? targetMonthName.replaceFirst('闰', '')
+            : targetMonthName;
+        final ln0 = LunarDate.fromString(targetYear, cleanName, 1,
+            isLeap: isLeap);
         startDate = ln0.toSolar;
 
-        // 用下月初一减本月初一算天数
-        String nextMonthStr = (month + 1 >= 1 && month + 1 <= 12)
-            ? cnMonths[month + 1]
-            : "正";
-        int nextYear = month == 12 ? targetYear + 1 : targetYear;
-        final ln1 = LunarDate.fromString(nextYear, nextMonthStr, 1);
-        final endAstro = ln1.toSolar;
-        final startNoon = AstroDateTime(
-          startDate.year,
-          startDate.month,
-          startDate.day,
-          12,
-          0,
-          0,
-        ).toJ2000();
-        final endNoon = AstroDateTime(
-          endAstro.year,
-          endAstro.month,
-          endAstro.day,
-          12,
-          0,
-          0,
-        ).toJ2000();
-        dayCount = (endNoon - startNoon).round();
+        // 计算下月起始日期来确定本月天数
+        if (nextMonthName != null) {
+          final isNextLeap = nextMonthName.startsWith('闰');
+          final cleanNextName = isNextLeap
+              ? nextMonthName.replaceFirst('闰', '')
+              : nextMonthName;
+          int nextYear = targetYear;
+          // 如果下月是正月，年份需要加1
+          if (cleanNextName == '正' && !isNextLeap) {
+            nextYear++;
+          }
+          final ln1 = LunarDate.fromString(nextYear, cleanNextName, 1,
+              isLeap: isNextLeap);
+          final endAstro = ln1.toSolar;
+          final startNoon = AstroDateTime(
+            startDate.year,
+            startDate.month,
+            startDate.day,
+            12,
+            0,
+            0,
+          ).toJ2000();
+          final endNoon = AstroDateTime(
+            endAstro.year,
+            endAstro.month,
+            endAstro.day,
+            12,
+            0,
+            0,
+          ).toJ2000();
+          dayCount = (endNoon - startNoon).round();
+        } else if (targetDx != null) {
+          // 没有下月信息，使用月大小
+          dayCount = targetDx;
+        }
       }
     } catch (_) {
       // fallback
@@ -484,11 +593,13 @@ class TimelineProvider {
   /// - [year]: 传了 → 挂载该年 12 个流月，并自动推断大限挂载流年
   /// - [decadeIndex]: 传了 → 覆盖自动推断，用指定大限挂载流年
   /// - [month]: 传了 → 挂载该月的流日 (需要 year)
+  /// - [isLeap]: 是否闰月（用于区分六月和闰六月）
   /// - [day]: 传了 → 挂载该日的流时 (需要 month)
   TimelineManifest getManifest({
     int? year,
     int? decadeIndex,
     int? month,
+    bool? isLeap,
     int? day,
   }) {
     // === 始终返回：大限 + 童限 ===
@@ -541,7 +652,7 @@ class TimelineProvider {
     // === 流日 ===
     List<DayNode>? days;
     if (year != null && month != null && !isFused) {
-      days = getDays(year, month);
+      days = getDays(year, month, isLeap: isLeap ?? false);
     }
 
     // === 流时 ===
@@ -594,5 +705,40 @@ class TimelineProvider {
     if (jd >= _jdWeiMingStart && jd <= _jdWeiMingEnd) return true;
     if (jd >= _jdWuZeTianStart && jd <= _jdWuZeTianEnd) return true;
     return false;
+  }
+
+  // --- 辅助方法 (用于处理闰月) ---
+
+  /// 将农历月名转换为逻辑月号 (1-13)
+  int _cnToLogicalMonth(String name) {
+    const map = {
+      // 正月（防御性：一、一月都映射到1）
+      '正': 1, '一': 1, '一月': 1,
+      '二': 2, '二月': 2,
+      '三': 3, '三月': 3,
+      '四': 4, '四月': 4,
+      '五': 5, '五月': 5,
+      '六': 6, '六月': 6,
+      '七': 7, '七月': 7,
+      '八': 8, '八月': 8,
+      '九': 9, '九月': 9,
+      '十': 10, '十月': 10,
+      // 冬月/十一月（防御性：多种写法）
+      '冬': 11, '十一': 11, '冬月': 11, '十一月': 11,
+      // 腊月/十二月（防御性：多种写法）
+      '腊': 12, '十二': 12, '腊月': 12, '十二月': 12,
+      // 历史特殊月
+      '十三': 13, '十三月': 13,
+      '后九': 9,
+      '拾贰': 12,
+    };
+    return map[name] ?? 1;
+  }
+
+  /// 将逻辑月号转换为中文月名 (用于节气模式)
+  String _logicalMonthToCn(int m) {
+    const names = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'];
+    if (m >= 1 && m <= 12) return names[m - 1];
+    return '正';
   }
 }

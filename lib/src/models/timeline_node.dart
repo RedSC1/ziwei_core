@@ -13,7 +13,20 @@ class ManifestStatus {
 
 /// 流月节点
 class MonthNode {
+  /// 逻辑月号 (1-13)，用于内部计算
   final int month;
+
+  /// 真实月名，用于显示和查询
+  /// 例如: "六", "闰六", "后九", "十三", "拾贰"
+  final String monthName;
+
+  /// UI 显示标签
+  /// 例如: "六月", "闰六月", "后九月", "十三月"
+  final String displayLabel;
+
+  /// 是否闰月
+  final bool isLeap;
+
   final String stem;
   final String branch;
   final String? solarStart;
@@ -21,6 +34,9 @@ class MonthNode {
 
   MonthNode({
     required this.month,
+    required this.monthName,
+    required this.displayLabel,
+    required this.isLeap,
     required this.stem,
     required this.branch,
     this.solarStart,
@@ -29,6 +45,9 @@ class MonthNode {
 
   Map<String, dynamic> toJson() => {
     'month': month,
+    'month_name': monthName,
+    'display_label': displayLabel,
+    'is_leap': isLeap,
     'stem': stem,
     'branch': branch,
     if (solarStart != null) 'solar_start': solarStart,
