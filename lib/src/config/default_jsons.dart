@@ -1593,8 +1593,8 @@ class DefaultJsons {
       "anchor": "year_branch",
       "boundary": "lunar",
       "table": {
-        "zi": 6, "chou": 7, "yin": 8, "mao": 9, "chen": 10, "si": 11,
-        "wu": 0, "wei": 1, "shen": 2, "you": 3, "xu": 4, "hai": 5
+        "zi": 7, "chou": 6, "yin": 9, "mao": 8, "chen": 11, "si": 10,
+        "wu": 1, "wei": 0, "shen": 3, "you": 2, "xu": 5, "hai": 4
       }
     }
   },
