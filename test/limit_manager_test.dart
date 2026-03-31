@@ -38,6 +38,89 @@ void main() async {
     expect(manager.limitContext.hasMonth, false);
   });
 
+  test('LimitContext remove actually clears nested scopes', () {
+    final date = ZiweiDate.fromSolar(DateTime(2023, 1, 15, 12, 0));
+    final plate = ZiweiEngine.calculate(date, defaultRuleset);
+    final manager = ZiweiLimitManager(plate);
+
+    manager.setYear(2025);
+    manager.setMonth(5);
+
+    expect(manager.limitContext.hasYear, true);
+    expect(manager.limitContext.hasMonth, true);
+
+    manager.clearYear();
+
+    expect(manager.limitContext.hasYear, false);
+    expect(manager.limitContext.hasMonth, false);
+    expect(manager.limitContext.hasDay, false);
+    expect(manager.limitContext.hasHour, false);
+  });
+
+  test('TimeMachine.travelByMacro uses targetYear for childhood routing', () {
+    final date = ZiweiDate.fromSolar(DateTime(2023, 1, 15, 12, 0));
+    final plate = ZiweiEngine.calculate(date, defaultRuleset);
+    final birthYear = Decade.getEffectiveBirthYear(plate);
+
+    final context = TimeMachine.travelByMacro(
+      plate,
+      0,
+      targetYear: birthYear + 1,
+    );
+    final expected = Decade.createChildhood(birthYear + 1, plate);
+
+    expect(context.decade, isNotNull);
+    expect(context.decade!.startTime, expected.startTime);
+    expect(context.decade!.endTime, expected.endTime);
+    expect(context.decade!.ganzhi.toString(), expected.ganzhi.toString());
+  });
+
+  test('TimelineProvider resolves leap month days consistently', () {
+    final date = ZiweiDate.fromSolar(DateTime(2023, 1, 15, 12, 0));
+    final plate = ZiweiEngine.calculate(date, defaultRuleset);
+    final provider = TimelineProvider(plate);
+
+    MonthNode? leapNode;
+    int? leapYear;
+    for (int year = 2000; year <= 2035; year++) {
+      final months = provider.getMonths(year);
+      for (final node in months) {
+        if (node.isLeap) {
+          leapNode = node;
+          leapYear = year;
+          break;
+        }
+      }
+      if (leapNode != null) break;
+    }
+
+    expect(leapNode, isNotNull);
+    expect(leapYear, isNotNull);
+
+    final days = provider.getDays(
+      leapYear!,
+      leapNode!.month,
+      isLeap: leapNode.isLeap,
+    );
+
+    expect(leapNode.sequence, greaterThan(leapNode.month));
+    expect(days, isNotEmpty);
+    expect(days.first.solarDate, leapNode.solarStart!.substring(0, 10));
+
+    final leapFlow = FlowMonth.create(
+      leapNode.month,
+      leapYear,
+      plate,
+      sequence: leapNode.sequence,
+      isLeap: true,
+    );
+    final normalFlow = FlowMonth.create(leapNode.month, leapYear, plate);
+
+    expect(leapFlow.isLeap, true);
+    expect(leapFlow.sequence, leapNode.sequence);
+    expect(leapFlow.ganzhi.toString() == normalFlow.ganzhi.toString(), false);
+  });
+
   test(
     'ZiweiLimitManager absolute time stepping handles Rat Hour securely',
     () {

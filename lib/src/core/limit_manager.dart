@@ -190,6 +190,8 @@ class ZiweiLimitManager {
       _basePlate,
       year: _currentContext.year!.year,
       month: _currentContext.month!.month,
+      monthSequence: _currentContext.month!.sequence,
+      monthIsLeap: _currentContext.month!.isLeap,
       day: day,
       dayGanZhi: dayGanZhi,
     );
@@ -205,6 +207,8 @@ class ZiweiLimitManager {
       _basePlate,
       year: _currentContext.year!.year,
       month: _currentContext.month!.month,
+      monthSequence: _currentContext.month!.sequence,
+      monthIsLeap: _currentContext.month!.isLeap,
       day: _currentContext.day!.day,
       dayGanZhi: _currentContext.day!.ganzhi, // TimeMachine 用它提取天干
       hourIndex: hourIndex,
@@ -377,9 +381,25 @@ class ZiweiLimitManager {
       _basePlate,
       year: effectiveYear,
       month: effectiveMonth,
+      monthSequence: _resolveMonthSequence(
+        effectiveYear,
+        effectiveMonth,
+        eLunar.isLeap,
+      ),
+      monthIsLeap: eLunar.isLeap,
       day: effectiveDay,
       dayGanZhi: bazi.day, // 😎 真正的降维打击！这里直接拿到物理正确的当日干支
       hourIndex: bazi.time.zhi.index, // 早晚子时的自动裁决
     );
+  }
+
+  int? _resolveMonthSequence(int year, int month, bool isLeap) {
+    final months = _timelineProvider.getMonths(year);
+    for (final node in months) {
+      if (node.month == month && node.isLeap == isLeap) {
+        return node.sequence;
+      }
+    }
+    return null;
   }
 }

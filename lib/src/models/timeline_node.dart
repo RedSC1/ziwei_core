@@ -16,8 +16,11 @@ class MonthNode {
   /// 逻辑月号 (1-13)，用于内部计算
   final int month;
 
+  /// 年内真实流月序号 (1-12/13)，用于流月宫位计算
+  final int sequence;
+
   /// 真实月名，用于显示和查询
-  /// 例如: "六", "闰六", "后九", "十三", "拾贰"
+  /// 例如: "六", "闰六", "后九", "十三"
   final String monthName;
 
   /// UI 显示标签
@@ -34,6 +37,7 @@ class MonthNode {
 
   MonthNode({
     required this.month,
+    required this.sequence,
     required this.monthName,
     required this.displayLabel,
     required this.isLeap,
@@ -45,6 +49,7 @@ class MonthNode {
 
   Map<String, dynamic> toJson() => {
     'month': month,
+    'sequence': sequence,
     'month_name': monthName,
     'display_label': displayLabel,
     'is_leap': isLeap,

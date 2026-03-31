@@ -242,17 +242,27 @@ class FlowYear extends FlowLimit {
 class FlowMonth extends FlowLimit {
   @override
   final GanZhi ganzhi;
-  final int month; // 农历月份 (1-12)
+  final int month; // 逻辑月份 (1-12)
+  final int sequence; // 年内真实流月序号 (1-12/13)
+  final bool isLeap;
   final PalaceRole role;
 
-  FlowMonth(this.ganzhi, this.month, this.role);
+  FlowMonth(this.ganzhi, this.month, this.sequence, this.isLeap, this.role);
 
   /// 根据年份与月份创建流月
   ///
-  /// - [month] 农历月份 (1-12)
+  /// - [month] 逻辑月份 (1-12)
   /// - [year] 该月所属的流年年份
   /// - [plate] 原始命盘
-  factory FlowMonth.create(int month, int year, ZiWeiPlate plate) {
+  factory FlowMonth.create(
+    int month,
+    int year,
+    ZiWeiPlate plate, {
+    int? sequence,
+    bool isLeap = false,
+  }) {
+    final monthSequence = sequence ?? month;
+
     // 1. 获取流年参数
     // 流年命宫 (地支)
     int yearBranchIndex = ZiweiConsts.fixIndex(year + 8);
@@ -275,11 +285,13 @@ class FlowMonth extends FlowLimit {
 
     // 3. 计算当前流月的宫位索引
     // 正月(1)在斗君，二月(2)在斗君+1...
-    int targetPlaceIndex = ZiweiConsts.fixIndex(douJunIndex + (month - 1));
+    int targetPlaceIndex = ZiweiConsts.fixIndex(
+      douJunIndex + (monthSequence - 1),
+    );
 
     // 4. 计算流月天干 (五虎遁)
     int startTigerStemIndex = (yearStemIndex % 5) * 2 + 2;
-    int monthStemIndex = (startTigerStemIndex + (month - 1)) % 10;
+    int monthStemIndex = (startTigerStemIndex + (monthSequence - 1)) % 10;
     if (monthStemIndex < 0) monthStemIndex += 10;
 
     TianGan monthStem = TianGan.values[monthStemIndex];
@@ -292,7 +304,13 @@ class FlowMonth extends FlowLimit {
     PalaceRole r = plate.getRole(ZiweiScope.origin, targetPlaceIndex);
 
     // 构造混合干支 (Hybrid GanZhi): 时间天干 + 宫位地支
-    return FlowMonth(GanZhi(monthStem, palaceBranch), month, r);
+    return FlowMonth(
+      GanZhi(monthStem, palaceBranch),
+      month,
+      monthSequence,
+      isLeap,
+      r,
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -302,6 +320,8 @@ class FlowMonth extends FlowLimit {
       'branch': ganzhi.zhi.name,
       'role': role.name,
       'month': month,
+      'sequence': sequence,
+      'is_leap': isLeap,
     };
   }
 }
@@ -539,6 +559,8 @@ class FlowHour extends FlowLimit {
 /// 这是一个“时间胶囊”，封装了从原盘到大限、流年、流月、流日、流时的所有状态。
 /// Engine 会根据这个 Context 来计算星星的动态变化（四化、流曜）。
 class LimitContext {
+  static const Object _unset = Object();
+
   /// 原始命盘 (Base Plate)
   final ZiWeiPlate plate;
 
@@ -586,21 +608,23 @@ class LimitContext {
   /// 允许你只更新其中某一层，其他层保持不变 (复用)
   LimitContext copyWith({
     ZiWeiPlate? plate,
-    Decade? decade,
-    SmallLimit? smallLimit,
-    FlowYear? year,
-    FlowMonth? month,
-    FlowDay? day,
-    FlowHour? hour,
+    Object? decade = _unset,
+    Object? smallLimit = _unset,
+    Object? year = _unset,
+    Object? month = _unset,
+    Object? day = _unset,
+    Object? hour = _unset,
   }) {
     return LimitContext(
       plate: plate ?? this.plate,
-      decade: decade ?? this.decade,
-      smallLimit: smallLimit ?? this.smallLimit,
-      year: year ?? this.year,
-      month: month ?? this.month,
-      day: day ?? this.day,
-      hour: hour ?? this.hour,
+      decade: identical(decade, _unset) ? this.decade : decade as Decade?,
+      smallLimit: identical(smallLimit, _unset)
+          ? this.smallLimit
+          : smallLimit as SmallLimit?,
+      year: identical(year, _unset) ? this.year : year as FlowYear?,
+      month: identical(month, _unset) ? this.month : month as FlowMonth?,
+      day: identical(day, _unset) ? this.day : day as FlowDay?,
+      hour: identical(hour, _unset) ? this.hour : hour as FlowHour?,
     );
   }
 
@@ -655,9 +679,13 @@ class LimitContext {
     List<String> parts = [];
     if (decade != null) parts.add("大限: ${decade!.ganzhi}");
     if (year != null) parts.add("流年: ${year!.ganzhi} (${year!.year})");
-    if (month != null) parts.add("流月: ${month!.ganzhi} (${month!.month}月)");
+    if (month != null) {
+      final monthLabel = month!.isLeap
+          ? "闰${month!.month}月"
+          : "${month!.month}月";
+      parts.add("流月: ${month!.ganzhi} ($monthLabel)");
+    }
     if (day != null) parts.add("流日: ${day!.ganzhi} (${day!.day}日)");
-    if (hour != null) parts.add("流时: ${hour!.ganzhi} (${hour!.hourIndex}时)");
     if (hour != null) parts.add("流时: ${hour!.ganzhi} (${hour!.hourIndex}时)");
     return parts.isEmpty ? "原盘状态" : parts.join(" | ");
   }
@@ -695,6 +723,8 @@ class TimeMachine {
     ZiWeiPlate plate, {
     int? year,
     int? month,
+    int? monthSequence,
+    bool monthIsLeap = false,
     int? day,
     int? hourIndex,
     GanZhi? dayGanZhi,
@@ -724,7 +754,13 @@ class TimeMachine {
 
     // 2. 如果有月份 (且有流年)，计算流月
     if (year != null && month != null) {
-      flowMonth = FlowMonth.create(month, year, plate);
+      flowMonth = FlowMonth.create(
+        month,
+        year,
+        plate,
+        sequence: monthSequence,
+        isLeap: monthIsLeap,
+      );
     }
 
     // 3. 如果有日期 (且有流月)，计算流日
@@ -766,12 +802,8 @@ class TimeMachine {
 
     if (index == 0) {
       // 🌟 绑定：索引 0 指向童限
-      // 如果没传 targetYear，默认看 1 岁
-      int vAge = 1;
-      if (targetYear != null) {
-        vAge = targetYear - Decade.getEffectiveBirthYear(plate) + 1;
-      }
-      decade = Decade.createChildhood(vAge, plate);
+      final childhoodYear = targetYear ?? Decade.getEffectiveBirthYear(plate);
+      decade = Decade.createChildhood(childhoodYear, plate);
     } else {
       // 🌟 绑定：1 就是第一大限
       decade = Decade.fromIndex(index, plate);
