@@ -1,3 +1,9 @@
+## 0.12.0
+
+- **[功能增强]** 重构 `ConfigLoader.overrideWith` 亮度表覆盖逻辑，支持分层结构化配置（`brightness_labels`/`static_stars`/`flow_stars`）。
+- **[健壮性]** 新增亮度表格式校验，确保必须为12个整数的数组。
+- **[健壮性]** 星曜和流曜覆盖时现在使用深拷贝，避免污染基础规则集对象。
+
 ## 0.11.0
 
 - **[依赖升级]** 升级 `sxwnl_spa_dart` 至 `^0.16.0`，`bazi_core` 至 `^0.6.0`，对齐 OpenDestiny 0.1.0 发布。
