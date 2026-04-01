@@ -56,24 +56,45 @@ class ConfigLoader {
     String? mainRulesJson,
     String? mastersJson,
   }) {
-    // 覆盖逻辑：如果有传入新的 JSON，则使用新 JSON 创建一份临时 ruleset；
-    // 否则，沿用基准 baseRuleset 里的对象引用。
-    // 这要求 createRuleset 内部逻辑进行分离，或者为了简便，我们可以通过提取局部方法来复用。
-
-    // 由于原始的 createRuleset 是全量构建，为了简化，这里我们可以直接复用 createRuleset 的核心代码。
-    // 但是要避免重复解析 baseRuleset 已经解析好的对象。
-
-    // 1. Brightness
     Map<int, String> brightnessLabels = Map.from(baseRuleset.brightnessLabels);
-    Map<String, List<int>> brightnessMap = {};
+    final staticBrightnessMap = {
+      for (final star in baseRuleset.stars)
+        star.key: List<int>.from(star.brightnessTable),
+    };
+    final flowBrightnessMap = {
+      for (final flow in baseRuleset.flowDefinitions)
+        flow.key: List<int>.from(flow.brightness),
+    };
     if (brightnessJson != null && brightnessJson.isNotEmpty) {
       try {
         final Map<String, dynamic> rawMap = jsonDecode(brightnessJson);
+        final labels = rawMap['brightness_labels'];
+        if (labels is Map<String, dynamic>) {
+          labels.forEach((key, value) {
+            if (int.tryParse(key) != null) {
+              brightnessLabels[int.parse(key)] = value.toString();
+            }
+          });
+        }
+
+        final staticStars = rawMap['static_stars'];
+        if (staticStars is Map<String, dynamic>) {
+          staticStars.forEach((key, value) {
+            staticBrightnessMap[key] = _parseBrightnessTable(key, value);
+          });
+        }
+
+        final flowStars = rawMap['flow_stars'];
+        if (flowStars is Map<String, dynamic>) {
+          flowStars.forEach((key, value) {
+            flowBrightnessMap[key] = _parseBrightnessTable(key, value);
+          });
+        }
+
         rawMap.forEach((key, value) {
           if (value is List) {
-            brightnessMap[key] = value.cast<int>();
+            staticBrightnessMap[key] = _parseBrightnessTable(key, value);
           } else if (int.tryParse(key) != null) {
-            // It's a label overwrite
             brightnessLabels[int.parse(key)] = value.toString();
           }
         });
@@ -82,18 +103,24 @@ class ConfigLoader {
       }
     }
 
-    // 2. Stars
-    List<StaticStar> stars = List.from(baseRuleset.stars);
+    List<StaticStar> stars = baseRuleset.stars
+        .map(
+          (star) => _copyStaticStar(
+            star,
+            staticBrightnessMap[star.key] ?? star.brightnessTable,
+          ),
+        )
+        .toList();
     if (starsJson != null && starsJson.isNotEmpty) {
       try {
         final List<dynamic> list = jsonDecode(starsJson);
         for (var e in list) {
-          final newStar = StaticStar.fromJson(e, brightnessMap);
+          final newStar = StaticStar.fromJson(e, staticBrightnessMap);
           final existingIndex = stars.indexWhere((s) => s.key == newStar.key);
           if (existingIndex >= 0) {
-            stars[existingIndex] = newStar; // update
+            stars[existingIndex] = newStar;
           } else {
-            stars.add(newStar); // append
+            stars.add(newStar);
           }
         }
       } on FormatException catch (e) {
@@ -104,16 +131,14 @@ class ConfigLoader {
       }
     }
 
-    // 3. Sihua
     Map<TianGan, Map<SiHuaType, String>> siHuaRules = baseRuleset.siHuaRules;
     if (sihuaJson != null && sihuaJson.isNotEmpty) {
       try {
         final Map<String, dynamic> raw = jsonDecode(sihuaJson);
-        siHuaRules = Map.from(baseRuleset.siHuaRules); // copy base map
+        siHuaRules = Map.from(baseRuleset.siHuaRules);
         raw.forEach((ganKey, rules) {
           final gan = TianGan.fromName(ganKey);
           if (rules is Map<String, dynamic>) {
-            // merge into existing gan rules if any
             final Map<SiHuaType, String> ruleMap = Map.from(
               siHuaRules[gan] ?? {},
             );
@@ -139,22 +164,34 @@ class ConfigLoader {
       }
     }
 
-    // 4. Flow
-    List<FlowDefinition> flowDefinitions = List.from(
-      baseRuleset.flowDefinitions,
-    );
+    List<FlowDefinition> flowDefinitions = baseRuleset.flowDefinitions
+        .map(
+          (flow) => FlowDefinition(
+            key: flow.key,
+            rule: flow.rule,
+            brightness: flowBrightnessMap[flow.key] ?? flow.brightness,
+          ),
+        )
+        .toList();
     if (flowJson != null && flowJson.isNotEmpty) {
       try {
         final List<dynamic> list = jsonDecode(flowJson);
         for (var e in list) {
           final newFlow = FlowDefinition.fromJson(e);
+          final brightness =
+              flowBrightnessMap[newFlow.key] ?? newFlow.brightness;
+          final patchedFlow = FlowDefinition(
+            key: newFlow.key,
+            rule: newFlow.rule,
+            brightness: brightness,
+          );
           final existingIndex = flowDefinitions.indexWhere(
             (f) => f.key == newFlow.key,
           );
           if (existingIndex >= 0) {
-            flowDefinitions[existingIndex] = newFlow; // update
+            flowDefinitions[existingIndex] = patchedFlow;
           } else {
-            flowDefinitions.add(newFlow); // append
+            flowDefinitions.add(patchedFlow);
           }
         }
       } on FormatException catch (e) {
@@ -169,16 +206,13 @@ class ConfigLoader {
       }
     }
 
-    // 5. Calendar Options
     CalendarOptions calOptions = baseRuleset.calendarOptions;
     if (mainRulesJson != null && mainRulesJson.isNotEmpty) {
-      // Create a mutable copy of existing labels just in case the main json alters them.
       Map<int, String> newLabels = Map.from(brightnessLabels);
       calOptions = _parseCalendarOptions(mainRulesJson, newLabels);
       brightnessLabels = newLabels;
     }
 
-    // 6. Masters
     MasterRule? mingZhuRule = baseRuleset.mingZhuRule;
     MasterRule? shenZhuRule = baseRuleset.shenZhuRule;
     if (mastersJson != null && mastersJson.isNotEmpty) {
@@ -487,6 +521,36 @@ class ConfigLoader {
   }
 
   /// 内部校验器：确保每一颗星曜身上的亮度数字，在当前的规则集下都合法存在（-1 除外）
+  static List<int> _parseBrightnessTable(String key, dynamic value) {
+    if (value is! List) {
+      throw FormatException(
+        'Brightness config for "$key" must be a list of 12 integers.',
+      );
+    }
+    final table = value.map((e) => e as int).toList();
+    if (table.length != 12) {
+      throw FormatException(
+        'Brightness config for "$key" must contain exactly 12 integers.',
+      );
+    }
+    return table;
+  }
+
+  static StaticStar _copyStaticStar(
+    StaticStar source,
+    List<int> brightnessTable,
+  ) {
+    return StaticStar(
+        key: source.key,
+        type: source.type,
+        rule: source.rule,
+        brightnessTable: List<int>.from(brightnessTable),
+        siHuaBuff: Map.of(source.siHuaBuff),
+      )
+      ..selfSiHua = source.selfSiHua
+      ..centripetalSiHua = source.centripetalSiHua;
+  }
+
   static void _validateBrightnessDependencies(ZiweiRuleset ruleset) {
     if (ruleset.brightnessLabels.isEmpty) {
       ZiweiLogger.warn(
