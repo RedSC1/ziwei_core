@@ -43,7 +43,7 @@ Modify SiHua to be bounded by Solar Terms, and enable distinct Early/Late Zi hou
 final myMainRules = '''
 {
   "calendar": {
-    "split_rat_hour": true,
+    "rat_hour_mode": "tomorrowGan",
     "sihua_boundary": "solar"
   }
 }
@@ -59,7 +59,7 @@ Calendar toggles configurable in `main_rules`:
 
 | Key Name | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `split_rat_hour` | bool | `false` | Distinguish Early/Late Zi Hour (13-hour format) |
+| `rat_hour_mode` | string | `"noSplit"` | Define Early/Late Zi hour behavior |
 | `leap_month_strategy` | string | `"split"` | Leap month processing: `split` / `current` / `as_next` |
 | `wu_hu_dun_boundary` (Experimental) | string | `"lunar"` | Five-Tigers-Chasing-Month stem calculation baseline: `lunar` / `solar` |
 | `sihua_boundary` | string | `"lunar"` | SiHua (Transformer) baseline bound: `lunar` / `solar` |

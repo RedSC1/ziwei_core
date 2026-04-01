@@ -166,7 +166,7 @@ Dynamic stars layered during flowing constraints. The format is similar to `star
 ```json
 {
   "calendar": {
-    "split_rat_hour": false,
+    "rat_hour_mode": "noSplit",
     "leap_month_strategy": "split",
     "wu_hu_dun_boundary": "lunar",
     "sihua_boundary": "lunar",
@@ -187,7 +187,7 @@ Dynamic stars layered during flowing constraints. The format is similar to `star
 
 | Field | Type | Available Options | Description |
 | :--- | :--- | :--- | :--- |
-| `split_rat_hour` | `bool` | `true` / `false` | Distinguish Early/Late Zi hour |
+| `rat_hour_mode` | `string` | `"noSplit"` / `"todayGan"` / `"tomorrowGan"` | Define Early/Late Zi hour behavior |
 | `leap_month_strategy` | `string` | `"split"` / `"current"` / `"as_next"` | `split`=Divided by 15th, `current`=Counted to previous month, `as_next`=Counted to next month |
 | `wu_hu_dun_boundary` | `string` | `"lunar"` / `"solar"` | Foundation for Five-Tigers-Chasing-Month stems |
 | `sihua_boundary` | `string` | `"lunar"` / `"solar"` | Foundation for birth year SiHua |

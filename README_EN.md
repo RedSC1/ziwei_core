@@ -139,7 +139,7 @@ Beyond stars, you can inject `mainRulesJson` to override the lowest-level runtim
 String myCalendarConfig = '''
 {
   "calendar": {
-    "split_rat_hour": false, // Hot Reload: forcefully disable internal Zi hour splitting
+    "rat_hour_mode": "noSplit", // Hot Reload: forcefully change the rat hour splitting mode
     "leap_month_strategy": "split_by_15th" // Change Leap Month ruleset
   }
 }

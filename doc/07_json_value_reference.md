@@ -112,7 +112,7 @@
 
 | 字段 | 类型 | 可用值 | 说明 |
 | :--- | :--- | :--- | :--- |
-| `split_rat_hour` | bool | `true` / `false` | 是否区分早晚子时 |
+| `rat_hour_mode` | string | `"noSplit"` / `"todayGan"` / `"tomorrowGan"` | 早晚子时配置模式 |
 | `leap_month_strategy` | string | `"split"` / `"current"` / `"as_next"` | `split`=15日前后分属，`current`=全算上月，`as_next`=全算下月 |
 | `wu_hu_dun_boundary` | string | `"lunar"` / `"solar"` | 五虎遁推宫干的历法基准 |
 | `sihua_boundary` | string | `"lunar"` / `"solar"` | 生年四化的历法基准 |

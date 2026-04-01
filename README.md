@@ -142,7 +142,7 @@ final newRuleset = ConfigLoader.overrideWith(
 String myCalendarConfig = '''
 {
   "calendar": {
-    "split_rat_hour": false, // 热重载：强制全局关闭早晚子区分
+    "rat_hour_mode": "noSplit", // 热重载：强制修改早晚子时模式
     "leap_month_strategy": "split_by_15th" // 切换闰月算法
   }
 }

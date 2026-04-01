@@ -42,7 +42,7 @@ JSON 文件格式详见[配置文件说明](./03_config_file.md)。
 final myMainRules = '''
 {
   "calendar": {
-    "split_rat_hour": true,
+    "rat_hour_mode": "tomorrowGan",
     "sihua_boundary": "solar"
   }
 }
@@ -58,7 +58,7 @@ final ruleset = ConfigLoader.overrideWith(
 
 | 键名 | 类型 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
-| `split_rat_hour` | bool | `false` | 是否区分早晚子时（13时辰制） |
+| `rat_hour_mode` | string | `"noSplit"` | 早晚子时配置模式 |
 | `leap_month_strategy` | string | `"split"` | 闰月处理：`split`/`current`/`as_next` |
 | `wu_hu_dun_boundary`（实验性功能）| string | `"lunar"` | 五虎遁月干推算基准：`lunar`/`solar` |
 | `sihua_boundary` | string | `"lunar"` | 四化飞星基准：`lunar`/`solar` |

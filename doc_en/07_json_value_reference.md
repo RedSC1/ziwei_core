@@ -112,7 +112,7 @@ The payload values map perfectly back to **Star Keys** (e.g., mapping `"lu": "zi
 
 | Field | Type | Options | Description |
 | :--- | :--- | :--- | :--- |
-| `split_rat_hour` | bool | `true` / `false` | Distinguish Early/Late Zi hour |
+| `rat_hour_mode` | string | `"noSplit"` / `"todayGan"` / `"tomorrowGan"` | Define Early/Late Zi hour behavior |
 | `leap_month_strategy` | string | `"split"` / `"current"` / `"as_next"` | `split`=Divided by 15th, `current`=Counted to prev month, `as_next`=Counted to next month |
 | `wu_hu_dun_boundary` | string | `"lunar"` / `"solar"` | Five-Tigers-Chasing base boundary |
 | `sihua_boundary` | string | `"lunar"` / `"solar"` | SiHua Generation Base boundary |
