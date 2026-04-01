@@ -119,7 +119,10 @@ class ConfigLoader {
             );
             rules.forEach((sihuaKey, starKey) {
               final type = SiHuaType.fromJson(sihuaKey);
-              ruleMap[type] = starKey.toString();
+              final value = starKey.toString().trim();
+              if (value.isNotEmpty) {
+                ruleMap[type] = value;
+              }
             });
             siHuaRules[gan] = ruleMap;
           }

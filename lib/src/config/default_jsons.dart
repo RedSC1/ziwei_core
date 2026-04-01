@@ -1537,11 +1537,13 @@ class DefaultJsons {
     "key": "jieshen",
     "type": "minor",
     "rule": {
-      "type": "anchor_offset",
+      "type": "lookup",
       "anchor": "month",
       "boundary": "lunar",
-      "offset": 10,
-      "direction": -1
+      "table": {
+        "0": 8, "1": 8, "2": 10, "3": 10, "4": 0, "5": 0,
+        "6": 2, "7": 2, "8": 4, "9": 4, "10": 6, "11": 6
+      }
     }
   },
   {
@@ -1552,8 +1554,8 @@ class DefaultJsons {
       "anchor": "year_branch",
       "boundary": "lunar",
       "table": {
-        "zi": 7, "chou": 8, "yin": 9, "mao": 10, "chen": 11, "si": 0,
-        "wu": 1, "wei": 2, "shen": 3, "you": 4, "xu": 5, "hai": 6
+        "zi": 10, "chou": 9, "yin": 8, "mao": 7, "chen": 6, "si": 5,
+        "wu": 4, "wei": 3, "shen": 2, "you": 1, "xu": 0, "hai": 11
       }
     }
   },
