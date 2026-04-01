@@ -1,3 +1,9 @@
+## 0.11.0
+
+- **[依赖升级]** 升级 `sxwnl_spa_dart` 至 `^0.16.0`，`bazi_core` 至 `^0.6.0`，对齐 OpenDestiny 0.1.0 发布。
+- **[工程化]** 将 `sxwnl_spa_dart` 和 `bazi_core` 依赖从本地路径 (`path`) 切换为 pub.dev 云端版本，正式支持独立发布。
+- **[元数据]** 完善 `pubspec.yaml`：新增 `issue_tracker`、`topics` 以提升 pub.dev 评分与可发现性。
+
 ## 0.10.0
 
 - 新增天地人盘支持：`ZiweiEngine.calculate` 新增可选参数 `tdrPan`，支持天盘（默认）、地盘（身宫为命宫）、人盘（福德宫为命宫）。

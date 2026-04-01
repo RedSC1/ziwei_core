@@ -195,3 +195,11 @@ graph TD
 ## 📜 协议 (License)
 
 Ziwei Core 采用 MIT 开源协议。如果你觉得帮到了你，请给一个 ⭐ 吧！
+
+---
+
+### 🎨 推荐实现 (Reference Implementation)
+
+基于本库构建的紫微斗数/八字排盘 UI 实现：
+
+*   **[OpenDestiny](https://github.com/RedSC1/opendestiny-flutter)** - 开源易学排盘工具（Flutter 全平台）。
