@@ -1,3 +1,7 @@
+## 0.12.1
+
+- **[依赖升级]** 升级 `sxwnl_spa_dart` 至 `^0.17.0`，`bazi_core` 至 `^0.6.1`。
+
 ## 0.12.0
 
 - **[功能增强]** 重构 `ConfigLoader.overrideWith` 亮度表覆盖逻辑，支持分层结构化配置（`brightness_labels`/`static_stars`/`flow_stars`）。
