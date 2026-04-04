@@ -338,10 +338,15 @@ class ZiweiDate {
       case ZiweiScope.origin:
       case ZiweiScope.year:
         if (boundary == Boundary.lunar) {
-          int stemIndex = (effective.year - 4) % 10;
+          // 🐛 BUG FIX: LunarDate.lunarYear 存储的是历史年份（无公元0年）
+          // 但干支公式 (year - 4) % 60 期望的是天文年份（有公元0年）
+          // 转换关系：天文年 = 历史年 < 0 ? 历史年 + 1 : 历史年
+          final astronomicalYear = effective.year < 0 ? effective.year + 1 : effective.year;
+
+          int stemIndex = (astronomicalYear - 4) % 10;
           if (stemIndex < 0) stemIndex += 10;
 
-          int branchIndex = (effective.year - 4) % 12;
+          int branchIndex = (astronomicalYear - 4) % 12;
           if (branchIndex < 0) branchIndex += 12;
 
           return GanZhi(TianGan.values[stemIndex], DiZhi.values[branchIndex]);
@@ -355,9 +360,12 @@ class ZiweiDate {
           int eMonth = effective.month;
           int eYear = effective.year;
 
+          // 🐛 BUG FIX: 同上年柱修复，LunarDate.lunarYear 是历史年，需转为天文年
+          final astronomicalYear = eYear < 0 ? eYear + 1 : eYear;
+
           // 农历月干: 需要用“五虎遁”推算！
-          // 1. 先算有效年干索引 (同样必须用 eYear，保证跨年时五虎遁不出错)
-          int yIdx = (eYear - 4) % 10;
+          // 1. 先算有效年干索引 (同样必须用天文年，保证跨年时五虎遁不出错)
+          int yIdx = (astronomicalYear - 4) % 10;
           if (yIdx < 0) yIdx += 10;
 
           // 2. 算出正月(寅)的天干: (年干%5)*2 + 2
