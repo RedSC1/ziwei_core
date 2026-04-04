@@ -1,3 +1,7 @@
+## 0.12.2
+
+- **[依赖升级]** 升级 `sxwnl_spa_dart` 至 `^0.18.0`，`bazi_core` 至 `^0.6.2`，适配天文纪年 breaking change。
+
 ## 0.12.1
 
 - **[依赖升级]** 升级 `sxwnl_spa_dart` 至 `^0.17.0`，`bazi_core` 至 `^0.6.1`。
