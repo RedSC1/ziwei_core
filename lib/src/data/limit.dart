@@ -55,9 +55,7 @@ class Decade extends FlowLimit {
     final bureauNum = plate.elementBureau.number;
 
     // 计算顺逆
-    // 🐛 BUG FIX: effectiveYear 是历史年份（无公元0年），需转为天文年
-    final astroBirthYear = birthYear < 0 ? birthYear + 1 : birthYear;
-    int stemIndex = (astroBirthYear - 4) % 10;
+    int stemIndex = (birthYear - 4) % 10;
     if (stemIndex < 0) stemIndex += 10;
     bool isClockwise = (stemIndex.isEven == (plate.date.gender == Gender.male));
 
@@ -109,9 +107,7 @@ class Decade extends FlowLimit {
     int mingIndex = plate.originMingIndex;
 
     // 计算顺逆
-    // 🐛 BUG FIX: effectiveYear 是历史年份（无公元0年），需转为天文年
-    final astroBirthYear = birthYear < 0 ? birthYear + 1 : birthYear;
-    int stemIndex = (astroBirthYear - 4) % 10;
+    int stemIndex = (birthYear - 4) % 10;
     if (stemIndex < 0) stemIndex += 10;
     bool isClockwise = (stemIndex.isEven == (plate.date.gender == Gender.male));
 
