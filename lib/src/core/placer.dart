@@ -68,7 +68,8 @@ class StarPlacer {
       // 3. 将任何跨界的数值包裹修剪为物理宫位范围 (0-11)
       final int finalIndex = ZiweiConsts.fixIndex(rawIndex);
 
-      palaces[finalIndex].addStar(star);
+      // 每次排盘都必须放入独立星体实例，避免后续四化装饰回写污染 ruleset.stars。
+      palaces[finalIndex].addStar(star.clone());
     } else {
       // 若计算结果为 null，则表明这颗星曜不触发（留空处理）
     }
