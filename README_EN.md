@@ -10,7 +10,7 @@ Ziwei Core is a configuration-driven Ziwei Doushu (Purple Star Astrology) plotti
 
 This project relies on [bazi_core(dart)](https://github.com/RedSC1/bazi_core) to calculate solar terms, four pillars, and fetch lunar times, and [sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart) to calculate solar terms and Apparent Solar Time. The calculation engine has been verified to support from roughly 1000 BC to 5000 AD. Earlier/later times can theoretically be calculated, but precision may vary, limited by [sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart).
 
-The current published release targets `sxwnl_spa_dart ^0.18.1` and `bazi_core ^0.6.3`, aligning with the `LunarDate` astronomical-year fix; if you need historical/BCE display values, use the lower-level `historicalYear` / `bceYear` helpers.
+The current published release targets `sxwnl_spa_dart ^0.18.3` and `bazi_core ^0.6.3`, aligning with the `LunarDate` astronomical-year and BCE lunar-year matching fixes; if you need historical/BCE display values, use the lower-level `historicalYear` / `bceYear` helpers.
 
 ---
 

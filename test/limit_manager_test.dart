@@ -121,6 +121,35 @@ void main() async {
     expect(leapFlow.ganzhi.toString() == normalFlow.ganzhi.toString(), false);
   });
 
+  test('TimelineProvider resolves BCE lunar month days for all months', () {
+    final date = ZiweiDate.fromSolar(
+      AstroDateTime(-100, 1, 1, 12, 0),
+      gender: Gender.male,
+      options: defaultRuleset.calendarOptions,
+    );
+    final plate = ZiweiEngine.calculate(date, defaultRuleset);
+    final provider = TimelineProvider(plate);
+
+    final months = provider.getMonths(-100);
+
+    expect(months, hasLength(12));
+
+    for (final month in months) {
+      final days = provider.getDays(-100, month.month, isLeap: month.isLeap);
+      expect(
+        days,
+        isNotEmpty,
+        reason: 'BCE flow year -100 month ${month.monthName} should expose flow days',
+      );
+      expect(
+        month.solarStart,
+        isNotNull,
+        reason: 'BCE flow year -100 month ${month.monthName} should expose solarStart',
+      );
+      expect(days.first.solarDate, month.solarStart);
+    }
+  });
+
   test(
     'ZiweiLimitManager absolute time stepping handles Rat Hour securely',
     () {
