@@ -4,6 +4,27 @@ import 'package:ziwei_core/ziwei_core.dart';
 void main() async {
   late ZiweiRuleset defaultRuleset;
 
+  ZiweiRuleset withRatHourMode(RatHourMode mode) {
+    final base = defaultRuleset.calendarOptions;
+    return ZiweiRuleset(
+      stars: defaultRuleset.stars,
+      flowDefinitions: defaultRuleset.flowDefinitions,
+      brightnessLabels: defaultRuleset.brightnessLabels,
+      siHuaRules: defaultRuleset.siHuaRules,
+      mingZhuRule: defaultRuleset.mingZhuRule,
+      shenZhuRule: defaultRuleset.shenZhuRule,
+      calendarOptions: CalendarOptions(
+        ratHourMode: mode,
+        leapRule: base.leapRule,
+        wuHuDunBasedOn: base.wuHuDunBasedOn,
+        siHuaBasedOn: base.siHuaBasedOn,
+        childhoodRule: base.childhoodRule,
+        flowLimitBasedOn: base.flowLimitBasedOn,
+        enableHistorical: base.enableHistorical,
+      ),
+    );
+  }
+
   setUpAll(() async {
     // 假设你有 ConfigLoader.getDefault()
     defaultRuleset = ConfigLoader.getDefault();
@@ -187,4 +208,36 @@ void main() async {
       expect(dp.hourMingIndex, isNotNull);
     },
   );
+
+  test('TimelineProvider split rat hour keeps late Zi stem consistent by mode', () {
+    final todayRuleset = withRatHourMode(RatHourMode.todayGan);
+    final tomorrowRuleset = withRatHourMode(RatHourMode.tomorrowGan);
+
+    final todayDate = ZiweiDate.fromSolar(
+      DateTime(2024, 1, 1, 12, 0),
+      options: todayRuleset.calendarOptions,
+    );
+    final tomorrowDate = ZiweiDate.fromSolar(
+      DateTime(2024, 1, 1, 12, 0),
+      options: tomorrowRuleset.calendarOptions,
+    );
+
+    final todayPlate = ZiweiEngine.calculate(todayDate, todayRuleset);
+    final tomorrowPlate = ZiweiEngine.calculate(tomorrowDate, tomorrowRuleset);
+
+    final todayProvider = TimelineProvider(todayPlate);
+    final tomorrowProvider = TimelineProvider(tomorrowPlate);
+
+    final jiaZiDay = GanZhi(TianGan.jia, DiZhi.zi);
+    final todayHours = todayProvider.getHours(jiaZiDay);
+    final tomorrowHours = tomorrowProvider.getHours(jiaZiDay);
+
+    expect(todayHours, hasLength(13));
+    expect(tomorrowHours, hasLength(13));
+    expect(todayHours.first.isEarlyRat, isTrue);
+    expect(todayHours.last.isLateRat, isTrue);
+    expect(todayHours.last.label, '晚子');
+    expect(todayHours.last.stem, TianGan.jia.name);
+    expect(tomorrowHours.last.stem, TianGan.bing.name);
+  });
 }

@@ -432,11 +432,14 @@ class TimelineProvider {
 
     if (splitRat) {
       // 晚子时 (23:00-00:00)
+      final lateRatStemOffset = ratHourMode == RatHourMode.todayGan ? 0 : 12;
       hours.add(
         HourNode(
           hourIndex: 12,
           label: '晚子',
-          stem: TianGan.values[(startRatStemIndex + 12) % 10].name,
+          stem: TianGan.values[
+            (startRatStemIndex + lateRatStemOffset) % 10
+          ].name,
           branch: DiZhi.values[0].name,
           isLateRat: true,
         ),
