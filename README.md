@@ -12,7 +12,7 @@ Ziwei Core 是一款支持 6000 年超长时空跨度（约 $-1000$ 至 $5000$�
 
 本项目使用[bazi_core(dart)](https://github.com/RedSC1/bazi_core)计算节气四柱、获取农历时间，[sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart)计算节气、真太阳时等。排盘时间经测试可以支持公元前约1000年到公元5000年，更早以及更远的时间理论上也可以计算，但是精度无法保证，具体精度受到[sxwnl_spa_dart](https://github.com/RedSC1/sxwnl_spa_dart) v0.10.0 及以上版本的限制。
 
-当前发布版本依赖 `sxwnl_spa_dart ^0.18.4` 与 `bazi_core ^0.6.6`，已对齐 `LunarDate` 的天文纪年、公元前古历与公元后历史改历归年修复，并同步底层八字反查能力；如需展示传统纪年，可通过底层 `historicalYear` / `bceYear` 等辅助字段处理。
+当前发布版本依赖 `sxwnl_spa_dart ^0.18.5` 与 `bazi_core ^0.6.7`，已对齐 `LunarDate` 的天文纪年、公元前古历与公元后历史改历归年修复，并同步底层八字反查能力与时辰边界修复；如需展示传统纪年，可通过底层 `historicalYear` / `bceYear` 等辅助字段处理。
 
 ---
 
