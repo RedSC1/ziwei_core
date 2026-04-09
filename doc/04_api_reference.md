@@ -71,6 +71,88 @@
 
 ---
 
+## ZiweiReverseLookup
+
+Tier 1 反查引擎：通过指定星曜所在的宫位，反推可能的出生时间参数。
+
+### 入口方法
+
+| 方法 | 签名 | 说明 |
+| :--- | :--- | :--- |
+| `searchTier1()` | `static List<ZiweiReverseCandidate> searchTier1(ZiweiTier1Query query)` | 根据查询条件反查所有可能的出生时间。返回列表按搜索顺序排列，结果已做去重。 |
+
+### ZiweiTier1Query
+
+反查查询条件。至少需要覆盖 **年干、年支、月、日、时** 五个维度才能定位到具体月份和日期范围。
+
+| 字段 | 类型 | 维度 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `lucunIndex` | `int?` | 年干 | 禄存所在宫位索引 `0-11`。必填。 |
+| `hongluanIndex` | `int?` | 年支 | 红鸾所在宫位索引 `0-11`。必填。 |
+| `zuofuIndex` | `int?` | 月 | 左辅所在宫位索引 `0-11`。与 `youbiIndex` 至少填一个。 |
+| `youbiIndex` | `int?` | 月 | 右弼所在宫位索引 `0-11`。与 `zuofuIndex` 至少填一个。 |
+| `wenchangIndex` | `int?` | 时 | 文昌所在宫位索引 `0-11`。与 `wenquIndex` 至少填一个。 |
+| `wenquIndex` | `int?` | 时 | 文曲所在宫位索引 `0-11`。与 `wenchangIndex` 至少填一个。 |
+| `santaiIndex` | `int?` | 日 | 三台所在宫位索引 `0-11`。与 `bazuoIndex` 至少填一个（推荐必填）。 |
+| `bazuoIndex` | `int?` | 日 | 八座所在宫位索引 `0-11`。与 `santaiIndex` 至少填一个。 |
+| `ziweiIndex` | `int?` | 高级过滤 | 紫微星所在宫位索引 `0-11`。可选，填了能进一步去重。 |
+| `startDate` | `AstroDateTime` | 范围 | 搜索起始公历日期。 |
+| `endDate` | `AstroDateTime` | 范围 | 搜索结束公历日期。 |
+| `gender` | `Gender` | 配置 | 性别，默认 `male`。 |
+| `tdrPan` | `TDRpan` | 配置 | 盘类型，默认 `tianPan`。 |
+| `location` | `Location` | 配置 | 出生地经纬度，默认上海。 |
+| `timeZone` | `double` | 配置 | 时区，默认 `8.0`。 |
+| `useTrueSolarTime` | `bool` | 配置 | 是否启用真太阳时，默认 `true`。 |
+| `ruleset` | `ZiweiRuleset` | 配置 | 规则集，必须传入。 |
+
+### ZiweiReverseCandidate
+
+反查结果对象，包含一个候选出生时间及其正向验证后的完整命盘。
+
+| 字段 | 类型 | 说明 |
+| :--- | :--- | :--- |
+| `solarDate` | `AstroDateTime` | 候选公历出生时间（已包含真太阳时转换）。 |
+| `lunarYear` | `int` | 农历年。 |
+| `lunarMonth` | `int` | 农历月 `1-12`。 |
+| `lunarDay` | `int` | 农历日 `1-30`。 |
+| `hourIndex` | `int` | 时辰索引 `0-11`（子=0）。 |
+| `isLeapMonth` | `bool` | 是否为闰月。 |
+| `plate` | `ZiWeiPlate` | 正向排盘验证后的完整命盘。 |
+
+### 使用示例
+
+```dart
+final results = ZiweiReverseLookup.searchTier1(
+  ZiweiTier1Query(
+    lucunIndex: 2,      // 禄存在寅
+    hongluanIndex: 3,   // 红鸾在卯
+    zuofuIndex: 6,      // 左辅在巳
+    wenchangIndex: 8,   // 文昌在未
+    santaiIndex: 4,     // 三台在辰
+    ziweiIndex: 0,      // 紫微星在子（可选，用于进一步过滤）
+    startDate: AstroDateTime(1970, 1, 1),
+    endDate: AstroDateTime(2025, 12, 31),
+    ruleset: ruleset,
+    gender: Gender.male,
+  ),
+);
+
+for (final r in results) {
+  print('公历: ${r.solarDate} / 农历: ${r.lunarYear}-${r.lunarMonth}-${r.lunarDay}');
+}
+```
+
+### 重要限制
+
+**日系星曜无法完全唯一锁定农历日。** 三台、八座、紫微、天府、恩光、天贵等所有与"日"相关的静态安星公式，本质上最多只能确定 `day % 12` 的同余类。这意味着：
+
+- 同一农历月内，满足条件的日期通常仍有 **2~3 个候选**（相差 12 天或 24 天）。
+- 加入 `ziweiIndex` 可以**削弱**这种模糊性（尤其五行局不是水二局时），但数学上仍不能保证 100% 唯一。
+
+如果搜索结果包含多个候选，属于正常情况，需由用户根据实际生日进一步判断。
+
+---
+
 ## ZiWeiPlate
 
 命盘数据对象，包含 12 宫位完整状态。通常不直接构造，由 `ZiweiEngine` 返回。

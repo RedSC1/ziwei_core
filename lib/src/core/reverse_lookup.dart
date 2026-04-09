@@ -43,6 +43,10 @@ class ZiweiTier1Query {
   /// 八座所在宫位索引 (0-11)
   final int? bazuoIndex;
 
+  // ─── 高级约束 (可选) ───
+  /// 紫微星所在宫位索引 (0-11)，用于进一步去重/过滤
+  final int? ziweiIndex;
+
   // ─── 搜索范围 ───
   /// 搜索起始公历日期
   final AstroDateTime startDate;
@@ -66,6 +70,7 @@ class ZiweiTier1Query {
     this.wenquIndex,
     this.santaiIndex,
     this.bazuoIndex,
+    this.ziweiIndex,
     required this.startDate,
     required this.endDate,
     required this.ruleset,
@@ -313,13 +318,17 @@ class ZiweiReverseLookup {
 
   /// 三台/八座 → 农历日候选 (1-based)
   ///
-  /// 三台 = fixIndex(4 + month - day%12)  → day%12 = fixIndex(4 + month - santai)
-  /// 八座 = fixIndex(10 - month - day%12)  → day%12 = fixIndex(10 - month - bazuo)
+  /// 正向公式 (engine.dart 中 effective_month 与 lunar_day 均为 0-based):
+  ///   三台 = fixIndex(4 + month0 + day0)
+  ///   八座 = fixIndex(10 - month0 - day0)
+  /// 反推:
+  ///   day0 = fixIndex(santai - 4 - month0)
+  ///   day0 = fixIndex(10 - month0 - bazuo)
   static List<int>? _deriveDayCandidates(ZiweiTier1Query query, int month0) {
     final dayMods = <int>{};
 
     if (query.santaiIndex != null) {
-      dayMods.add(ZiweiConsts.fixIndex(4 + month0 - query.santaiIndex!));
+      dayMods.add(ZiweiConsts.fixIndex(query.santaiIndex! - 4 - month0));
     }
     if (query.bazuoIndex != null) {
       dayMods.add(ZiweiConsts.fixIndex(10 - month0 - query.bazuoIndex!));
@@ -327,14 +336,14 @@ class ZiweiReverseLookup {
 
     if (dayMods.isEmpty) return null;
 
-    // 取交集：如果两个星都给了，day%12 必须一致
+    // 取交集：如果两个星都给了，day0 必须一致
     if (query.santaiIndex != null && query.bazuoIndex != null && dayMods.length > 1) {
       return const []; // 矛盾，无解
     }
 
     final mod = dayMods.first;
 
-    // day 范围 0-29 (0-based)，展开为 1-based
+    // day0 范围 0-29 (0-based)，展开为 1-based
     final candidates = <int>[];
     for (var d = mod; d < 30; d += 12) {
       candidates.add(d + 1); // 转 1-based
@@ -401,12 +410,13 @@ class ZiweiReverseLookup {
       // 闰月前面那个常规月是几月？
       // L 位置的闰月 = 闰(L-1月之后) = 闰(leapMonthNum月)
       // 无闰时 L 位置的月号 = _indexToMonth(L)
-      final leapMonthNum = _indexToMonth(L, 0); // 假设没闰月时 L 位置的月号
+      final leapMonthNum = _indexToMonth(L - 1, 0); // 闰的是 L-1 位置对应的常规月
       // 有闰月时，L 就是闰月，月号 = leapMonthNum
       // 所以 ssqResult.leap = L 表示闰的是 leapMonthNum 月
 
-      // 闰(leapMonthNum) 在 asNext 下 effective = leapMonthNum+1
-      if (leapMonthNum + 1 == effectiveMonth) {
+      // 闰(leapMonthNum) 在 asNext / splitAt15(day>15) 下 effective = 下一个月
+      final asNextMonth = leapMonthNum % 12 + 1; // 处理闰腊月跨年: 12 -> 1
+      if (asNextMonth == effectiveMonth) {
         if (L < ssqResult.dx.length) {
           forms.add(_MonthForm(
             index: L,
@@ -416,12 +426,12 @@ class ZiweiReverseLookup {
         }
       }
 
-      // 闰(effectiveMonth) 本身
+      // 闰(leapMonthNum) 在 asPrevious / splitAt15(day<=15) 下 effective = leapMonthNum
       if (leapMonthNum == effectiveMonth) {
         if (L < ssqResult.dx.length) {
           forms.add(_MonthForm(
             index: L,
-            lunarMonth: effectiveMonth,
+            lunarMonth: leapMonthNum,
             isLeap: true,
           ));
         }
@@ -471,6 +481,14 @@ class ZiweiReverseLookup {
   // 构建候选 & 正向验证
   // ─────────────────────────────────────────────────────────────
 
+  static bool _verifyPalaceStar(ZiWeiPlate plate, String starKey, int? expectedIndex) {
+    if (expectedIndex == null) return true;
+    for (final palace in plate.palaces) {
+      if (palace.hasStar(starKey)) return palace.index == expectedIndex;
+    }
+    return false;
+  }
+
   static ZiweiReverseCandidate? _buildAndVerify({
     required int year,
     required int month,
@@ -505,6 +523,17 @@ class ZiweiReverseLookup {
       final startJd = query.startDate.toJ2000();
       final endJd = query.endDate.toJ2000();
       if (solarJd < startJd || solarJd > endJd) return null;
+
+      // 正向验证：检查各星曜宫位是否与查询条件匹配
+      if (!_verifyPalaceStar(plate, 'lucun', query.lucunIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'hongluan', query.hongluanIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'zuofu', query.zuofuIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'youbi', query.youbiIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'wenchang', query.wenchangIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'wenqu', query.wenquIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'santai', query.santaiIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'bazuo', query.bazuoIndex)) return null;
+      if (!_verifyPalaceStar(plate, 'ziwei', query.ziweiIndex)) return null;
 
       return ZiweiReverseCandidate(
         solarDate: date.solar,

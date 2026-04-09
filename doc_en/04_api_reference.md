@@ -71,6 +71,88 @@ The core processing engine where all layout computations take place to spit out 
 
 ---
 
+## ZiweiReverseLookup
+
+Tier 1 reverse lookup engine: deduce possible birth-time parameters by specifying the palace indices of certain anchor stars.
+
+### Entry Point
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `searchTier1()` | `static List<ZiweiReverseCandidate> searchTier1(ZiweiTier1Query query)` | Reverse-searches all possible birth times matching the given star positions. Results are deduplicated. |
+
+### ZiweiTier1Query
+
+The query object for reverse lookup. You must cover at least the **Year Stem, Year Branch, Month, Day, and Hour** dimensions to narrow down a meaningful date range.
+
+| Field | Type | Dimension | Description |
+| :--- | :--- | :--- | :--- |
+| `lucunIndex` | `int?` | Year Stem | Palace index `0-11` of **Lucun**. Required. |
+| `hongluanIndex` | `int?` | Year Branch | Palace index `0-11` of **Hongluan**. Required. |
+| `zuofuIndex` | `int?` | Month | Palace index `0-11` of **Zuofu**. At least one of `zuofuIndex` / `youbiIndex` must be provided. |
+| `youbiIndex` | `int?` | Month | Palace index `0-11` of **Youbi**. At least one of `zuofuIndex` / `youbiIndex` must be provided. |
+| `wenchangIndex` | `int?` | Hour | Palace index `0-11` of **Wenchang**. At least one of `wenchangIndex` / `wenquIndex` must be provided. |
+| `wenquIndex` | `int?` | Hour | Palace index `0-11` of **Wenqu**. At least one of `wenchangIndex` / `wenquIndex` must be provided. |
+| `santaiIndex` | `int?` | Day | Palace index `0-11` of **Santai**. At least one of `santaiIndex` / `bazuoIndex` must be provided (strongly recommended). |
+| `bazuoIndex` | `int?` | Day | Palace index `0-11` of **Bazuo**. At least one of `santaiIndex` / `bazuoIndex` must be provided. |
+| `ziweiIndex` | `int?` | Advanced filter | Palace index `0-11` of **Ziwei**. Optional; supplying it further reduces ambiguous candidates. |
+| `startDate` | `AstroDateTime` | Range | Start of the Gregorian date search window. |
+| `endDate` | `AstroDateTime` | Range | End of the Gregorian date search window. |
+| `gender` | `Gender` | Config | Gender, default `male`. |
+| `tdrPan` | `TDRpan` | Config | Plate type, default `tianPan`. |
+| `location` | `Location` | Config | Birth location, default Shanghai `(120E, 30N)`. |
+| `timeZone` | `double` | Config | Time zone offset, default `8.0`. |
+| `useTrueSolarTime` | `bool` | Config | Enable apparent solar time correction, default `true`. |
+| `ruleset` | `ZiweiRuleset` | Config | The ruleset to use for both calendar conversion and chart calculation. **Required**. |
+
+### ZiweiReverseCandidate
+
+A single candidate result containing a prospective birth time and its forward-verified chart.
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `solarDate` | `AstroDateTime` | Candidate Gregorian birth time (after true-solar-time conversion if enabled). |
+| `lunarYear` | `int` | Lunar year. |
+| `lunarMonth` | `int` | Lunar month `1-12`. |
+| `lunarDay` | `int` | Lunar day `1-30`. |
+| `hourIndex` | `int` | Hour index `0-11` (`Zi`=0). |
+| `isLeapMonth` | `bool` | Whether the candidate falls in a leap month. |
+| `plate` | `ZiWeiPlate` | The fully calculated chart used for forward verification. |
+
+### Usage Example
+
+```dart
+final results = ZiweiReverseLookup.searchTier1(
+  ZiweiTier1Query(
+    lucunIndex: 2,      // Lucun in Yin (3rd palace)
+    hongluanIndex: 3,   // Hongluan in Mao (4th palace)
+    zuofuIndex: 6,      // Zuofu in Si (7th palace)
+    wenchangIndex: 8,   // Wenchang in Wei (9th palace)
+    santaiIndex: 4,     // Santai in Chen (5th palace)
+    ziweiIndex: 0,      // Ziwei in Zi ( optional; tightens results)
+    startDate: AstroDateTime(1970, 1, 1),
+    endDate: AstroDateTime(2025, 12, 31),
+    ruleset: ruleset,
+    gender: Gender.male,
+  ),
+);
+
+for (final r in results) {
+  print('Solar: ${r.solarDate} / Lunar: ${r.lunarYear}-${r.lunarMonth}-${r.lunarDay}');
+}
+```
+
+### Important Limitations
+
+**Day-level stars can never uniquely lock down the exact lunar day.** All static day-based placement formulas—including Santai, Bazuo, Ziwei, Tianfu, Enguang, and Tiangui—are fundamentally limited to resolving `day % 12`. This means:
+
+- Within the same lunar month, there are usually **2–3 candidate days** that satisfy the given constraints (separated by 12 or 24 days).
+- Adding `ziweiIndex` **reduces** ambiguity (especially when the Five-Element Bureau is not Water-2), but it still cannot mathematically guarantee a single unique answer in every case.
+
+If multiple candidates are returned, that is expected behavior; the end user must select the actual birth date from the shortlist.
+
+---
+
 ## ZiWeiPlate
 
 The data package of the Astrological Chart carrying the complete states of the 12 Palaces. Typically never constructed by hand, derived solely via `ZiweiEngine`.
