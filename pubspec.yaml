@@ -1,6 +1,6 @@
 name: ziwei_core
 description: A pure Dart, configuration-driven Ziwei Doushu (Purple Star Astrology) engine supporting a 6000-year timeline with high-precision ephemeris and JSON patching.
-version: 0.12.12
+version: 0.13.0
 repository: https://github.com/RedSC1/ziwei_core
 issue_tracker: https://github.com/RedSC1/ziwei_core/issues
 topics:
