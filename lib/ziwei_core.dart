@@ -2,6 +2,7 @@
 export 'src/config/loader.dart';
 export 'src/config/ruleset.dart';
 export 'src/core/engine.dart';
+export 'src/core/reverse_lookup.dart';
 export 'src/core/limit_manager.dart'; //  Export Flow State Manager
 export 'src/core/timeline_provider.dart'; //  Export UI Timeline Generator
 export 'src/data/limit.dart';
