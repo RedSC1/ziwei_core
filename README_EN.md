@@ -12,6 +12,10 @@ This project relies on [bazi_core(dart)](https://github.com/RedSC1/bazi_core) to
 
 The current published release targets `sxwnl_spa_dart ^0.18.4` and `bazi_core ^0.6.5`, aligning with the `LunarDate` astronomical-year, BCE ancient-calendar, and CE historical-reform year-matching fixes; if you need historical/BCE display values, use the lower-level `historicalYear` / `bceYear` helpers.
 
+## ⚠️ Calendar Scope Warning
+
+> The underlying lunar-calendar and solar-term algorithms in this library are based on China Standard Time (UTC+8, Beijing time) and the Chinese almanac. In regions that use a UTC+7 lunar system (e.g., Vietnam, Laos), the date boundary of synodic months can differ materially from the Chinese almanac—a new moon may fall on the 1st day of the month in Beijing but on the 30th of the previous month in Hanoi. **The default parameters are therefore not applicable to these regions.** If you need to support a non-Chinese lunar calendar, you must implement your own adapter layer (similar to `TimeAdapter`) rather than simply adjusting the `timeZone` or `location` arguments.
+
 ---
 
 ## ✨ Core Features
