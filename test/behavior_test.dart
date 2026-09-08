@@ -17,6 +17,129 @@ void main() {
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
 
+  test('month selection rejects forged nodes and preserves physical state', () {
+    final c = natal(), m = c.createLimitManager();
+    m.setPhysicalTime(time(2026, 4, 20));
+    final node = c.timeline().getMonths(2026).first,
+        before = m.context,
+        target = m.currentTarget;
+    final forged = MonthNode(
+      lunarYear: node.lunarYear,
+      month: node.month,
+      sequence: node.sequence,
+      effectiveMonth: node.effectiveMonth,
+      effectiveYear: node.effectiveYear,
+      dayStart: node.dayStart,
+      dayEnd: node.dayEnd,
+      monthBuildingBranch: (node.monthBuildingBranch + 1) % 12,
+      stem: node.stem,
+      branch: node.branch,
+      displayBranch: node.displayBranch,
+      firstCivilDayNumber: node.firstCivilDayNumber,
+      dayCount: node.dayCount,
+      monthName: node.monthName,
+      displayLabel: node.displayLabel,
+      isLeap: node.isLeap,
+      solarStartJd: node.solarStartJd,
+      solarEndJdExclusive: node.solarEndJdExclusive,
+    );
+    expect(() => m.selectMonth(forged), throwsRangeError);
+    expect(identical(m.context, before), isTrue);
+    expect(identical(m.currentTarget, target), isTrue);
+    m.selectMonth(node);
+    expect(m.context.month!.month, node.month);
+  });
+  test('direct flow modules validate supported inputs and domains', () {
+    for (final input in ['lunar.month_index', 'solar.day_index', 'unknown']) {
+      expect(
+        () => ZiweiRuleModule(
+          label: 'bad-flow',
+          patch: {
+            'flowPlacements': {
+              'flow_lucun': {
+                'inputs': [input],
+                'shape': [12],
+                'positions': List.filled(12, 0),
+              },
+            },
+          },
+        ),
+        throwsArgumentError,
+      );
+    }
+    expect(
+      () => ZiweiRuleModule(
+        label: 'short-flow',
+        patch: {
+          'flowPlacements': {
+            'flow_lucun': {
+              'inputs': ['lunar.year_branch'],
+              'shape': [1],
+              'positions': [0],
+            },
+          },
+        },
+      ),
+      throwsArgumentError,
+    );
+    final module = ZiweiRuleModule(
+      label: 'valid-flow',
+      patch: {
+        'flowPlacements': {
+          'flow_lucun': {
+            'inputs': ['lunar.year_branch'],
+            'shape': [12],
+            'positions': List.generate(12, (i) => i),
+          },
+        },
+      },
+    );
+    expect(module.patch['flowPlacements'], isNotEmpty);
+  });
+  test('hour selection rejects stale and incompatible nodes atomically', () {
+    for (final mode in RatHourMode.values) {
+      final m = natal(
+        defaultOptions.copyWith(ratHourMode: mode),
+      ).createLimitManager();
+      m.setYear(2026);
+      m.setMonth(1);
+      m.setDay(1);
+      final old = m.manifest.currentDayHours!.first;
+      m.setDay(2);
+      m.setHour(0);
+      final before = m.context;
+      expect(() => m.selectHour(old), throwsRangeError);
+      expect(identical(m.context, before), isTrue);
+      final fresh = m.manifest.currentDayHours!.first;
+      m.selectHour(
+        HourNode(
+          hourIndex: fresh.hourIndex,
+          branchIndex: fresh.branchIndex,
+          stem: fresh.stem,
+          branch: fresh.branch,
+          label: fresh.label,
+          isEarlyRat: fresh.isEarlyRat,
+          isLateRat: fresh.isLateRat,
+        ),
+      );
+      final now = m.context;
+      expect(
+        () => m.selectHour(
+          HourNode(
+            hourIndex: fresh.hourIndex,
+            branchIndex: fresh.branchIndex,
+            stem: fresh.stem,
+            branch: fresh.branch,
+            label: fresh.label,
+            isEarlyRat: !fresh.isEarlyRat,
+            isLateRat: fresh.isLateRat,
+          ),
+        ),
+        throwsRangeError,
+      );
+      expect(identical(m.context, now), isTrue);
+    }
+  });
   test('selected day rejects stale nodes without mutating state', () {
     final m = natal().createLimitManager();
     m.setYear(2026);

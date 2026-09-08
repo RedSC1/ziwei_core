@@ -152,6 +152,19 @@ class ZiweiCompiledPlacement {
   };
 }
 
+const _flowInputs = {
+  'anchor.bureau',
+  'anchor.ziwei',
+  'anchor.tianfu',
+  'anchor.life',
+  'anchor.body',
+  'birth.gender',
+  'lunar.year_stem',
+  'solar.year_stem',
+  'lunar.year_branch',
+  'solar.year_branch',
+};
+
 class ZiweiRuleModule {
   ZiweiRuleModule({required String label, required Map<String, dynamic> patch})
     : label = _nonempty(label).trim(),
@@ -174,7 +187,16 @@ Map<String, dynamic> _normalizePatch(Map<String, dynamic> patch) {
   for (final name in ['natalPlacements', 'flowPlacements']) {
     for (final e in _object(result[name] ?? {}).entries) {
       _nonempty(e.key);
-      ZiweiCompiledPlacement.fromJson(_object(e.value));
+      final compiled = ZiweiCompiledPlacement.fromJson(_object(e.value));
+      if (name == 'flowPlacements') {
+        for (var i = 0; i < compiled.inputs.length; i++) {
+          final input = compiled.inputs[i];
+          if (!_flowInputs.contains(input) ||
+              compiled.shape[i] != _domain(input)) {
+            throw ArgumentError('invalid flow input or domain: $input');
+          }
+        }
+      }
     }
   }
   for (final e in _object(result['brightness'] ?? {}).entries) {
@@ -759,23 +781,6 @@ class ZiweiConfigLoader {
                 : category,
         });
         final compiled = compileZiweiJsonPlacement(r['rule']);
-        if (!isNatal &&
-            compiled.inputs.any(
-              (v) => !{
-                'anchor.bureau',
-                'anchor.ziwei',
-                'anchor.tianfu',
-                'anchor.life',
-                'anchor.body',
-                'birth.gender',
-                'lunar.year_stem',
-                'solar.year_stem',
-                'lunar.year_branch',
-                'solar.year_branch',
-              }.contains(v),
-            )) {
-          throw ArgumentError('flow rule references unavailable input');
-        }
         (isNatal ? natal : flow)[r['key']] = compiled.toJson();
         if (!isNatal && r['brightness'] != null) {
           brightness[r['key']] = (r['brightness'] as List)
