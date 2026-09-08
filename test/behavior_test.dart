@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:ziwei_core/ziwei_core.dart';
 import 'package:ephemeris_lite/ephemeris_lite.dart' as eph;
@@ -16,6 +17,72 @@ void main() {
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
 
+  test('selected day rejects stale nodes without mutating state', () {
+    final m = natal().createLimitManager();
+    m.setYear(2026);
+    m.setMonth(1);
+    final old = m.manifest.currentMonthDays!.first;
+    m.setMonth(3);
+    m.setDay(1);
+    final before = m.context;
+    expect(() => m.selectDay(old), throwsRangeError);
+    expect(identical(m.context, before), isTrue);
+    final fresh = m.manifest.currentMonthDays!.first;
+    m.selectDay(
+      DayNode(
+        day: fresh.day,
+        stem: fresh.stem,
+        branch: fresh.branch,
+        solarDate: fresh.solarDate,
+      ),
+    );
+    expect(m.context.day!.limit.coordinate.stem, fresh.stem);
+    final unchanged = m.context;
+    expect(
+      () => m.selectDay(
+        DayNode(
+          day: fresh.day,
+          stem: (fresh.stem + 1) % 10,
+          branch: fresh.branch,
+          solarDate: fresh.solarDate,
+        ),
+      ),
+      throwsRangeError,
+    );
+    expect(identical(m.context, unchanged), isTrue);
+  });
+  test(
+    'master boundary rejects invalid supplied values and preserves defaults',
+    () {
+      for (final key in ['ming_zhu', 'shen_zhu']) {
+        ZiweiRuleModule compile(Map<String, dynamic> extra) =>
+            ZiweiConfigLoader.compileJson(
+              label: 'master-boundary',
+              mastersJson: jsonEncode({
+                key: {
+                  'table': {for (var i = 0; i < 12; i++) '$i': 'ziwei'},
+                  ...extra,
+                },
+              }),
+            );
+        final name = key == 'ming_zhu' ? 'life' : 'body';
+        expect(
+          (compile({}).patch['masters'] as Map)[name]['input'],
+          key == 'ming_zhu' ? 'anchor.life' : 'master.year_branch',
+        );
+        for (final valid in ['lunar', 'solar']) {
+          expect(
+            (compile({'boundary': valid}).patch['masters']
+                as Map)[name]['input'],
+            '$valid.year_branch',
+          );
+        }
+        for (final invalid in ['solr', '', null, 0, true]) {
+          expect(() => compile({'boundary': invalid}), throwsArgumentError);
+        }
+      }
+    },
+  );
   test(
     'review3: civil clock normalizes input offset without changing instant',
     () {

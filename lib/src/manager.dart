@@ -213,7 +213,29 @@ class ZiweiLimitManager {
 
   void selectDay(DayNode node) {
     final m = _context.month;
-    if (m == null) throw StateError('select a month first');
+    if (m == null || _timelineYear == null) {
+      throw StateError('select a month first');
+    }
+    final valid = timeline
+        .getDays(
+          _timelineYear!,
+          m.month,
+          isLeap: m.isLeap,
+          effectiveMonth: m.effectiveMonth,
+          effectiveYear: m.effectiveYear,
+        )
+        .any(
+          (v) =>
+              v.day == node.day &&
+              v.stem == node.stem &&
+              v.branch == node.branch &&
+              v.solarDate.year == node.solarDate.year &&
+              v.solarDate.month == node.solarDate.month &&
+              v.solarDate.day == node.solarDate.day,
+        );
+    if (!valid) {
+      throw RangeError('day node does not belong to the selected month');
+    }
     final d = makeFlowDay(baseChart, m, node.day, node.stem);
     _context = ZiweiLimitContext(
       decade: _context.decade,

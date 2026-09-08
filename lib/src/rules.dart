@@ -815,7 +815,12 @@ class ZiweiConfigLoader {
       final r = _object(jsonDecode(mastersJson));
       for (final key in ['ming_zhu', 'shen_zhu']) {
         if (r[key] == null) continue;
-        final v = r[key];
+        final v = _object(r[key]);
+        if (v.containsKey('boundary') &&
+            v['boundary'] != 'solar' &&
+            v['boundary'] != 'lunar') {
+          throw ArgumentError('master boundary must be lunar or solar');
+        }
         masters[key == 'ming_zhu' ? 'life' : 'body'] = {
           'input': v['boundary'] == 'solar'
               ? 'solar.year_branch'
