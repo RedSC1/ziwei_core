@@ -758,9 +758,25 @@ class ZiweiConfigLoader {
                 ? 'cycle'
                 : category,
         });
-        (isNatal ? natal : flow)[r['key']] = compileZiweiJsonPlacement(
-          r['rule'],
-        ).toJson();
+        final compiled = compileZiweiJsonPlacement(r['rule']);
+        if (!isNatal &&
+            compiled.inputs.any(
+              (v) => !{
+                'anchor.bureau',
+                'anchor.ziwei',
+                'anchor.tianfu',
+                'anchor.life',
+                'anchor.body',
+                'birth.gender',
+                'lunar.year_stem',
+                'solar.year_stem',
+                'lunar.year_branch',
+                'solar.year_branch',
+              }.contains(v),
+            )) {
+          throw ArgumentError('flow rule references unavailable input');
+        }
+        (isNatal ? natal : flow)[r['key']] = compiled.toJson();
         if (!isNatal && r['brightness'] != null) {
           brightness[r['key']] = (r['brightness'] as List)
               .map(_jsonNumber)

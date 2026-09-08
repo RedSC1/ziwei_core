@@ -139,6 +139,7 @@ class ZiweiLimitManager {
       monthName: node.monthName,
     );
     _context = _yearContext(node.effectiveYear, month: m);
+    _timelineYear = node.effectiveYear;
     _clearTarget();
   }
 
@@ -304,6 +305,7 @@ class ZiweiLimitManager {
     _target = ZiweiFlowTarget(
       target.toJulianTime().jdUT1,
       resolveZiweiVirtualTime(target, baseChart.options),
+      ratHourSegment: flow.targetRatHourSegment,
     );
   }
 
@@ -314,8 +316,9 @@ class ZiweiLimitManager {
                 _target!,
                 baseChart.options.ratHourMode,
                 dir,
+                options: baseChart.options,
               )
-            : stepZiweiFlowDayTarget(_target!, dir),
+            : stepZiweiFlowDayTarget(_target!, dir, options: baseChart.options),
         flow = resolveZiweiFlowFromInstant(
           baseChart,
           next.jdUT1,

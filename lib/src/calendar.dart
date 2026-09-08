@@ -197,6 +197,7 @@ ResolvedZiweiBirth resolveZiweiBirthFromInstant(
       (options.leapMonthStrategy == LeapMonthStrategy.asNext ||
           options.leapMonthStrategy == LeapMonthStrategy.splitAfterFifteenth &&
               lunar.day > 15)) {
+    if (lunar.monthName == MonthName.laterNine) year++;
     month++;
     if (month > 12) {
       month = 1;
@@ -218,7 +219,12 @@ ResolvedZiweiBirth resolveZiweiBirthFromInstant(
     hour: solar.hour,
   );
   final previous = getPreviousJie(jd, options: options.calendarOptions);
-  final jieVirtual = previous.time.jdUT1 + vjd - jd;
+  final jieVirtual = _jd(
+    resolveZiweiVirtualTime(
+      previous.time.toZonedTime(options.utcOffsetMinutes.toInt()),
+      options,
+    ),
+  );
   final day =
       (_logical(vjd, options.ratHourMode) + 0.5).floor() -
       (_logical(jieVirtual, options.ratHourMode) + 0.5).floor() +
@@ -265,6 +271,7 @@ ResolvedZiweiBirth resolveZiweiBirthFromInstant(
   if (date.isLeap &&
       (strategy == LeapMonthStrategy.asNext ||
           strategy == LeapMonthStrategy.splitAfterFifteenth && date.day > 15)) {
+    if (date.monthName == MonthName.laterNine) year++;
     month++;
     if (month > 12) {
       month = 1;
@@ -317,3 +324,14 @@ List<int> flattenZiweiAnchors(ZiweiAnchors anchors) => List.unmodifiable([
   anchors.tianfu,
   ...anchors.palacePositions,
 ]);
+
+// Invert the chart clock at the requested virtual instant, including its EOT.
+double _virtualToUt1(CalendarDate v, ZiweiOptions o) {
+  final jd = _jd(v);
+  return switch (o.clockMode) {
+    ZiweiClockMode.civil => jd - o.utcOffsetMinutes / 1440,
+    ZiweiClockMode.meanSolar => jd - o.longitudeDeg! / 360,
+    ZiweiClockMode.trueSolar =>
+      localApparentToMeanSolarTime(jd, o.longitudeDeg!) - o.longitudeDeg! / 360,
+  };
+}

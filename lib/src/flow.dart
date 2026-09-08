@@ -289,7 +289,12 @@ RatHourSegment _segment(CalendarDate v, RatHourMode mode, int branch) =>
     : RatHourSegment.early;
 double _solarLogical(double jd, CalendarDate v, ZiweiOptions o) {
   final previous = getPreviousJie(jd, options: o.calendarOptions),
-      jv = previous.time.jdUT1 + (_jd(v) - jd);
+      jv = _jd(
+        resolveZiweiVirtualTime(
+          previous.time.toZonedTime(o.utcOffsetMinutes.toInt()),
+          o,
+        ),
+      );
   return (_logical(_jd(v), o.ratHourMode) + 0.5).floorToDouble() -
       (_logical(jv, o.ratHourMode) + 0.5).floor() +
       1;
@@ -434,11 +439,14 @@ class ZiweiFlowTarget {
   final RatHourSegment ratHourSegment;
 }
 
+/// Preserve the virtual clock position; pass [options] for solar-clock inversion.
+/// The limit manager supplies its chart options automatically.
 ZiweiFlowTarget stepZiweiFlowHourTarget(
   ZiweiFlowTarget current,
   RatHourMode mode,
-  int direction,
-) {
+  int direction, {
+  ZiweiOptions? options,
+}) {
   if (direction != 1 && direction != -1) {
     throw ArgumentError('direction must be ±1');
   }
@@ -464,13 +472,20 @@ ZiweiFlowTarget stepZiweiFlowHourTarget(
         second: v.second,
       );
   return ZiweiFlowTarget(
-    current.jdUT1 + step / 24,
+    options == null
+        ? current.jdUT1 + step / 24
+        : _virtualToUt1(virtual, options),
     virtual,
     ratHourSegment: _segment(virtual, mode, ((virtual.hour + 1) ~/ 2) % 12),
   );
 }
 
-ZiweiFlowTarget stepZiweiFlowDayTarget(ZiweiFlowTarget current, int direction) {
+/// Preserve virtual time of day. Pass [options] for true/mean solar clocks.
+ZiweiFlowTarget stepZiweiFlowDayTarget(
+  ZiweiFlowTarget current,
+  int direction, {
+  ZiweiOptions? options,
+}) {
   if (direction != 1 && direction != -1) {
     throw ArgumentError('direction must be ±1');
   }
@@ -479,15 +494,25 @@ ZiweiFlowTarget stepZiweiFlowDayTarget(ZiweiFlowTarget current, int direction) {
         julianDay(year: v.year, month: v.month, day: v.day, hour: 12) +
             direction,
       );
+  final virtual = CalendarDate(
+    year: date.year,
+    month: date.month,
+    day: date.day,
+    hour: v.hour,
+    minute: v.minute,
+    second: v.second,
+  );
   return ZiweiFlowTarget(
-    current.jdUT1 + direction,
-    CalendarDate(
-      year: date.year,
-      month: date.month,
-      day: date.day,
-      hour: v.hour,
-      minute: v.minute,
-      second: v.second,
-    ),
+    options == null
+        ? current.jdUT1 + direction
+        : _virtualToUt1(virtual, options),
+    virtual,
+    ratHourSegment: options == null
+        ? current.ratHourSegment
+        : _segment(
+            virtual,
+            options.ratHourMode,
+            ((virtual.hour + 1) ~/ 2) % 12,
+          ),
   );
 }

@@ -210,6 +210,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
                           LeapMonthStrategy.splitAfterFifteenth &&
                       day > 15);
           if (advance) {
+            if (m.monthName == MonthName.laterNine) ey++;
             em++;
             if (em > 12) {
               em = 1;
@@ -239,18 +240,63 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
                 in h == 0 && options.ratHourMode != RatHourMode.nextDay
                     ? [0, 23]
                     : [h * 2]) {
-              inspect(
-                _targetFromVirtual(
-                  CalendarDate(
-                    year: solar.year,
-                    month: solar.month,
-                    day: solar.day,
-                    hour: hour,
-                  ),
-                  options,
+              var target = _targetFromVirtual(
+                CalendarDate(
+                  year: solar.year,
+                  month: solar.month,
+                  day: solar.day,
+                  hour: hour,
                 ),
-                maxCandidatesToExamine ?? 9007199254740991,
+                options,
               );
+              final split = options.ratHourMode != RatHourMode.nextDay;
+              final lo = hour == 0
+                  ? (split ? 0 : -1)
+                  : hour == 23
+                  ? 23
+                  : hour - 1;
+              final hi = hour == 0
+                  ? 1
+                  : hour == 23
+                  ? 24
+                  : hour + 1;
+              CalendarDate boundary(int h) {
+                final date = calendarDateFromJulianDay(
+                  julianDay(
+                        year: solar.year,
+                        month: solar.month,
+                        day: solar.day,
+                        hour: 12,
+                      ) +
+                      (h / 24).floor(),
+                );
+                return CalendarDate(
+                  year: date.year,
+                  month: date.month,
+                  day: date.day,
+                  hour: h % 24,
+                );
+              }
+
+              if (_virtualToUt1(boundary(lo), options) > endJd ||
+                  _virtualToUt1(boundary(hi), options) <= startJd) {
+                continue;
+              }
+              // A representative outside the interval may still describe an
+              // overlapping segment. Clamp, then verify with the forward engine.
+              if (target.jdUT1 < startJd || target.jdUT1 > endJd) {
+                final jd = target.jdUT1.clamp(startJd, endJd);
+                target = ZiweiFlowTarget(
+                  jd,
+                  resolveZiweiVirtualTime(
+                    JulianTime.fromUT1(
+                      jd,
+                    ).toZonedTime(options.utcOffsetMinutes.toInt()),
+                    options,
+                  ),
+                );
+              }
+              inspect(target, maxCandidatesToExamine ?? 9007199254740991);
             }
           }
         }

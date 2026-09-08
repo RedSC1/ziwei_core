@@ -37,3 +37,14 @@
 | `reverseLookupZiweiTier1` | 命名参数 `start/end/options/query/maxCandidatesToExamine` |
 
 `TransformSet` 在 Dart 中用不可变 `Map<String, int>` 表示（`lu/quan/ke/ji`）。数据模型公开明确的字段与 `toJson()`；运行时无 JS 解释器，也不执行 JS 代码。
+
+
+底层步进函数新增可选命名参数 `options`：
+
+```dart
+stepZiweiFlowHourTarget(target, options.ratHourMode, 1, options: options);
+stepZiweiFlowDayTarget(target, 1, options: options);
+```
+
+真太阳时／平太阳时应传入出生盘的选项，以保留虚拟时钟位置并重新换算 UT1。
+管理器自动传入，无需调用方额外处理。省略参数保留固定时差步进语义。

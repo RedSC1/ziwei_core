@@ -15,6 +15,164 @@ void main() {
   final defaultOptions = ZiweiOptions(gender: ZiweiGender.male);
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
+
+  test('review: previous Jie uses its own apparent-solar offset', () {
+    final o = defaultOptions.copyWith(
+      clockMode: ZiweiClockMode.trueSolar,
+      longitudeDeg: 153.07804249718785,
+      ratHourMode: RatHourMode.currentDay,
+    );
+    final target = time(2026, 3, 20, 20),
+        jd = target.toJulianTime().jdUT1,
+        v = resolveZiweiVirtualTime(target, o);
+    final jie = eph.getPreviousJie(jd, options: o.calendarOptions).time;
+    final jv = resolveZiweiVirtualTime(jie.toZonedTime(480), o);
+    double vjd(eph.CalendarDate v) => eph.julianDay(
+      year: v.year,
+      month: v.month,
+      day: v.day,
+      hour: v.hour,
+      minute: v.minute,
+      second: v.second,
+    );
+    final expected = (vjd(v) + 0.5).floor() - (vjd(jv) + 0.5).floor() + 1;
+    expect(expected, 16);
+    expect(solarDayFromPreviousJie(jd, v, o), expected);
+    expect(
+      ZiweiChart.fromZonedTime(target, o).facts.solarDayFromPreviousJie,
+      expected,
+    );
+    expect(
+      resolveZiweiFlow(
+        natal(o),
+        target,
+        boundary: PillarBoundary.solarTerm,
+      ).targetDay,
+      expected,
+    );
+  });
+  test(
+    'review: historical later-nine birth agrees with flow effective year',
+    () {
+      for (final strategy in [
+        LeapMonthStrategy.asNext,
+        LeapMonthStrategy.splitAfterFifteenth,
+      ]) {
+        final o = defaultOptions.copyWith(leapMonthStrategy: strategy);
+        final target = time(-217, 11, 1),
+            birth = ZiweiChart.fromZonedTime(target, o);
+        expect(birth.facts.lunarDate.monthName, MonthName.laterNine);
+        expect(birth.facts.effectiveLunarYear, -216);
+        final earlier = ZiweiChart.fromZonedTime(time(-230), o);
+        expect(
+          resolveZiweiFlow(earlier, target).effectiveTargetYear,
+          birth.facts.effectiveLunarYear,
+        );
+      }
+    },
+  );
+  test('review: direct reverse includes a partial matching segment', () {
+    final c = ZiweiChart.fromZonedTime(time(2026, 3, 1, 2), defaultOptions);
+    int b(String k) => c.starPositions[requireStarId(k)];
+    final q = ZiweiTier1ReverseQuery(
+      lucunBranch: b('lucun'),
+      hongluanBranch: b('hongluan'),
+      zuofuBranch: b('zuofu'),
+      wenchangBranch: b('wenchang'),
+      santaiBranch: b('santai'),
+    );
+    for (final r in [
+      [1, 10, 30],
+      [2, 30, 45],
+    ]) {
+      expect(
+        reverseLookupZiweiTier1(
+          start: time(2026, 3, 1, r[0], r[1]),
+          end: time(2026, 3, 1, r[0], r[2]),
+          options: defaultOptions,
+          query: q,
+        ),
+        hasLength(1),
+      );
+    }
+  });
+  test('review: later-nine advance changes effective year', () {
+    for (final strategy in [
+      LeapMonthStrategy.asNext,
+      LeapMonthStrategy.splitAfterFifteenth,
+    ]) {
+      expect(
+        resolveEffectiveLunarMonth(
+          eph.LunarDate(
+            year: -200,
+            month: 9,
+            day: 16,
+            isLeap: true,
+            monthName: MonthName.laterNine,
+          ),
+          strategy,
+        ),
+        (year: -199, month: 10),
+      );
+    }
+  });
+  test(
+    'review: physical steps retain true-solar conversion and rat metadata',
+    () {
+      final o = defaultOptions.copyWith(
+        clockMode: ZiweiClockMode.trueSolar,
+        longitudeDeg: 116.4,
+        ratHourMode: RatHourMode.currentDay,
+      );
+      final m = natal(o).createLimitManager();
+      m.setPhysicalTime(time(2026, 3, 1, 23, 40));
+      expect(
+        m.currentTarget!.ratHourSegment,
+        m.resolvedFlow!.targetRatHourSegment,
+      );
+      for (final action in [
+        m.nextDay,
+        m.nextHour,
+        m.previousHour,
+        m.previousDay,
+      ]) {
+        action();
+        final t = m.currentTarget!,
+            actual = resolveZiweiVirtualTime(
+              eph.JulianTime.fromUT1(t.jdUT1).toZonedTime(480),
+              o,
+            );
+        double jd(eph.CalendarDate v) => eph.julianDay(
+          year: v.year,
+          month: v.month,
+          day: v.day,
+          hour: v.hour,
+          minute: v.minute,
+          second: v.second,
+        );
+        expect((jd(actual) - jd(t.virtualTime)).abs() * 86400, lessThan(0.001));
+        expect(t.ratHourSegment, m.resolvedFlow!.targetRatHourSegment);
+      }
+    },
+  );
+  test('review: selecting a month from another year synchronizes timeline', () {
+    final c = natal(), m = c.createLimitManager();
+    m.setYear(2023);
+    m.selectMonth(c.timeline().getMonths(2024).first);
+    expect(m.timelineYear, 2024);
+    expect(m.manifest.currentMonthDays!, isNotEmpty);
+    expect(m.manifest.currentMonthDays!.first.solarDate.year, 2024);
+  });
+  test('review: flow JSON rejects unavailable month input', () {
+    expect(
+      () => ZiweiConfigLoader.compileJson(
+        label: 'invalid-flow',
+        flowJson:
+            '[{"key":"flow_lucun","rule":{"type":"anchor_offset","anchor":"month","offset":0}}]',
+      ),
+      throwsArgumentError,
+    );
+  });
   test('reverse fallback includes partially overlapping hour segments', () {
     for (final mode in RatHourMode.values) {
       final options = defaultOptions.copyWith(ratHourMode: mode);
