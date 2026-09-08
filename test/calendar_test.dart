@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:test/test.dart';
 import 'package:ziwei_core/ziwei_core.dart';
 
+LunarCalendarDate publicLunarResult(ResolvedZiweiBirth birth) =>
+    birth.lunarDate;
+
 void main() {
   test(
     'birth calendar/anchors match JS across historical dates and all accuracies',

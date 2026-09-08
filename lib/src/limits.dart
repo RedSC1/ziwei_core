@@ -399,7 +399,7 @@ FlowHourLimit makeFlowHourFromPillar(
         branch: (day.limit.coordinate.branch + h) % 12,
       ),
     ),
-    h,
+    segment == RatHourSegment.late ? 12 : h,
     segment,
   );
 }

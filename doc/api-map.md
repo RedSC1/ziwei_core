@@ -48,3 +48,8 @@ stepZiweiFlowDayTarget(target, 1, options: options);
 
 真太阳时／平太阳时应传入出生盘的选项，以保留虚拟时钟位置并重新换算 UT1。
 管理器自动传入，无需调用方额外处理。省略参数保留固定时差步进语义。
+
+
+民用时钟模式以 `ZiweiOptions.utcOffsetMinutes` 为排盘时区；传入其他时区的 `ZonedTime` 时保持实际瞬间不变，转换到配置时区后排盘。
+拆分子时模式下，`targetHourIndex` 和 `FlowHourLimit.hourIndex` 的晚子索引为 12，早子为 0；地支索引仍为 0。
+公开返回值类型 `LunarCalendarDate` 可直接从 `ziwei_core.dart` 导入。

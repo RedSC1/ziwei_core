@@ -308,7 +308,12 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
       resolveZiweiVirtualTime(start, options),
     );
     final ceiling =
-        maxCandidatesToExamine ?? ((endJd - startJd) * 13).ceil() + 2;
+        maxCandidatesToExamine ??
+        ((endJd - startJd) * 13).ceil() + ((endJd - startJd) / 10).ceil() + 3;
+    var nextJie = getNextJie(
+      startJd,
+      options: options.calendarOptions,
+    ).time.jdUT1;
     while (target.jdUT1 <= endJd + 1e-12) {
       inspect(target, ceiling);
       // Search every segment boundary; interactive stepping intentionally
@@ -329,7 +334,23 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
         hour: nextHour % 24,
       );
       final physical = _targetFromVirtual(boundary, options);
-      final next = ZiweiFlowTarget(physical.jdUT1, boundary);
+      var next = ZiweiFlowTarget(physical.jdUT1, boundary);
+      // Solar rule inputs can change inside a Chinese-hour segment.
+      if (nextJie <= next.jdUT1) {
+        next = ZiweiFlowTarget(
+          nextJie,
+          resolveZiweiVirtualTime(
+            JulianTime.fromUT1(
+              nextJie,
+            ).toZonedTime(options.utcOffsetMinutes.toInt()),
+            options,
+          ),
+        );
+        nextJie = getNextJie(
+          nextJie + 1,
+          options: options.calendarOptions,
+        ).time.jdUT1;
+      }
       if (next.jdUT1 <= target.jdUT1) {
         throw StateError('stepping did not advance');
       }

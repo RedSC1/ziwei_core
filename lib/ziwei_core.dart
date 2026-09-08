@@ -16,6 +16,7 @@ export 'package:ephemeris_lite/ephemeris_lite.dart'
         ZonedTime,
         CalendarDate,
         LunarDate,
+        LunarCalendarDate,
         MonthName,
         FourPillars;
 part 'src/placement.dart';

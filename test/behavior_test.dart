@@ -16,6 +16,78 @@ void main() {
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
 
+  test(
+    'review3: civil clock normalizes input offset without changing instant',
+    () {
+      final utc = ZonedTime(
+        year: 2026,
+        month: 3,
+        day: 20,
+        hour: 18,
+        offsetMinutes: 0,
+      );
+      final local = utc.toJulianTime().toZonedTime(480);
+      final a = ZiweiChart.fromZonedTime(utc, defaultOptions),
+          b = ZiweiChart.fromZonedTime(local, defaultOptions);
+      expect(a.facts.virtualTime.hour, b.facts.virtualTime.hour);
+      expect(a.facts.virtualTime.day, b.facts.virtualTime.day);
+      expect(a.facts.solarDayFromPreviousJie, b.facts.solarDayFromPreviousJie);
+      expect(a.starPositions, b.starPositions);
+    },
+  );
+  test('review3: late Zi selectable index round trips physical flow', () {
+    for (final mode in [
+      RatHourMode.currentDay,
+      RatHourMode.currentDayTomorrowStem,
+    ]) {
+      final c = natal(defaultOptions.copyWith(ratHourMode: mode)),
+          m = c.createLimitManager();
+      m.setPhysicalTime(time(2026, 3, 20, 23, 30));
+      final f = m.resolvedFlow!, old = f.hour.limit.coordinate;
+      expect(f.targetHourIndex, 12);
+      m.setHour(f.targetHourIndex);
+      expect(m.context.hour!.ratHourSegment, RatHourSegment.late);
+      expect(m.context.hour!.limit.coordinate.toJson(), old.toJson());
+    }
+  });
+  test('review3: custom solar placement reverse detects mid-hour Jie', () {
+    final module = ZiweiRuleModule(
+      label: 'solar-month',
+      patch: {
+        'natalPlacements': {
+          'wenchang': {
+            'inputs': ['solar.month_branch'],
+            'shape': [12],
+            'positions': List.generate(12, (i) => i),
+          },
+        },
+      },
+    );
+    final o = defaultOptions.copyWith(
+      rules: ZiweiRuleSelection(ruleset: ZiweiRuleset([module])),
+    );
+    final jie = eph
+        .getNextJie(
+          time(2026, 3, 1).toJulianTime().jdUT1,
+          options: o.calendarOptions,
+        )
+        .time
+        .jdUT1;
+    ZonedTime at(double delta) =>
+        eph.JulianTime.fromUT1(jie + delta / 86400).toZonedTime(480);
+    final post = ZiweiChart.fromZonedTime(at(30), o),
+        pre = ZiweiChart.fromZonedTime(at(-30), o),
+        id = requireStarId('wenchang');
+    expect(pre.starPositions[id], isNot(post.starPositions[id]));
+    final rows = reverseLookupZiweiTier1(
+      start: at(-30),
+      end: at(30),
+      options: o,
+      query: ZiweiTier1ReverseQuery(wenchangBranch: post.starPositions[id]),
+    );
+    expect(rows, isNotEmpty);
+    expect(rows.first.jdUT1, closeTo(jie, 1e-8));
+  });
   test('review: previous Jie uses its own apparent-solar offset', () {
     final o = defaultOptions.copyWith(
       clockMode: ZiweiClockMode.trueSolar,

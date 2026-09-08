@@ -162,7 +162,12 @@ ResolvedZiweiBirth resolveZiweiBirth(ZonedTime clock, ZiweiOptions options) {
 
 CalendarDate resolveZiweiVirtualTime(ZonedTime clock, ZiweiOptions options) =>
     switch (options.clockMode) {
-      ZiweiClockMode.civil => clock,
+      ZiweiClockMode.civil =>
+        clock.offsetMinutes == options.utcOffsetMinutes
+            ? clock
+            : clock.toJulianTime().toZonedTime(
+                options.utcOffsetMinutes.toInt(),
+              ),
       ZiweiClockMode.meanSolar => meanSolarTime(clock, options.longitudeDeg!),
       ZiweiClockMode.trueSolar => trueSolarTime(clock, options.longitudeDeg!),
     };
