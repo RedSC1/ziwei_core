@@ -412,14 +412,25 @@ class ZiweiTimelineProvider {
         ).time.jdUT1,
       );
     }
+    double logicalJd(double jd) {
+      final v = resolveZiweiVirtualTime(
+        JulianTime.fromUT1(
+          jd,
+        ).toZonedTime(chart.options.utcOffsetMinutes.toInt()),
+        chart.options,
+      );
+      return _jd(v) +
+          (chart.options.ratHourMode == RatHourMode.nextDay ? 1 / 24 : 0);
+    }
+
     return List.unmodifiable(
       List.generate(12, (i) {
         final m = i + 1,
             flow = makeFlowMonth(chart, year, m),
-            start = (starts[i] + chart.options.utcOffsetMinutes / 1440 + 0.5)
-                .floor(),
-            end = (starts[i + 1] + chart.options.utcOffsetMinutes / 1440 + 0.5)
-                .floor(),
+            start = (logicalJd(starts[i]) + 0.5).floor(),
+            // A partial final civil date belongs to this month too.
+            end = (logicalJd(starts[i + 1]) + 0.5)
+                .ceil(),
             c = flow.limit.coordinate;
         return MonthNode(
           lunarYear: year,

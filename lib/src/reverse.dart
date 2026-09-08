@@ -265,7 +265,25 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
         maxCandidatesToExamine ?? ((endJd - startJd) * 13).ceil() + 2;
     while (target.jdUT1 <= endJd + 1e-12) {
       inspect(target, ceiling);
-      final next = stepZiweiFlowHourTarget(target, options.ratHourMode, 1);
+      // Search every segment boundary; interactive stepping intentionally
+      // preserves the minute offset and is not suitable for interval scans.
+      final v = target.virtualTime;
+      final nextHour =
+          options.ratHourMode != RatHourMode.nextDay && v.hour == 23
+          ? 24
+          : ((v.hour + 1) ~/ 2) * 2 + 1;
+      final date = calendarDateFromJulianDay(
+        julianDay(year: v.year, month: v.month, day: v.day, hour: 12) +
+            nextHour ~/ 24,
+      );
+      final boundary = CalendarDate(
+        year: date.year,
+        month: date.month,
+        day: date.day,
+        hour: nextHour % 24,
+      );
+      final physical = _targetFromVirtual(boundary, options);
+      final next = ZiweiFlowTarget(physical.jdUT1, boundary);
       if (next.jdUT1 <= target.jdUT1) {
         throw StateError('stepping did not advance');
       }

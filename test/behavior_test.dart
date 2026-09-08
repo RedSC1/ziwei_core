@@ -15,6 +15,76 @@ void main() {
   final defaultOptions = ZiweiOptions(gender: ZiweiGender.male);
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
+  test('reverse fallback includes partially overlapping hour segments', () {
+    for (final mode in RatHourMode.values) {
+      final options = defaultOptions.copyWith(ratHourMode: mode);
+      final expected = ZiweiChart.fromZonedTime(time(2026, 3, 1, 1), options);
+      final rows = reverseLookupZiweiTier1(
+        start: time(2026, 3, 1, 0, 30),
+        end: time(2026, 3, 1, 1, 30),
+        options: options,
+        query: ZiweiTier1ReverseQuery(
+          wenchangBranch: expected.starPositions[requireStarId('wenchang')],
+        ),
+      );
+      expect(rows, hasLength(1), reason: mode.name);
+      expect(rows.single.virtualTime.hour, 1);
+      expect(rows.single.virtualTime.minute, 0);
+      final midnight = reverseLookupZiweiTier1(
+        start: time(2026, 3, 1, 23, 30),
+        end: time(2026, 3, 2, 0, 30),
+        options: options,
+        query: ZiweiTier1ReverseQuery(
+          lucunBranch: expected.starPositions[requireStarId('lucun')],
+        ),
+      );
+      expect(
+        midnight.map((r) => r.virtualTime.hour).toList(),
+        mode == RatHourMode.nextDay ? [23] : [23, 0],
+      );
+      final endpoint = reverseLookupZiweiTier1(
+        start: time(2026, 3, 1, 0, 30),
+        end: time(2026, 3, 1, 1),
+        options: options,
+        query: ZiweiTier1ReverseQuery(
+          wenchangBranch: expected.starPositions[requireStarId('wenchang')],
+        ),
+      );
+      expect(endpoint, hasLength(1));
+    }
+  });
+  test('solar month timeline contains both sides of a Jie civil date', () {
+    final chart = natal(
+      defaultOptions.copyWith(flowLimitBoundary: PillarBoundary.solarTerm),
+    );
+    final timeline = chart.timeline();
+    for (final month in timeline.getMonths(2026)) {
+      for (final delta in [-1 / 86400, 1 / 86400]) {
+        final instant = eph.JulianTime.fromUT1(
+          month.solarEndJdExclusive + delta,
+        ).toZonedTime(480);
+        final flow = resolveZiweiFlow(chart, instant);
+        final logical = eph.calendarDateFromJulianDay(
+          instant.toJulianTime().jdUT1 + 480 / 1440 + 1 / 24,
+        );
+        final days = timeline.getDays(
+          flow.effectiveTargetYear,
+          flow.targetMonth,
+        );
+        expect(
+          days.any(
+            (d) =>
+                d.day == flow.targetDay &&
+                d.solarDate.year == logical.year &&
+                d.solarDate.month == logical.month &&
+                d.solarDate.day == logical.day,
+          ),
+          isTrue,
+          reason: 'month ${month.month}, delta $delta',
+        );
+      }
+    }
+  });
   test('lunar entry matches solar and preserves original lunar input', () {
     final solar = natal(), lunar = eph.solarToLunar(time(2000));
     final c = ZiweiChart.fromLunar(lunar, defaultOptions, hour: 12);
