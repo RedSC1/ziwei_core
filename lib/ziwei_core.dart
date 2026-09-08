@@ -1,24 +1,31 @@
-// 🚀 Export main entry points
-export 'src/config/loader.dart';
-export 'src/config/ruleset.dart';
-export 'src/core/engine.dart';
-export 'src/core/reverse_lookup.dart';
-export 'src/core/limit_manager.dart'; //  Export Flow State Manager
-export 'src/core/timeline_provider.dart'; //  Export UI Timeline Generator
-export 'src/data/limit.dart';
-export 'src/data/palace.dart';
-export 'src/data/plate.dart';
-export 'src/data/star.dart';
-export 'src/enums/basic.dart';
-export 'src/enums/config_enums.dart'; // Contains Gender, Boundary etc.
-export 'src/enums/scope.dart';
-export 'src/enums/star_enums.dart';
-export 'src/enums/consts.dart'; // EXPORT CONSTS
-export 'src/core/logger.dart'; // EXPORT LOGGER
-export 'src/time/ziwei_date.dart'; // Exports BaZi/LunarDate/GanZhi from BaziCore
-export 'src/config/schemas/flow_definition.dart'; // EXPORT SCHEMAS
-export 'src/config/schemas/star_rule.dart'; // EXPORT SCHEMAS
-export 'src/models/timeline_node.dart';
-export 'package:bazi_core/bazi_core.dart' hide Decade, FlowHour, FlowDay, FlowMonth, FlowYear;
-export 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart'
-    show AstroDateTime, Location, RatHourMode;
+/// Pure Dart Ziwei engine, ported from ziwei-lite. MPL-2.0.
+library;
+
+import 'dart:convert';
+import 'dart:math' as math;
+import 'package:ephemeris_lite/ephemeris_lite.dart';
+import 'src/generated/rules.dart';
+export 'package:ephemeris_lite/ephemeris_lite.dart'
+    show
+        Accuracy,
+        CalendarOptions,
+        CalendarMode,
+        CalendarDayBoundaryMode,
+        RatHourMode,
+        PillarHistoricalMode,
+        ZonedTime,
+        CalendarDate,
+        LunarDate,
+        MonthName,
+        FourPillars;
+part 'src/placement.dart';
+part 'src/calendar.dart';
+part 'src/rules.dart';
+part 'src/plate.dart';
+part 'src/chart.dart';
+part 'src/casting.dart';
+part 'src/limits.dart';
+part 'src/flow.dart';
+part 'src/timeline.dart';
+part 'src/manager.dart';
+part 'src/reverse.dart';

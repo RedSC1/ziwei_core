@@ -1,14 +1,8 @@
-# .pubignore - Files to exclude when publishing to pub.dev
-
-# Dev tools
-.claude/
-.dart_tool/
-.vscode/
-.idea/
-
-# Build artifacts
-build/
-
-# Temporary files
-*.log
-.DS_Store
+# Release remains disabled; exclude development fixtures when preparing a package.
+test/
+tool/
+plan/
+plans/
+design/
+PLAN.md
+PLANS.md
