@@ -1,3 +1,11 @@
+## 0.14.0-dev.1 (unreleased rewrite)
+
+- Port the current ziwei-lite engine to pure Dart with ephemeris_lite as the sole runtime dependency.
+- Add complete natal/flow charts, historical timelines, custom rules, immutable modifications, casting and reverse lookup.
+- Verify against JS fixtures and the frozen 1,200-case C++ oracle; add VM/dart2js parity checks.
+- Breaking API redesign; see doc/migration.md. Publication remains disabled.
+- New ported implementation follows MPL-2.0; previous releases retain their original license.
+
 ## 0.13.0
 
 - **[新功能] Tier 1 紫微盘反查**：通过指定星曜宫位直接反推出生时间，O(1) 无循环。

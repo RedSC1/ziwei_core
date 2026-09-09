@@ -1,23 +1,13 @@
 name: ziwei_core
-description: A pure Dart, configuration-driven Ziwei Doushu (Purple Star Astrology) engine supporting a 6000-year timeline with high-precision ephemeris and JSON patching.
-version: 0.13.0
+version: 0.14.0-dev.1
+description: Pure Dart Ziwei charts, customizable rules, timelines and casting backed by ephemeris_lite.
 repository: https://github.com/RedSC1/ziwei_core
-issue_tracker: https://github.com/RedSC1/ziwei_core/issues
-topics:
-  - ziwei
-  - chinese-astrology
-  - purple-star
-  - fortune-telling
-
+publish_to: none
 environment:
-  sdk: ^3.10.8
-
-# Add regular dependencies here.
+  sdk: ^3.10.0
 dependencies:
-  tuple: ^2.0.2
-  sxwnl_spa_dart: ^0.18.5
-  bazi_core: ^0.6.7
-
+  ephemeris_lite:
+    path: ../ephemeris_lite
 dev_dependencies:
   lints: ^6.0.0
   test: ^1.25.6
