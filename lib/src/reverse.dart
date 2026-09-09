@@ -310,10 +310,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
     final ceiling =
         maxCandidatesToExamine ??
         ((endJd - startJd) * 13).ceil() + ((endJd - startJd) / 10).ceil() + 3;
-    var nextJie = getNextJie(
-      startJd,
-      options: options.calendarOptions,
-    ).time.jdUT1;
+    var nextJie = _nextPillarJieBoundary(startJd, options);
     while (target.jdUT1 <= endJd + 1e-12) {
       inspect(target, ceiling);
       // Search every segment boundary; interactive stepping intentionally
@@ -346,10 +343,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
             options,
           ),
         );
-        nextJie = getNextJie(
-          nextJie + 1,
-          options: options.calendarOptions,
-        ).time.jdUT1;
+        nextJie = _nextPillarJieBoundary(nextJie, options);
       }
       if (next.jdUT1 <= target.jdUT1) {
         throw StateError('stepping did not advance');

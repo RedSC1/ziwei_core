@@ -288,10 +288,12 @@ RatHourSegment _segment(CalendarDate v, RatHourMode mode, int branch) =>
     ? RatHourSegment.late
     : RatHourSegment.early;
 double _solarLogical(double jd, CalendarDate v, ZiweiOptions o) {
-  final previous = getPreviousJie(jd, options: o.calendarOptions),
+  final previous = _previousPillarJie(jd, o),
       jv = _jd(
         resolveZiweiVirtualTime(
-          previous.time.toZonedTime(o.utcOffsetMinutes.toInt()),
+          JulianTime.fromUT1(
+            _pillarJieBoundary(previous, o),
+          ).toZonedTime(o.utcOffsetMinutes.toInt()),
           o,
         ),
       );

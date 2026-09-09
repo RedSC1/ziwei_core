@@ -412,6 +412,14 @@ class ZiweiTimelineProvider {
         ).time.jdUT1,
       );
     }
+    final boundaries = starts
+        .map(
+          (jd) => _pillarJieBoundary(
+            getNextJie(jd - 1, options: chart.options.calendarOptions),
+            chart.options,
+          ),
+        )
+        .toList();
     double logicalJd(double jd) {
       final v = resolveZiweiVirtualTime(
         JulianTime.fromUT1(
@@ -427,9 +435,9 @@ class ZiweiTimelineProvider {
       List.generate(12, (i) {
         final m = i + 1,
             flow = makeFlowMonth(chart, year, m),
-            start = (logicalJd(starts[i]) + 0.5).floor(),
+            start = (logicalJd(boundaries[i]) + 0.5).floor(),
             // A partial final civil date belongs to this month too.
-            end = (logicalJd(starts[i + 1]) + 0.5)
+            end = (logicalJd(boundaries[i + 1]) + 0.5)
                 .ceil(),
             c = flow.limit.coordinate;
         return MonthNode(
@@ -447,8 +455,8 @@ class ZiweiTimelineProvider {
           stem: c.stem,
           branch: c.branch,
           displayBranch: (flow.effectiveMonth + 1) % 12,
-          solarStartJd: starts[i],
-          solarEndJdExclusive: starts[i + 1],
+          solarStartJd: boundaries[i],
+          solarEndJdExclusive: boundaries[i + 1],
           firstCivilDayNumber: start,
           dayCount: end - start,
         );

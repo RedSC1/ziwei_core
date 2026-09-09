@@ -26,6 +26,9 @@ class ZiweiOptions {
     ZiweiRuleSelection? rules,
   }) : rules = rules ?? ZiweiRuleSelection(),
        calendarOptions = calendarOptions ?? CalendarOptions() {
+    if (utcOffsetMinutes != utcOffsetMinutes.truncateToDouble()) {
+      throw ArgumentError('utcOffsetMinutes must be an integer');
+    }
     if (longitudeDeg != null &&
         (!longitudeDeg!.isFinite || longitudeDeg!.abs() > 180)) {
       throw RangeError('longitudeDeg must be within ±180 degrees');
@@ -223,20 +226,7 @@ ResolvedZiweiBirth resolveZiweiBirthFromInstant(
     day: solar.day,
     hour: solar.hour,
   );
-  final previous = getPreviousJie(jd, options: options.calendarOptions);
-  final jieVirtual = _jd(
-    resolveZiweiVirtualTime(
-      previous.time.toZonedTime(options.utcOffsetMinutes.toInt()),
-      options,
-    ),
-  );
-  final day =
-      (_logical(vjd, options.ratHourMode) + 0.5).floor() -
-      (_logical(jieVirtual, options.ratHourMode) + 0.5).floor() +
-      1;
-  if (day < 1 || day > 33) {
-    throw StateError('invalid solar day from previous Jie: $day');
-  }
+  final day = solarDayFromPreviousJie(jd, virtual, options);
   final yearPillar = options.wuHuDunYearBoundary == PillarBoundary.lunar
       ? lunarPillars.year
       : solar.year;
@@ -339,4 +329,37 @@ double _virtualToUt1(CalendarDate v, ZiweiOptions o) {
     ZiweiClockMode.trueSolar =>
       localApparentToMeanSolarTime(jd, o.longitudeDeg!) - o.longitudeDeg! / 360,
   };
+}
+
+// Keep assigned UTC+08 civil-day boundaries consistent with four-pillar calculation.
+double _pillarJieBoundary(CalendarSolarTerm term, ZiweiOptions options) {
+  final historical =
+      options.pillarHistoricalMode == PillarHistoricalMode.on ||
+      (options.pillarHistoricalMode == PillarHistoricalMode.followCalendar &&
+          options.calendarOptions.mode == CalendarMode.historical);
+  final day = historical
+      ? historicalEventCivilDay(HistoricalEventKind.solarTerm, term.time.jdUT1)
+      : null;
+  return day == null ? term.time.jdUT1 : day - 0.5 - 480 / 1440;
+}
+
+CalendarSolarTerm _previousPillarJie(double jd, ZiweiOptions options) {
+  var term = getPreviousJie(jd + 1, options: options.calendarOptions);
+  if (_pillarJieBoundary(term, options) > jd + 1e-9) {
+    term = getPreviousJie(
+      term.time.jdUT1 - 10,
+      options: options.calendarOptions,
+    );
+  }
+  return term;
+}
+
+double _nextPillarJieBoundary(double jd, ZiweiOptions options) {
+  var term = _previousPillarJie(jd, options);
+  for (var i = 0; i < 4; i++) {
+    term = getNextJie(term.time.jdUT1 + 1, options: options.calendarOptions);
+    final boundary = _pillarJieBoundary(term, options);
+    if (boundary > jd + 1e-9) return boundary;
+  }
+  throw StateError('next pillar Jie boundary not found');
 }
