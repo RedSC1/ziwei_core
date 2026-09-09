@@ -319,6 +319,67 @@ void main() {
     }
   });
 
+  test(
+    'Jie probes deduplicate unchanged slots but retain changed chart states',
+    () {
+      final base = defaultOptions;
+      final jie = eph
+          .getNextJie(
+            time(2026, 3, 1).toJulianTime().jdUT1,
+            options: base.calendarOptions,
+          )
+          .time
+          .jdUT1;
+      ZonedTime at(int seconds) =>
+          eph.JulianTime.fromUT1(jie + seconds / 86400).toZonedTime(480);
+      final module = ZiweiRuleModule(
+        label: 'changed-solar',
+        patch: {
+          'natalPlacements': {
+            'wenchang': {
+              'inputs': ['solar.month_branch'],
+              'shape': [12],
+              'positions': List.generate(12, (i) => i),
+            },
+          },
+        },
+      );
+      for (final changed in [false, true]) {
+        final options = changed
+            ? base.copyWith(
+                rules: base.rules.copyWith(ruleset: ZiweiRuleset([module])),
+              )
+            : base;
+        final before = ZiweiChart.fromZonedTime(at(-30), options),
+            after = ZiweiChart.fromZonedTime(at(30), options);
+        final query = ZiweiTier1ReverseQuery(
+          lucunBranch: before.starPositions[findStarId('lucun')!],
+        );
+        List<ZiweiReverseCandidate> search(int start, int end) =>
+            reverseLookupZiweiTier1(
+              start: at(start),
+              end: at(end),
+              options: options,
+              query: query,
+            );
+        final rows = search(-30, 30);
+        expect(rows.length, changed ? 2 : 1);
+        expect(rows.first.jdUT1, closeTo(at(-30).toJulianTime().jdUT1, 1e-9));
+        if (changed) {
+          expect(before.starPositions, isNot(after.starPositions));
+          expect(rows.last.jdUT1, closeTo(jie, 1e-9));
+        }
+        expect(search(0, 30).length, 1);
+        expect(search(-30, 0).length, changed ? 2 : 1);
+        final wide = search(-7200, 7200);
+        expect(wide.length, greaterThanOrEqualTo(3));
+        if (!changed) {
+          expect(wide.where((r) => (r.jdUT1 - jie).abs() < 1e-9), isEmpty);
+        }
+      }
+    },
+  );
+
   test('legacy JSON rule typos cannot fall through to optional defaults', () {
     for (final rule in [
       {'type': 'anchor_offset', 'anchor': 'month', 'offest': 2},

@@ -134,7 +134,12 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
       );
   final results = <ZiweiReverseCandidate>[], seen = <String>{};
   var examined = 0;
-  void inspect(ZiweiFlowTarget target, int ceiling) {
+  String? previousState;
+  void inspect(
+    ZiweiFlowTarget target,
+    int ceiling, {
+    bool insideHourProbe = false,
+  }) {
     if (examined++ >= ceiling) {
       throw RangeError('reverse lookup candidate ceiling exceeded');
     }
@@ -142,7 +147,21 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
     final chart = ZiweiChart.fromResolvedBirth(
       resolveZiweiBirthFromInstant(target.jdUT1, target.virtualTime, options),
     );
-    if (!query.matches(chart)) return;
+    final placementAnchors = chart.anchors.toJson()
+      ..remove('solarTerm')
+      ..remove('lunar');
+    final state = jsonEncode([
+      placementAnchors,
+      chart.bodyPalace,
+      chart.lifeMaster,
+      chart.bodyMaster,
+      chart.palaceStems,
+      chart.starPositions,
+      chart.birthYearTransformations,
+    ]);
+    final duplicate = insideHourProbe && state == previousState;
+    previousState = state;
+    if (duplicate || !query.matches(chart)) return;
     final h = ganzhiBranch(chart.facts.solarTermPillars.hour),
         key = '${target.jdUT1.toStringAsFixed(10)}:$h';
     if (!seen.add(key)) return;
@@ -311,8 +330,9 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
         maxCandidatesToExamine ??
         ((endJd - startJd) * 13).ceil() + ((endJd - startJd) / 10).ceil() + 3;
     var nextJie = _nextPillarJieBoundary(startJd, options);
+    var insideHourProbe = false;
     while (target.jdUT1 <= endJd + 1e-12) {
-      inspect(target, ceiling);
+      inspect(target, ceiling, insideHourProbe: insideHourProbe);
       // Search every segment boundary; interactive stepping intentionally
       // preserves the minute offset and is not suitable for interval scans.
       final v = target.virtualTime;
@@ -333,6 +353,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
       final physical = _targetFromVirtual(boundary, options);
       var next = ZiweiFlowTarget(physical.jdUT1, boundary);
       // Solar rule inputs can change inside a Chinese-hour segment.
+      insideHourProbe = nextJie < next.jdUT1;
       if (nextJie <= next.jdUT1) {
         next = ZiweiFlowTarget(
           nextJie,
