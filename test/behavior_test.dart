@@ -17,6 +17,114 @@ void main() {
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
 
+  test('legacy JSON rule typos cannot fall through to optional defaults', () {
+    for (final rule in [
+      {'type': 'anchor_offset', 'anchor': 'month', 'offest': 2},
+      {'type': 'constant', 'vaule': 4},
+      {
+        'type': 'pipeline',
+        'steps': [
+          {'type': 'constant', 'value': 2, 'vaule': 4},
+        ],
+      },
+    ]) {
+      expect(() => compileZiweiJsonPlacement(rule), throwsArgumentError);
+    }
+    expect(
+      compileZiweiJsonPlacement({
+        'type': 'constant',
+        'value': 4,
+        '_comment': 'note',
+      }).positions,
+      [4],
+    );
+  });
+  test(
+    'fixed rule schemas reject unknown fields instead of silently ignoring them',
+    () {
+      final master = {
+        'input': 'anchor.life',
+        'stars': List.filled(12, 'ziwei'),
+      };
+      for (final patch in <Map<String, dynamic>>[
+        {
+          'masters': {'bdy': master},
+        },
+        {
+          'masters': {'life': master, 'bdy': master},
+        },
+        {
+          'mastrs': {'life': master},
+        },
+        {
+          'masters': {
+            'body': {...master, 'inpt': 'anchor.life'},
+          },
+        },
+        {
+          'stars': [
+            {'key': 'custom', 'natal': true, 'natel': true},
+          ],
+        },
+        {
+          'natalPlacements': {
+            'wenchang': {
+              'inputs': [],
+              'shape': [],
+              'positions': [0],
+              'positons': [1],
+            },
+          },
+        },
+      ]) {
+        expect(
+          () => ZiweiRuleModule(label: 'invalid-schema', patch: patch),
+          throwsArgumentError,
+        );
+      }
+      final table = {for (var i = 0; i < 12; i++) '$i': 'ziwei'};
+      for (final raw in [
+        {
+          'shen_zh': {'table': table},
+        },
+        {
+          'shen_zhu': {'table': table, 'boundry': 'solar'},
+        },
+        {
+          'shen_zhu': {
+            'table': {...table, '12': 'ziwei'},
+          },
+        },
+      ]) {
+        expect(
+          () => ZiweiConfigLoader.compileJson(
+            label: 'invalid-schema',
+            mastersJson: jsonEncode(raw),
+          ),
+          throwsArgumentError,
+        );
+      }
+      expect(
+        ZiweiRuleModule(
+          label: 'valid',
+          patch: {
+            'masters': {'life': master, 'body': master},
+          },
+        ).patch['masters'],
+        isNotEmpty,
+      );
+      expect(
+        ZiweiConfigLoader.compileJson(
+          label: 'valid',
+          mastersJson: jsonEncode({
+            '_comment': 'note',
+            'shen_zhu': {'table': table, '_comment': 'note'},
+          }),
+        ).patch['masters'],
+        isNotEmpty,
+      );
+    },
+  );
   test('sihua rejects unknown transformation keys at both entry points', () {
     for (final row in [
       {'kua': 'ziwei'},

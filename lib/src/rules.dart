@@ -173,10 +173,28 @@ class ZiweiRuleModule {
   final Map<String, dynamic> patch;
 }
 
+void _checkKeys(Map value, Iterable<String> allowed, String path) {
+  for (final key in value.keys) {
+    if (!allowed.contains(key)) {
+      throw ArgumentError('unknown $path field: $key');
+    }
+  }
+}
+
 Map<String, dynamic> _normalizePatch(Map<String, dynamic> patch) {
   final result = _object(_canonicalNumbers(jsonDecode(jsonEncode(patch))));
+  _checkKeys(result, [
+    'stars',
+    'natalPlacements',
+    'flowPlacements',
+    'brightness',
+    'brightnessLabels',
+    'sihua',
+    'masters',
+  ], 'rule patch');
   final seen = <String>{};
   for (final s in result['stars'] ?? []) {
+    _checkKeys(_object(s), ['key', 'category', 'natal'], 'star');
     if (s['key'] is! String ||
         !seen.add(_nonempty(s['key'])) ||
         s['natal'] is! bool) {
@@ -187,6 +205,12 @@ Map<String, dynamic> _normalizePatch(Map<String, dynamic> patch) {
   for (final name in ['natalPlacements', 'flowPlacements']) {
     for (final e in _object(result[name] ?? {}).entries) {
       _nonempty(e.key);
+      _checkKeys(_object(e.value), [
+        'inputs',
+        'shape',
+        'positions',
+        'starId',
+      ], 'placement');
       final compiled = ZiweiCompiledPlacement.fromJson(_object(e.value));
       for (var i = 0; i < compiled.inputs.length; i++) {
         final input = compiled.inputs[i];
@@ -221,7 +245,10 @@ Map<String, dynamic> _normalizePatch(Map<String, dynamic> patch) {
       _starReference(entry.value);
     }
   }
-  for (final v in _object(result['masters'] ?? {}).values) {
+  final masterValues = _object(result['masters'] ?? {});
+  _checkKeys(masterValues, ['life', 'body'], 'masters');
+  for (final v in masterValues.values) {
+    _checkKeys(_object(v), ['input', 'stars'], 'master lookup');
     if (![
           'anchor.life',
           'lunar.year_branch',
@@ -578,6 +605,22 @@ ZiweiCompiledPlacement compileZiweiJsonPlacement(Object rule) {
   void collect(Object raw, String inherited, int depth) {
     if (depth > 128) throw ArgumentError('rule nesting limit exceeded');
     final r = _object(raw), b = boundary(r, inherited);
+    final fields = switch (r['type']) {
+      'constant' => ['value'],
+      'pipeline' => ['steps'],
+      'anchor_offset' => ['anchor', 'offset', 'direction'],
+      'lookup' => ['anchor', 'table', 'offset', 'direction'],
+      'lookup_offset' => [
+        'anchor',
+        'table',
+        'shift_anchor',
+        'offset',
+        'direction',
+      ],
+      _ => throw ArgumentError('unsupported rule type: ${r['type']}'),
+    };
+    _checkKeys(r, ['type', 'boundary', '_comment', ...fields], 'JSON rule');
+
     if (r['type'] == 'constant') return;
     if (r['type'] == 'pipeline') {
       for (final step in r['steps'] as List) {
@@ -831,9 +874,16 @@ class ZiweiConfigLoader {
     final masters = <String, dynamic>{};
     if (mastersJson != null) {
       final r = _object(jsonDecode(mastersJson));
+      _checkKeys(r, ['ming_zhu', 'shen_zhu', '_comment'], 'mastersJson');
       for (final key in ['ming_zhu', 'shen_zhu']) {
         if (r[key] == null) continue;
         final v = _object(r[key]);
+        _checkKeys(v, ['boundary', 'table', '_comment'], 'master rule');
+        _checkKeys(
+          _object(v['table']),
+          List.generate(12, (i) => '$i'),
+          'master table',
+        );
         if (v.containsKey('boundary') &&
             v['boundary'] != 'solar' &&
             v['boundary'] != 'lunar') {
