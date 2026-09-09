@@ -226,68 +226,74 @@ void main() {
           },
         },
       );
-      for (final mode in PillarHistoricalMode.values) {
-        for (final offset in [480, 0]) {
-          final options = ZiweiOptions(
-            gender: ZiweiGender.male,
-            pillarHistoricalMode: mode,
-            calendarOptions: CalendarOptions(
-              utcOffsetMinutes: offset.toDouble(),
-            ),
-            flowLimitBoundary: PillarBoundary.solarTerm,
-            rules: ZiweiRuleSelection(ruleset: ZiweiRuleset([module])),
-          );
-          final term = eph.getNextJie(
-            time(100, 1, 1).toJulianTime().jdUT1,
-            options: options.calendarOptions,
-          );
-          final boundary = mode == PillarHistoricalMode.off
-              ? term.time.jdUT1
-              : eph.historicalEventCivilDay(
-                      eph.HistoricalEventKind.solarTerm,
-                      term.time.jdUT1,
-                    )! -
-                    0.5 -
-                    480 / 1440;
-          ZonedTime at(int seconds) => eph.JulianTime.fromUT1(
-            boundary + seconds / 86400,
-          ).toZonedTime(offset);
-          final chart = ZiweiChart.fromZonedTime(time(99, 1, 1), options);
-          final pre = ZiweiChart.fromZonedTime(at(-1800), options),
-              post = ZiweiChart.fromZonedTime(at(1800), options),
-              id = findStarId('wenchang')!;
-          expect(pre.starPositions[id], isNot(post.starPositions[id]));
-          final rows = reverseLookupZiweiTier1(
-            start: at(-1800),
-            end: at(1800),
-            options: options,
-            query: ZiweiTier1ReverseQuery(
-              wenchangBranch: post.starPositions[id],
-            ),
-          );
-          expect(rows.any((r) => (r.jdUT1 - boundary).abs() < 1e-8), isTrue);
-          final months = chart.timeline().getMonths(99);
-          expect(
-            months.firstWhere((m) => m.month == 12).solarStartJd,
-            closeTo(boundary, 1e-8),
-          );
-          for (final seconds in [-1800, 1800]) {
-            final instant = at(seconds),
-                flow = resolveZiweiFlow(chart, instant),
-                jd = instant.toJulianTime().jdUT1;
-            final row = months.firstWhere(
-              (m) => m.solarStartJd <= jd && m.solarEndJdExclusive > jd,
+      for (final probeMonth in [1, 9]) {
+        for (final mode in PillarHistoricalMode.values) {
+          for (final offset in [480, 0]) {
+            final options = ZiweiOptions(
+              gender: ZiweiGender.male,
+              pillarHistoricalMode: mode,
+              calendarOptions: CalendarOptions(
+                utcOffsetMinutes: offset.toDouble(),
+              ),
+              flowLimitBoundary: PillarBoundary.solarTerm,
+              rules: ZiweiRuleSelection(ruleset: ZiweiRuleset([module])),
             );
-            expect(row.month, flow.targetMonth);
+            final term = eph.getNextJie(
+              time(100, probeMonth, 1).toJulianTime().jdUT1,
+              options: options.calendarOptions,
+            );
+            final boundary = mode == PillarHistoricalMode.off
+                ? term.time.jdUT1
+                : eph.historicalEventCivilDay(
+                        eph.HistoricalEventKind.solarTerm,
+                        term.time.jdUT1,
+                      )! -
+                      0.5 -
+                      480 / 1440;
+            ZonedTime at(int seconds) => eph.JulianTime.fromUT1(
+              boundary + seconds / 86400,
+            ).toZonedTime(offset);
+            final chart = ZiweiChart.fromZonedTime(time(99, 1, 1), options);
+            final pre = ZiweiChart.fromZonedTime(at(-1800), options),
+                post = ZiweiChart.fromZonedTime(at(1800), options),
+                id = findStarId('wenchang')!;
+            expect(pre.starPositions[id], isNot(post.starPositions[id]));
+            final rows = reverseLookupZiweiTier1(
+              start: at(-1800),
+              end: at(1800),
+              options: options,
+              query: ZiweiTier1ReverseQuery(
+                wenchangBranch: post.starPositions[id],
+              ),
+            );
+            expect(rows.any((r) => (r.jdUT1 - boundary).abs() < 1e-8), isTrue);
+            final months = chart.timeline().getMonths(
+              probeMonth == 1 ? 99 : 100,
+            );
             expect(
-              chart
-                  .timeline()
-                  .getDays(flow.effectiveTargetYear, flow.targetMonth)
-                  .any((d) => d.day == flow.targetDay),
-              isTrue,
+              months
+                  .firstWhere((m) => m.month == (probeMonth == 1 ? 12 : 8))
+                  .solarStartJd,
+              closeTo(boundary, 1e-8),
             );
+            for (final seconds in [-1800, 1800]) {
+              final instant = at(seconds),
+                  flow = resolveZiweiFlow(chart, instant),
+                  jd = instant.toJulianTime().jdUT1;
+              final row = months.firstWhere(
+                (m) => m.solarStartJd <= jd && m.solarEndJdExclusive > jd,
+              );
+              expect(row.month, flow.targetMonth);
+              expect(
+                chart
+                    .timeline()
+                    .getDays(flow.effectiveTargetYear, flow.targetMonth)
+                    .any((d) => d.day == flow.targetDay),
+                isTrue,
+              );
+            }
+            expect(post.facts.solarDayFromPreviousJie, 1);
           }
-          expect(post.facts.solarDayFromPreviousJie, 1);
         }
       }
     },

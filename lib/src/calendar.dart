@@ -332,28 +332,18 @@ double _virtualToUt1(CalendarDate v, ZiweiOptions o) {
 }
 
 // Keep assigned UTC+08 civil-day boundaries consistent with four-pillar calculation.
-double _pillarJieBoundary(CalendarSolarTerm term, ZiweiOptions options) {
-  final historical =
-      options.pillarHistoricalMode == PillarHistoricalMode.on ||
-      (options.pillarHistoricalMode == PillarHistoricalMode.followCalendar &&
-          options.calendarOptions.mode == CalendarMode.historical);
-  final day = historical
-      ? historicalEventCivilDay(HistoricalEventKind.solarTerm, term.time.jdUT1)
-      : null;
-  return day == null ? term.time.jdUT1 : day - 0.5 - 480 / 1440;
-}
-
-CalendarSolarTerm _previousPillarJie(double jd, ZiweiOptions options) {
-  var term = getPreviousJie(jd + 1, options: options.calendarOptions);
-  if (_pillarJieBoundary(term, options) > jd + 1e-9) {
-    term = getPreviousJie(
-      term.time.jdUT1 - 10,
+double _pillarJieBoundary(CalendarSolarTerm term, ZiweiOptions options) =>
+    getPillarTermBoundary(
+      term,
       options: options.calendarOptions,
+      pillarHistoricalMode: options.pillarHistoricalMode,
     );
-  }
-  return term;
-}
-
+CalendarSolarTerm _previousPillarJie(double jd, ZiweiOptions options) =>
+    getPreviousPillarJie(
+      jd,
+      options: options.calendarOptions,
+      pillarHistoricalMode: options.pillarHistoricalMode,
+    );
 double _nextPillarJieBoundary(double jd, ZiweiOptions options) {
   var term = _previousPillarJie(jd, options);
   for (var i = 0; i < 4; i++) {
