@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:test/test.dart';
 import 'package:ziwei_core/ziwei_core.dart';
 import 'package:ephemeris_lite/ephemeris_lite.dart' as eph;
@@ -74,6 +75,141 @@ void main() {
       }
     }
   });
+
+  test(
+    'lookup tables reject keys outside their anchor domain, including nested rules',
+    () {
+      final stems = [
+        'jia',
+        'yi',
+        'bing',
+        'ding',
+        'wu',
+        'ji',
+        'geng',
+        'xin',
+        'ren',
+        'gui',
+      ];
+      final branches = [
+        'zi',
+        'chou',
+        'yin',
+        'mao',
+        'chen',
+        'si',
+        'wu',
+        'wei',
+        'shen',
+        'you',
+        'xu',
+        'hai',
+      ];
+      for (final (anchor, boundary, keys) in [
+        ('year_stem', 'lunar', stems),
+        ('month_stem', 'solar', stems),
+        ('year_branch', 'lunar', branches),
+        ('ming', 'lunar', branches),
+        ('wuxingjv', 'lunar', ['water2', 'wood3', 'metal4', 'earth5', 'fire6']),
+        ('month', 'lunar', List.generate(12, (i) => '$i')),
+        ('day', 'lunar', List.generate(30, (i) => '$i')),
+        ('day', 'solar', List.generate(33, (i) => '$i')),
+      ]) {
+        final table = {for (var i = 0; i < keys.length; i++) keys[i]: i % 12};
+        for (final type in ['lookup', 'lookup_offset']) {
+          final rule = {
+            'type': type,
+            'anchor': anchor,
+            'boundary': boundary,
+            'table': table,
+            if (type == 'lookup_offset') 'shift_anchor': 'hour',
+          };
+          expect(compileZiweiJsonPlacement(rule).positions, isNotEmpty);
+          final invalid = {
+            ...rule,
+            'table': {...table, 'jiaa': 0},
+          };
+          final error = throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('table field: jiaa'),
+            ),
+          );
+          expect(() => compileZiweiJsonPlacement(invalid), error);
+          expect(
+            () => compileZiweiJsonPlacement({
+              'type': 'pipeline',
+              'steps': [invalid],
+            }),
+            error,
+          );
+          if (anchor == 'day') {
+            expect(
+              () => compileZiweiJsonPlacement({
+                ...rule,
+                'table': {...table, '${keys.length}': 0},
+              }),
+              throwsArgumentError,
+            );
+            final inherited = {...rule}..remove('boundary');
+            expect(
+              compileZiweiJsonPlacement({
+                'type': 'pipeline',
+                'boundary': boundary,
+                'steps': [inherited],
+              }).positions,
+              compileZiweiJsonPlacement(rule).positions,
+            );
+          }
+          final missing = {...table}..remove(keys.first);
+          expect(
+            () => compileZiweiJsonPlacement({...rule, 'table': missing}),
+            throwsArgumentError,
+          );
+        }
+      }
+    },
+  );
+
+  test(
+    'complete legacy natal and flow star configuration remains loadable',
+    () {
+      final fixture = jsonDecode(
+        File('test/fixtures/legacy-stars.json').readAsStringSync(),
+      );
+      final ruleset = ZiweiConfigLoader.overrideWith(
+        ZiweiRuleset(),
+        label: 'legacy-complete',
+        starsJson: jsonEncode(fixture['stars']),
+        flowJson: jsonEncode(fixture['flow']),
+      );
+      final selected = selectZiweiRules(ZiweiRuleSelection(ruleset: ruleset));
+      expect(selected.catalog.length, 159);
+      for (final raw in fixture['stars'] as List) {
+        if (raw['type'] == 'bad') {
+          expect(
+            selected.catalog.firstWhere((s) => s.key == raw['key']).category,
+            'malefic',
+          );
+        }
+      }
+      final chart = ZiweiChart.fromZonedTime(
+        time(2003, 3, 13, 14),
+        defaultOptions.copyWith(
+          rules: defaultOptions.rules.copyWith(ruleset: ruleset),
+        ),
+      );
+      final dynamic = dynamicChartForTime(chart, time(2033, 12, 22)).chart;
+      for (final raw in fixture['flow'] as List) {
+        final star = dynamic.getFlowStar(findStarId(raw['key'])!)!;
+        expect(star.branch, inInclusiveRange(0, 11));
+        if (raw['brightness'] != null) {
+          expect(star.brightness, raw['brightness'][star.branch]);
+        }
+      }
+    },
+  );
 
   test('legacy JSON rule typos cannot fall through to optional defaults', () {
     for (final rule in [

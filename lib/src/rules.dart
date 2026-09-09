@@ -624,7 +624,15 @@ ZiweiCompiledPlacement compileZiweiJsonPlacement(Object rule) {
       }
       return;
     }
-    add(_source(r['anchor'], b));
+    final source = _source(r['anchor'], b);
+    add(source);
+    if (r['type'] == 'lookup' || r['type'] == 'lookup_offset') {
+      _checkKeys(
+        _object(r['table']),
+        List.generate(_domain(source), (i) => _lookupKey(source, i)),
+        "${r['type']}.table",
+      );
+    }
     if (r['type'] == 'lookup_offset') add(_source(r['shift_anchor'], b));
     if (r['direction'] == 'gender_shun_ni') {
       add('birth.gender');
@@ -838,6 +846,8 @@ class ZiweiConfigLoader {
                   'changsheng12',
                 ].contains(category)
                 ? 'cycle'
+                : category == 'bad'
+                ? 'malefic'
                 : category,
         });
         final compiled = compileZiweiJsonPlacement(r['rule']);
