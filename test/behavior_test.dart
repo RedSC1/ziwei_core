@@ -17,6 +17,64 @@ void main() {
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
 
+  test('legacy star declarations validate raw fields before projection', () {
+    final rule = {'type': 'constant', 'value': 4};
+    for (final isNatal in [true, false]) {
+      ZiweiRuleModule compile(Map<String, dynamic> star) =>
+          ZiweiConfigLoader.compileJson(
+            label: 'raw-star-schema',
+            starsJson: isNatal ? jsonEncode([star]) : null,
+            flowJson: isNatal ? null : jsonEncode([star]),
+          );
+      for (final typo in ['brighness', 'tyep', 'catgory', 'natel', 'rulle']) {
+        expect(
+          () => compile({'key': 'extra', 'rule': rule, typo: 0}),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('unknown JSON'),
+            ),
+          ),
+        );
+      }
+      for (final categoryKey in ['type', 'category']) {
+        final patch = compile({
+          'key': 'extra',
+          'rule': rule,
+          categoryKey: 'minor',
+          '_comment': 'supported metadata',
+          if (!isNatal) 'brightness': List.filled(12, 6),
+        }).patch;
+        expect(patch['stars'], [
+          {'key': 'extra', 'category': 'minor', 'natal': isNatal},
+        ]);
+        expect(
+          patch[isNatal
+              ? 'natalPlacements'
+              : 'flowPlacements']['extra']['positions'],
+          [4],
+        );
+        if (!isNatal) expect(patch['brightness']['extra'], List.filled(12, 6));
+      }
+      if (isNatal) {
+        expect(
+          () => compile({
+            'key': 'extra',
+            'rule': rule,
+            'brightness': List.filled(12, 6),
+          }),
+          throwsArgumentError,
+        );
+      } else {
+        expect(
+          () => compile({'key': 'extra', 'rule': rule, 'brightness': null}),
+          throwsA(isA<TypeError>()),
+        );
+      }
+    }
+  });
+
   test('legacy JSON rule typos cannot fall through to optional defaults', () {
     for (final rule in [
       {'type': 'anchor_offset', 'anchor': 'month', 'offest': 2},
@@ -42,6 +100,24 @@ void main() {
   test(
     'fixed rule schemas reject unknown fields instead of silently ignoring them',
     () {
+      expect(
+        () => ZiweiCompiledPlacement.fromJson({
+          'inputs': [],
+          'shape': [],
+          'positions': [0],
+          'positons': [1],
+        }),
+        throwsArgumentError,
+      );
+      final compiled = ZiweiCompiledPlacement.fromJson({
+        'inputs': [],
+        'shape': [],
+        'positions': [4],
+        'starId': 7,
+      });
+      expect(compiled.positions, [4]);
+      expect(compiled.starId, 7);
+      expect(ZiweiCompiledPlacement.fromJson(compiled.toJson()).positions, [4]);
       final master = {
         'input': 'anchor.life',
         'stars': List.filled(12, 'ziwei'),

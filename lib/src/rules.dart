@@ -125,13 +125,15 @@ class ZiweiCompiledPlacement {
       throw ArgumentError('invalid placement table');
     }
   }
-  factory ZiweiCompiledPlacement.fromJson(Map value, {int? starId}) =>
-      ZiweiCompiledPlacement(
-        inputs: (value['inputs'] as List).cast<String>(),
-        shape: (value['shape'] as List).cast<int>(),
-        positions: (value['positions'] as List).cast<int>(),
-        starId: starId ?? value['starId'] ?? -1,
-      );
+  factory ZiweiCompiledPlacement.fromJson(Map value, {int? starId}) {
+    _checkKeys(value, ['inputs', 'shape', 'positions', 'starId'], 'placement');
+    return ZiweiCompiledPlacement(
+      inputs: (value['inputs'] as List).cast<String>(),
+      shape: (value['shape'] as List).cast<int>(),
+      positions: (value['positions'] as List).cast<int>(),
+      starId: starId ?? value['starId'] ?? -1,
+    );
+  }
   final List<String> inputs;
   final List<int> shape, positions;
   final int starId;
@@ -205,12 +207,6 @@ Map<String, dynamic> _normalizePatch(Map<String, dynamic> patch) {
   for (final name in ['natalPlacements', 'flowPlacements']) {
     for (final e in _object(result[name] ?? {}).entries) {
       _nonempty(e.key);
-      _checkKeys(_object(e.value), [
-        'inputs',
-        'shape',
-        'positions',
-        'starId',
-      ], 'placement');
       final compiled = ZiweiCompiledPlacement.fromJson(_object(e.value));
       for (var i = 0; i < compiled.inputs.length; i++) {
         final input = compiled.inputs[i];
@@ -820,6 +816,14 @@ class ZiweiConfigLoader {
     void parseStars(String source, bool isNatal) {
       for (final raw in jsonDecode(source) as List) {
         final r = _object(raw);
+        _checkKeys(r, [
+          'key',
+          'type',
+          'category',
+          'rule',
+          '_comment',
+          if (!isNatal) 'brightness',
+        ], 'JSON ${isNatal ? 'natal' : 'flow'} star');
         final category = r['type'] ?? r['category'];
         stars.add({
           'key': r['key'],
@@ -838,7 +842,7 @@ class ZiweiConfigLoader {
         });
         final compiled = compileZiweiJsonPlacement(r['rule']);
         (isNatal ? natal : flow)[r['key']] = compiled.toJson();
-        if (!isNatal && r['brightness'] != null) {
+        if (!isNatal && r.containsKey('brightness')) {
           brightness[r['key']] = (r['brightness'] as List)
               .map(_jsonNumber)
               .toList();
