@@ -76,6 +76,7 @@ class ZiweiLimitManager {
     isLeap: _context.month?.isLeap ?? false,
     effectiveMonth: _context.month?.effectiveMonth,
     effectiveYear: _context.month?.effectiveYear,
+    sequence: _context.month?.sequence,
     day: _context.day?.day,
   );
   void _clearTarget() {
@@ -155,6 +156,7 @@ class ZiweiLimitManager {
     bool isLeap = false,
     int? effectiveMonth,
     int? effectiveYear,
+    int? sequence,
   }) {
     if (_timelineYear == null) throw StateError('select a year first');
     final n = timeline
@@ -164,7 +166,8 @@ class ZiweiLimitManager {
               v.month == month &&
               v.isLeap == isLeap &&
               (effectiveMonth == null || v.effectiveMonth == effectiveMonth) &&
-              (effectiveYear == null || v.effectiveYear == effectiveYear),
+              (effectiveYear == null || v.effectiveYear == effectiveYear) &&
+              (sequence == null || v.sequence == sequence),
         )
         .firstOrNull;
     if (n == null) throw RangeError('flow month absent');
@@ -230,6 +233,7 @@ class ZiweiLimitManager {
           isLeap: m.isLeap,
           effectiveMonth: m.effectiveMonth,
           effectiveYear: m.effectiveYear,
+          sequence: m.sequence,
         )
         .any(
           (v) =>
@@ -266,6 +270,7 @@ class ZiweiLimitManager {
           isLeap: m.isLeap,
           effectiveMonth: m.effectiveMonth,
           effectiveYear: m.effectiveYear,
+          sequence: m.sequence,
         )
         .where((v) => v.day == day)
         .firstOrNull;

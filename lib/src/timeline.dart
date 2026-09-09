@@ -462,6 +462,7 @@ class ZiweiTimelineProvider {
     bool isLeap = false,
     int? effectiveMonth,
     int? effectiveYear,
+    int? sequence,
   }) {
     final node = getMonths(year)
         .where(
@@ -469,7 +470,8 @@ class ZiweiTimelineProvider {
               v.month == month &&
               v.isLeap == isLeap &&
               (effectiveMonth == null || v.effectiveMonth == effectiveMonth) &&
-              (effectiveYear == null || v.effectiveYear == effectiveYear),
+              (effectiveYear == null || v.effectiveYear == effectiveYear) &&
+              (sequence == null || v.sequence == sequence),
         )
         .firstOrNull;
     if (node == null) return const [];
@@ -537,6 +539,7 @@ class ZiweiTimelineProvider {
     bool isLeap = false,
     int? effectiveMonth,
     int? effectiveYear,
+    int? sequence,
     int? day,
   }) {
     final index =
@@ -578,6 +581,7 @@ class ZiweiTimelineProvider {
                 isLeap: isLeap,
                 effectiveMonth: effectiveMonth,
                 effectiveYear: effectiveYear,
+                sequence: sequence,
               ),
         target = days?.where((v) => v.day == day).firstOrNull;
     return TimelineManifest(

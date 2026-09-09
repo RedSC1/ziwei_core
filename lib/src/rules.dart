@@ -214,8 +214,11 @@ Map<String, dynamic> _normalizePatch(Map<String, dynamic> patch) {
     if (!_stemKeys.contains(e.key) || _object(e.value).isEmpty) {
       throw ArgumentError('invalid sihua');
     }
-    for (final v in _object(e.value).values) {
-      _starReference(v);
+    for (final entry in _object(e.value).entries) {
+      if (!_transformKeys.contains(entry.key)) {
+        throw ArgumentError('unknown sihua transformation: ${entry.key}');
+      }
+      _starReference(entry.value);
     }
   }
   for (final v in _object(result['masters'] ?? {}).values) {

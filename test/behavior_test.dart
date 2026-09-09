@@ -17,6 +17,76 @@ void main() {
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
 
+  test('sihua rejects unknown transformation keys at both entry points', () {
+    for (final row in [
+      {'kua': 'ziwei'},
+      {'lu': 'ziwei', 'kua': 'tianji'},
+    ]) {
+      expect(
+        () => ZiweiRuleModule(
+          label: 'bad',
+          patch: {
+            'sihua': {'jia': row},
+          },
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => ZiweiConfigLoader.compileJson(
+          label: 'bad',
+          sihuaJson: jsonEncode({'jia': row}),
+        ),
+        throwsArgumentError,
+      );
+    }
+    expect(
+      ZiweiRuleModule(
+        label: 'valid',
+        patch: {
+          'sihua': {
+            'jia': {'quan': 'ziwei'},
+          },
+        },
+      ).patch['sihua'],
+      isNotEmpty,
+    );
+  });
+  test('historical repeated months retain identity through day selection', () {
+    final c = ZiweiChart.fromZonedTime(time(1), defaultOptions),
+        t = c.timeline(),
+        m = c.createLimitManager();
+    final months = t
+        .getMonths(23)
+        .where((v) => v.month == 12 && !v.isLeap)
+        .toList();
+    expect(months.map((v) => v.sequence), [12, 13]);
+    m.setYear(23);
+    for (final n in months) {
+      m.selectMonth(n);
+      final expected = eph.calendarDateFromJulianDay(
+        n.firstCivilDayNumber - 0.5,
+      );
+      final days = t.getDays(
+        23,
+        12,
+        effectiveMonth: 12,
+        effectiveYear: 23,
+        sequence: n.sequence,
+      );
+      expect(days.first.solarDate.day, expected.day);
+      expect(m.manifest.currentMonthDays!.first.solarDate.day, expected.day);
+      m.setDay(1);
+      expect(m.context.day!.limit.coordinate.stem, days.first.stem);
+    }
+    m.addMonth(-1);
+    expect(m.manifest.currentMonthDays!.first.solarDate.day, 2);
+    m.addMonth(1);
+    expect(m.manifest.currentMonthDays!.first.solarDate.day, 31);
+    m.setMonth(12, sequence: 13);
+    expect(m.context.month!.sequence, 13);
+    m.setPhysicalTime(time(23, 12, 31));
+    expect(m.manifest.currentMonthDays!.first.solarDate.day, 31);
+  });
   test(
     'natal modules reject unknown inputs and invalid domains at construction',
     () {

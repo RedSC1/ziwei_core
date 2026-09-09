@@ -53,3 +53,5 @@ stepZiweiFlowDayTarget(target, 1, options: options);
 民用时钟模式以 `ZiweiOptions.utcOffsetMinutes` 为排盘时区；传入其他时区的 `ZonedTime` 时保持实际瞬间不变，转换到配置时区后排盘。
 拆分子时模式下，`targetHourIndex` 和 `FlowHourLimit.hourIndex` 的晚子索引为 12，早子为 0；地支索引仍为 0。
 公开返回值类型 `LunarCalendarDate` 可直接从 `ziwei_core.dart` 导入。
+
+历史年份可能存在月号相同但实际日期不同的月份。`getDays`、`getManifest` 和管理器 `setMonth` 支持可选命名参数 `sequence`，使用 `MonthNode.sequence` 区分；管理器选中月份后自动传递该值。省略时保留原来的首个匹配行为。
