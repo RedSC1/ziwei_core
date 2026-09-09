@@ -404,18 +404,28 @@ FlowHourLimit makeFlowHourFromPillar(
   );
 }
 
+/// Construct a timeline hour index: 0..11, plus late rat hour 12 in split modes.
 FlowHourLimit makeFlowHour(ZiweiChart chart, FlowDayLimit day, int hourIndex) {
-  _checked(hourIndex, 0, 11, 'hourIndex');
-  return FlowHourLimit(
-    _limit(
-      chart,
-      FlowLevel.hour,
-      FlowCoordinate(
-        stem: (day.limit.coordinate.stem % 5 * 2 + hourIndex) % 10,
-        branch: (day.limit.coordinate.branch + hourIndex) % 12,
-      ),
-    ),
-    hourIndex,
-    hourIndex == 0 ? RatHourSegment.unified : RatHourSegment.none,
+  final split = chart.options.ratHourMode != RatHourMode.nextDay;
+  _checked(hourIndex, 0, split ? 12 : 11, 'hourIndex');
+  final late = hourIndex == 12;
+  final dayStem =
+      (day.limit.coordinate.stem +
+          (late &&
+                  chart.options.ratHourMode ==
+                      RatHourMode.currentDayTomorrowStem
+              ? 1
+              : 0)) %
+      10;
+  final segment = late
+      ? RatHourSegment.late
+      : hourIndex == 0
+      ? (split ? RatHourSegment.early : RatHourSegment.unified)
+      : RatHourSegment.none;
+  return makeFlowHourFromPillar(
+    chart,
+    day,
+    getHourGanzhi(dayStem, hourIndex % 12),
+    segment,
   );
 }

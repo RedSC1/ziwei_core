@@ -1212,6 +1212,52 @@ void main() {
     m.reset();
     expect(m.dynamicChart.flowStack, isEmpty);
   });
+  test(
+    'makeFlowHour round-trips every timeline slot in all rat-hour modes',
+    () {
+      for (final mode in RatHourMode.values) {
+        final chart = natal(defaultOptions.copyWith(ratHourMode: mode));
+        final month = makeFlowMonth(chart, 2023, 5, sequence: 5);
+        for (var pillar = 0; pillar < 60; pillar++) {
+          final day = makeFlowDay(chart, month, 1, pillar % 10);
+          for (final node in chart.timeline().getHours(
+            eph.makeGanzhi(pillar % 10, pillar % 12),
+          )) {
+            final segment = node.isLateRat
+                ? RatHourSegment.late
+                : node.isEarlyRat
+                ? RatHourSegment.early
+                : node.branch == 0
+                ? RatHourSegment.unified
+                : RatHourSegment.none;
+            final hour = makeFlowHour(chart, day, node.hourIndex);
+            expect(
+              hour.toJson(),
+              makeFlowHourFromPillar(
+                chart,
+                day,
+                eph.makeGanzhi(node.stem, node.branch),
+                segment,
+              ).toJson(),
+            );
+            expect(hour.hourIndex, node.hourIndex);
+            expect(hour.limit.coordinate.stem, node.stem);
+            expect(
+              hour.limit.coordinate.branch,
+              (day.limit.coordinate.branch + node.branch) % 12,
+            );
+          }
+        }
+        for (final invalid in [-1, 13, if (mode == RatHourMode.nextDay) 12]) {
+          expect(
+            () => makeFlowHour(chart, makeFlowDay(chart, month, 1, 0), invalid),
+            throwsArgumentError,
+          );
+        }
+      }
+    },
+  );
+
   test('split rat-hour stepping preserves minute and steps reversibly', () {
     for (final mode in RatHourMode.values) {
       final c = natal(defaultOptions.copyWith(ratHourMode: mode)),
