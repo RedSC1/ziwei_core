@@ -188,13 +188,11 @@ Map<String, dynamic> _normalizePatch(Map<String, dynamic> patch) {
     for (final e in _object(result[name] ?? {}).entries) {
       _nonempty(e.key);
       final compiled = ZiweiCompiledPlacement.fromJson(_object(e.value));
-      if (name == 'flowPlacements') {
-        for (var i = 0; i < compiled.inputs.length; i++) {
-          final input = compiled.inputs[i];
-          if (!_flowInputs.contains(input) ||
-              compiled.shape[i] != _domain(input)) {
-            throw ArgumentError('invalid flow input or domain: $input');
-          }
+      for (var i = 0; i < compiled.inputs.length; i++) {
+        final input = compiled.inputs[i];
+        if (compiled.shape[i] != _domain(input) ||
+            (name == 'flowPlacements' && !_flowInputs.contains(input))) {
+          throw ArgumentError('invalid $name input or domain: $input');
         }
       }
     }
@@ -534,15 +532,27 @@ String _source(String anchor, String boundary) => switch (anchor) {
   'fu_kong' => '$boundary.$anchor',
   _ => throw ArgumentError('unsupported anchor: $anchor'),
 };
-int _domain(String s) => s == 'anchor.bureau'
-    ? 5
-    : s == 'birth.gender'
-    ? 2
-    : s.endsWith('_stem')
-    ? 10
-    : s.endsWith('day_index')
-    ? (s.startsWith('solar') ? 33 : 30)
-    : 12;
+final Map<String, int> _inputDomains = {
+  'anchor.bureau': 5,
+  'anchor.ziwei': 12,
+  'anchor.tianfu': 12,
+  'anchor.life': 12,
+  'anchor.body': 12,
+  'birth.gender': 2,
+  for (final prefix in ['lunar', 'solar']) ...{
+    for (final pillar in ['year', 'month', 'day', 'hour']) ...{
+      '$prefix.${pillar}_stem': 10,
+      '$prefix.${pillar}_branch': 12,
+    },
+    '$prefix.zheng_kong': 12,
+    '$prefix.fu_kong': 12,
+    '$prefix.month_index': 12,
+    '$prefix.day_index': prefix == 'solar' ? 33 : 30,
+  },
+};
+int _domain(String s) =>
+    _inputDomains[s] ??
+    (throw ArgumentError('unsupported placement input: $s'));
 String _lookupKey(String s, int v) => s.endsWith('_stem')
     ? _stemKeys[v]
     : s == 'anchor.bureau'

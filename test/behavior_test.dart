@@ -17,6 +17,63 @@ void main() {
   ZiweiChart natal([ZiweiOptions? o]) =>
       ZiweiChart.fromZonedTime(time(2000), o ?? defaultOptions);
 
+  test(
+    'natal modules reject unknown inputs and invalid domains at construction',
+    () {
+      for (final input in [
+        'unknown',
+        'constructor',
+        'lunar.year_branch',
+        'lunar.day_index',
+        'solar.day_index',
+      ]) {
+        expect(
+          () => ZiweiRuleModule(
+            label: 'bad-natal',
+            patch: {
+              'natalPlacements': {
+                'wenchang': {
+                  'inputs': [input],
+                  'shape': [1],
+                  'positions': [0],
+                },
+              },
+            },
+          ),
+          throwsArgumentError,
+        );
+      }
+      for (final e in {
+        'lunar.year_branch': 12,
+        'lunar.day_index': 30,
+        'solar.day_index': 33,
+        'anchor.bureau': 5,
+        'birth.gender': 2,
+      }.entries) {
+        final module = ZiweiRuleModule(
+          label: 'valid-natal',
+          patch: {
+            'natalPlacements': {
+              'wenchang': {
+                'inputs': [e.key],
+                'shape': [e.value],
+                'positions': List.generate(e.value, (i) => i % 12),
+              },
+            },
+          },
+        );
+        final c = natal(
+          defaultOptions.copyWith(
+            rules: ZiweiRuleSelection(ruleset: ZiweiRuleset([module])),
+          ),
+        );
+        expect(
+          c.starPositions[requireStarId('wenchang')],
+          inInclusiveRange(0, 11),
+        );
+      }
+    },
+  );
   test('month selection rejects forged nodes and preserves physical state', () {
     final c = natal(), m = c.createLimitManager();
     m.setPhysicalTime(time(2026, 4, 20));
