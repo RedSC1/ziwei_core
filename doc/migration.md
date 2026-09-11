@@ -21,6 +21,42 @@
 - JSON 快照字段与盘面数据尽量对齐 JS；`options` 使用 Dart 枚举名并显式保存可选空值，不承诺配置 JSON 可不经转换直接跨语言反序列化。
 - 报数允许 `int`、`BigInt` 或十进制字符串；超过 JS 安全整数范围时用后两种。默认随机来源为 `Random.secure()`，缺少安全来源的平台可显式注入 uint32 生成器。
 
+## `TimePack` 的替代方式
+
+旧版通过 `bazi_core` 的 `TimePack` 同时承载钟表时间、UTC、真太阳时和排盘钟表。
+新版直接使用 `ephemeris_lite` 的时间类型，并将时间策略放入 `ZiweiOptions`：
+
+```dart
+final clock = ZonedTime(
+  year: 2026,
+  month: 2,
+  day: 18,
+  hour: 12,
+  offsetMinutes: 480,
+);
+final options = ZiweiOptions(
+  gender: ZiweiGender.male,
+  calendarOptions: CalendarOptions(utcOffsetMinutes: 480),
+  clockMode: ZiweiClockMode.trueSolar,
+  longitudeDeg: 116.4074,
+  ratHourMode: RatHourMode.nextDay,
+);
+final chart = ZiweiChart.fromZonedTime(clock, options);
+
+final instant = clock.toJulianTime();
+final utc = instant.toZonedTime(0);
+final apparentSolarClock = trueSolarTime(clock, 116.4074);
+final virtualClock = chart.facts.virtualTime;
+```
+
+`ZonedTime` 负责“某个固定时区的墙上时间”，`JulianTime` 表示物理瞬间，
+`chart.facts.virtualTime` 是排盘采用的民用／平太阳／真太阳钟面。旧 `timezone: 8`
+现在写作 `offsetMinutes: 480`。旧 `location` 对排盘太阳时实际使用的是经度，因此新版在
+`longitudeDeg` 中单独声明；纬度不参与此换算。
+
+新版默认 `ZiweiClockMode.civil`。旧版 `TimeAdapter` 与 `ZiweiDate` 的公历、农历入口默认
+启用真太阳时；要保持旧行为，必须像上例一样显式设置 `trueSolar` 和经度。
+
 ## 边界与安全
 
 修改盘的生日、原始四柱、命身主、宫干保持不变。更新五行局会重算起运年龄；只平移命宫不改变星位和年龄。起盘类不继承出生盘，避免将无法定义的运限包装为 null 方法。

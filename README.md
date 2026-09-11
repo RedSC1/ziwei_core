@@ -55,7 +55,7 @@ final snapshot = chart.toJson();
 
 `eventAccuracy` 控制底层定气定朔求解，不是给紫微安星算法增设精度档位。默认 `mid`，子时默认 `RatHourMode.nextDay`，闰月默认十五日后按下月处理。
 
-平/真太阳时用 `clockMode` 与 `longitudeDeg` 配置；原始出生时刻与用于排盘的虚拟时钟分开保存。
+平/真太阳时用 `clockMode` 与 `longitudeDeg` 配置；原始出生时刻与用于排盘的虚拟时钟分开保存。`clockMode` 默认 `ZiweiClockMode.civil`；旧版入口默认启用真太阳时，迁移旧调用时应显式选择 `ZiweiClockMode.trueSolar` 并填写经度。
 
 ## 修改与复原
 

@@ -14,6 +14,8 @@ Natal-chart civil dates follow the core range of astronomical years −6000 thro
 
 Current prerelease: `1.0.0-beta.1`.
 
+`ZiweiClockMode.civil` is now the default. Legacy chart constructors enabled apparent solar time by default; preserving that behavior requires `ZiweiClockMode.trueSolar` and an explicit longitude.
+
 ## Installation
 
 ```yaml
