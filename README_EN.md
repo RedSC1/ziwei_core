@@ -8,6 +8,10 @@ Implemented: natal charts, placement variants, brightness and transformations, c
 
 This development branch retains the existing package and repository name. It is **not published and is not a drop-in replacement for 0.13.0**. Place `ephemeris_lite` beside this checkout for the current local path dependency. `publish_to: none` prevents accidental publication.
 
+The previous release used `sxwnl_spa_dart`, whose primary goal is compatibility with an existing port. The rewrite uses the project-maintained `ephemeris_lite` so calendar-event accuracy, historical date assignment, solar time, and Zi-hour boundaries can be extended consistently when chart features require support from the astronomy core.
+
+Natal-chart civil dates follow the core range of astronomical years −6000 through 10000, where year 0 is 1 BCE. This is a supported computation interval, not a claim of uniform accuracy across every epoch; historical-calendar and ΔT limitations follow the `ephemeris_lite` documentation. Casting charts without a birth date are independent of this civil-date range.
+
 ```dart
 import 'package:ziwei_core/ziwei_core.dart';
 
