@@ -1,4 +1,4 @@
-# ziwei_core
+# 🔮 Ziwei Core
 
 [English](README_EN.md)
 
