@@ -12,7 +12,7 @@ The previous release used `sxwnl_spa_dart`, whose primary goal is compatibility 
 
 Natal-chart civil dates follow the core range of astronomical years −6000 through 10000, where year 0 is 1 BCE. This is a supported computation interval, not a claim of uniform accuracy across every epoch; historical-calendar and ΔT limitations follow the `ephemeris_lite` documentation. Casting charts without a birth date are independent of this civil-date range.
 
-Current prerelease: `1.0.0-beta.1`.
+Current stable version: `1.0.0`.
 
 `ZiweiClockMode.civil` is now the default. Legacy chart constructors enabled apparent solar time by default; preserving that behavior requires `ZiweiClockMode.trueSolar` and an explicit longitude.
 
@@ -20,7 +20,7 @@ Current prerelease: `1.0.0-beta.1`.
 
 ```yaml
 dependencies:
-  ziwei_core: 1.0.0-beta.1
+  ziwei_core: ^1.0.0
 ```
 
 Run `dart pub get`, or `flutter pub get` in a Flutter project.
