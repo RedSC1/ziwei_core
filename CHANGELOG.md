@@ -1,10 +1,10 @@
-## 0.14.0-dev.1 (unreleased rewrite)
+## 1.0.0-beta.1
 
-- Port the current ziwei-lite engine to pure Dart with ephemeris_lite as the sole runtime dependency.
-- Add complete natal/flow charts, historical timelines, custom rules, immutable modifications, casting and reverse lookup.
-- Verify against JS fixtures and the frozen 1,200-case C++ oracle; add VM/dart2js parity checks.
-- Breaking API redesign; see doc/migration.md. Publication remains disabled.
-- New ported implementation follows MPL-2.0; previous releases retain their original license.
+- **[重大破坏性更新]** 基于 `ziwei-lite` 重写公共 API，与旧版 `0.13.x` 不兼容，迁移方式见 `doc/migration.md`。
+- **[依赖重构]** 移除 `sxwnl_spa_dart` 与 `bazi_core` 依赖，以 `ephemeris_lite` 作为唯一运行时依赖。
+- **[功能移植]** 提供出生盘、完整流盘、历史时间线、自定义规则、不可变修改与复原、无生日起盘和反查。
+- **[验证]** 覆盖 JS 数值对照、冻结的 1,200 组 C++ 盘例，以及 Dart VM／Dart Web 一致性检查。
+- **[许可证]** 新实现沿用 `ziwei-lite` 的 MPL-2.0；旧版代码仍按其发布时的许可证保留在 Git 历史中。
 
 ## 0.13.0
 

@@ -1,4 +1,4 @@
-# Release remains disabled; exclude development fixtures when preparing a package.
+# Exclude development fixtures and tooling from the published package.
 test/
 tool/
 plan/

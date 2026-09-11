@@ -1,14 +1,16 @@
 # 🔮 Ziwei Core
 
-[English](README_EN.md)
+[English](https://github.com/RedSC1/ziwei_core/blob/main/README_EN.md)
 
-纯 Dart 紫微斗数核心。以 `ziwei-lite` 为源实现，提供出生盘、运限与流盘、时间线、规则配置、修改盘和无生日起盘；底层使用 `ephemeris_lite`，不依赖 FFI、`sxwnl_spa_dart` 或 `bazi_core`。
+纯 Dart 紫微斗数核心。以 `ziwei-lite` 为源实现，提供出生盘、运限与流盘、时间线、规则配置、修改盘和无生日起盘；天文与历法内核由 `sxwnl_spa_dart` 迁移至 `ephemeris_lite`，新版不再依赖 `bazi_core`。
 
-本次重写沿用 `RedSC1/ziwei_core` 仓库与包名。当前为开发分支，**尚未发布，不是旧版 0.13.0 的直接兼容升级**。旧版实现和授权保留在 Git 历史及原主分支中。
+> **重大破坏性更新**：重写版 API 与旧版 `0.13.x` 不兼容，升级前请阅读[迁移说明](https://github.com/RedSC1/ziwei_core/blob/main/doc/migration.md)。旧版实现和授权仍保留在 Git 历史中。
 
 旧版采用的 `sxwnl_spa_dart` 以既有算法移植与兼容为主要目标，不适合持续加入排盘专用的底层能力。重写版改用本项目维护的 `ephemeris_lite`，便于统一定制气朔精度、历史历法归日、太阳时和子时边界等需要天文内核配合的功能。
 
 出生盘所用民用日期范围跟随内核，为天文纪年 −6000～10000 年；年 `0` 表示公元前 1 年。该范围表示接口可计算的目标区间，不代表所有年代具有相同精度；历史历法和 ΔT 的限制以 `ephemeris_lite` 文档为准。无生日起盘不依赖民用日期范围。
+
+当前测试版本：`1.0.0-beta.1`。
 
 ## 功能
 
@@ -21,17 +23,14 @@
 - 无生日的 `ZiweiCastingChart`，支持手动坐标、序号回放、报数映射和随机采样。
 - 星位条件反查，支持直接反解与有限区间逐时辰验证。
 
-## 开发依赖
+## 安装
 
-暂不发包。将两个仓库放在同一目录：
-
-```text
-workspace/
-  ephemeris_lite/
-  ziwei_core/
+```yaml
+dependencies:
+  ziwei_core: 1.0.0-beta.1
 ```
 
-`pubspec.yaml` 当前通过 `../ephemeris_lite` 引用底层，`publish_to: none` 阻止误发布。接入应用时可用本地 path 依赖；正式发布前再确定版本与依赖地址。
+运行 `dart pub get`，Flutter 项目使用 `flutter pub get`。
 
 ## 出生盘
 
@@ -126,7 +125,7 @@ final customOptions = options.copyWith(
 );
 ```
 
-更多内容见 [API 对照](doc/api-map.md)、[迁移说明](doc/migration.md) 和 [验证说明](doc/testing.md)。示例位于 [example](example/)。
+更多内容见 [API 对照](https://github.com/RedSC1/ziwei_core/blob/main/doc/api-map.md)、[迁移说明](https://github.com/RedSC1/ziwei_core/blob/main/doc/migration.md) 和 [验证说明](https://github.com/RedSC1/ziwei_core/blob/main/doc/testing.md)。示例位于 [example](https://github.com/RedSC1/ziwei_core/tree/main/example)。
 
 ## 开发检查
 

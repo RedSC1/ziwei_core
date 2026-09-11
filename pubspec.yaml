@@ -1,13 +1,17 @@
 name: ziwei_core
-version: 0.14.0-dev.1
+version: 1.0.0-beta.1
 description: Pure Dart Ziwei charts, customizable rules, timelines and casting backed by ephemeris_lite.
 repository: https://github.com/RedSC1/ziwei_core
-publish_to: none
+issue_tracker: https://github.com/RedSC1/ziwei_core/issues
+topics:
+  - ziwei
+  - chinese-astrology
+  - purple-star
+  - fortune-telling
 environment:
   sdk: ^3.10.0
 dependencies:
-  ephemeris_lite:
-    path: ../ephemeris_lite
+  ephemeris_lite: ^1.0.0-beta.2
 dev_dependencies:
   lints: ^6.0.0
   test: ^1.25.6
