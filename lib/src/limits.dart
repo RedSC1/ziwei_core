@@ -136,7 +136,7 @@ int getEffectiveBirthYear(ZiweiChart chart, {PillarBoundary? boundary}) {
   if ((boundary ?? chart.options.flowLimitBoundary) == PillarBoundary.lunar) {
     return chart.facts.effectiveLunarYear;
   }
-  final y = chart.facts.virtualTime.year,
+  final y = chart.facts.chartTime.year,
       s = ganzhiStem(chart.facts.solarTermPillars.year);
   if (_yearStem(y) == s) return y;
   if (_yearStem(y - 1) == s) return y - 1;

@@ -46,11 +46,11 @@ final chart = ZiweiChart.fromZonedTime(clock, options);
 final instant = clock.toJulianTime();
 final utc = instant.toZonedTime(0);
 final apparentSolarClock = trueSolarTime(clock, 116.4074);
-final virtualClock = chart.facts.virtualTime;
+final chartClock = chart.facts.chartTime;
 ```
 
 `ZonedTime` 负责“某个固定时区的墙上时间”，`JulianTime` 表示物理瞬间，
-`chart.facts.virtualTime` 是排盘采用的民用／平太阳／真太阳钟面。旧 `timezone: 8`
+`chart.facts.chartTime` 是排盘采用的民用／平太阳／真太阳钟面；`virtualTime` 暂作兼容别名。旧 `timezone: 8`
 现在写作 `offsetMinutes: 480`。旧 `location` 对排盘太阳时实际使用的是经度，因此新版在
 `longitudeDeg` 中单独声明；纬度不参与此换算。
 

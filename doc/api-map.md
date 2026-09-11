@@ -2,7 +2,7 @@
 
 | JS 入口或模块 | Dart 入口 |
 | --- | --- |
-| `ZiweiChart.fromZonedTime/fromLunar/fromResolvedBirth` | 同名工厂，`fromLunar` 的时分秒使用命名参数 |
+| `ZiweiChart.fromZonedTime/fromSolarDay/fromLunarDay/fromResolvedBirth` | 日对象与必填 `hour` 分开；`fromLunar` 保留为兼容入口 |
 | `ZiweiPlate` 的宫位、星位、庙旺、自化查询 | 同名查询；宫位编号见 `Palace`，四化标记见 `StarTransformMark` |
 | `ZiweiOptions`, `options.with` | `ZiweiOptions`, `copyWith`；底层选项用 `CalendarOptions` |
 | `resolveZiweiOptions` | Dart 使用已经类型化的 `ZiweiOptions`，无需对象归一化包装 |
@@ -50,7 +50,7 @@ stepZiweiFlowDayTarget(target, 1, options: options);
 管理器自动传入，无需调用方额外处理。省略参数保留固定时差步进语义。
 
 
-民用时钟模式以 `ZiweiOptions.utcOffsetMinutes` 为排盘时区；传入其他时区的 `ZonedTime` 时保持实际瞬间不变，转换到配置时区后排盘。
+民用时钟模式以 `ZiweiOptions.utcOffsetMinutes` 为排盘时区；`chartTime` 是新公共名称，`virtualTime` 系列名称保留为兼容别名。命盘流运 API 复用建盘设置；底层混用其他设置仅建议用于明确的比较工具。
 拆分子时模式下，`targetHourIndex` 和 `FlowHourLimit.hourIndex` 的晚子索引为 12，早子为 0；地支索引仍为 0。
 公开返回值类型 `LunarCalendarDate` 可直接从 `ziwei_core.dart` 导入。
 

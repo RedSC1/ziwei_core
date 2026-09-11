@@ -117,7 +117,7 @@ class ZiweiOptions {
 class ResolvedZiweiBirth {
   const ResolvedZiweiBirth({
     required this.clockTime,
-    required this.virtualTime,
+    required this.chartTime,
     required this.jdUT1,
     required this.lunarDate,
     required this.solarTermPillars,
@@ -131,7 +131,9 @@ class ResolvedZiweiBirth {
   ZiweiGender get gender => options.gender;
   Map<String, Object> toJson() => _factsJson(this);
   final ZonedTime? clockTime;
-  final CalendarDate virtualTime;
+  final CalendarDate chartTime;
+  @Deprecated('Use chartTime.')
+  CalendarDate get virtualTime => chartTime;
   final double jdUT1;
   final LunarCalendarDate lunarDate;
   final FourPillars solarTermPillars, lunarPillars;
@@ -157,13 +159,13 @@ double _logical(double jd, RatHourMode mode) =>
 ResolvedZiweiBirth resolveZiweiBirth(ZonedTime clock, ZiweiOptions options) {
   return resolveZiweiBirthFromInstant(
     clock.toJulianTime().jdUT1,
-    resolveZiweiVirtualTime(clock, options),
+    resolveZiweiChartTime(clock, options),
     options,
     clockTime: clock,
   );
 }
 
-CalendarDate resolveZiweiVirtualTime(ZonedTime clock, ZiweiOptions options) =>
+CalendarDate resolveZiweiChartTime(ZonedTime clock, ZiweiOptions options) =>
     switch (options.clockMode) {
       ZiweiClockMode.civil =>
         clock.offsetMinutes == options.utcOffsetMinutes
@@ -174,6 +176,9 @@ CalendarDate resolveZiweiVirtualTime(ZonedTime clock, ZiweiOptions options) =>
       ZiweiClockMode.meanSolar => meanSolarTime(clock, options.longitudeDeg!),
       ZiweiClockMode.trueSolar => trueSolarTime(clock, options.longitudeDeg!),
     };
+@Deprecated('Use resolveZiweiChartTime.')
+CalendarDate resolveZiweiVirtualTime(ZonedTime clock, ZiweiOptions options) =>
+    resolveZiweiChartTime(clock, options);
 LunarCalendarDate resolveZiweiLogicalLunarDate(
   CalendarDate virtual,
   ZiweiOptions options,
@@ -189,12 +194,12 @@ LunarCalendarDate resolveZiweiLogicalLunarDate(
 
 ResolvedZiweiBirth resolveZiweiBirthFromInstant(
   double jd,
-  CalendarDate virtualTime,
+  CalendarDate chartTime,
   ZiweiOptions options, {
   ZonedTime? clockTime,
 }) {
   if (!jd.isFinite) throw ArgumentError.value(jd, 'jdUT1');
-  final virtual = normalizeChartVirtualTime(virtualTime), vjd = _jd(virtual);
+  final virtual = normalizeChartVirtualTime(chartTime), vjd = _jd(virtual);
   final logical = calendarDateFromJulianDay(_logical(vjd, options.ratHourMode));
   final lunar = solarToLunar(
     CalendarDate(year: logical.year, month: logical.month, day: logical.day),
@@ -242,7 +247,7 @@ ResolvedZiweiBirth resolveZiweiBirthFromInstant(
   );
   return ResolvedZiweiBirth(
     clockTime: clockTime,
-    virtualTime: virtual,
+    chartTime: virtual,
     jdUT1: jd,
     lunarDate: lunar,
     solarTermPillars: solar,
@@ -321,7 +326,7 @@ List<int> flattenZiweiAnchors(ZiweiAnchors anchors) => List.unmodifiable([
 ]);
 
 // Invert the chart clock at the requested virtual instant, including its EOT.
-double _virtualToUt1(CalendarDate v, ZiweiOptions o) {
+double chartTimeToUt1(CalendarDate v, ZiweiOptions o) {
   final jd = _jd(v);
   return switch (o.clockMode) {
     ZiweiClockMode.civil => jd - o.utcOffsetMinutes / 1440,
@@ -330,6 +335,9 @@ double _virtualToUt1(CalendarDate v, ZiweiOptions o) {
       localApparentToMeanSolarTime(jd, o.longitudeDeg!) - o.longitudeDeg! / 360,
   };
 }
+
+@Deprecated('Use chartTimeToUt1.')
+double virtualTimeToUt1(CalendarDate v, ZiweiOptions o) => chartTimeToUt1(v, o);
 
 // Keep assigned UTC+08 civil-day boundaries consistent with four-pillar calculation.
 double _pillarJieBoundary(CalendarSolarTerm term, ZiweiOptions options) =>

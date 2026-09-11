@@ -12,7 +12,7 @@ The previous release used `sxwnl_spa_dart`, whose primary goal is compatibility 
 
 Natal-chart civil dates follow the core range of astronomical years −6000 through 10000, where year 0 is 1 BCE. This is a supported computation interval, not a claim of uniform accuracy across every epoch; historical-calendar and ΔT limitations follow the `ephemeris_lite` documentation. Casting charts without a birth date are independent of this civil-date range.
 
-Current stable version: `1.0.0`.
+Current stable version: `1.1.0`.
 
 `ZiweiClockMode.civil` is now the default. Legacy chart constructors enabled apparent solar time by default; preserving that behavior requires `ZiweiClockMode.trueSolar` and an explicit longitude.
 
@@ -20,7 +20,7 @@ Current stable version: `1.0.0`.
 
 ```yaml
 dependencies:
-  ziwei_core: ^1.0.0
+  ziwei_core: ^1.1.0
 ```
 
 Run `dart pub get`, or `flutter pub get` in a Flutter project.
@@ -38,10 +38,27 @@ final chart = ZiweiChart.fromZonedTime(
   ZonedTime(year: 2000, month: 1, day: 1, hour: 12, offsetMinutes: 480),
   options,
 );
+final lunarChart = ZiweiChart.fromLunarDay(
+  const LunarDate(year: 2003, month: 2, day: 11),
+  options,
+  hour: 14,
+  minute: 15,
+);
 final modified = chart.modify(ZiweiModifyInput(month: 8, updateBureau: true));
 final original = modified.reset();
 final random = ZiweiCastingChart.random(options);
 ```
+
+Calendar dates represent a day only. `fromSolarDay()` and `fromLunarDay()` require
+a separate `hour`; both use the chart options' fixed offset, and the lunar entry
+uses the same calendar options for conversion and chart construction.
+
+`birthClockTime` preserves the original wall clock, `facts.jdUT1` identifies the
+physical instant, and `facts.chartTime` contains the civil, mean-solar, or
+apparent-solar fields used by the chart. `virtualTime` remains a deprecated alias.
+Flow methods, timelines, and limit managers reuse the immutable options retained
+by the natal chart. Mixing different low-level options is supported for explicit
+comparison tools but may disagree at calendar and time boundaries.
 
 `modify` preserves the original birth facts. Changing the bureau also changes the starting limit age; shifting palace roles keeps stars and the body palace fixed. Casting charts deliberately have no calendar-dependent age or timeline API. Their index space contains 259,200 combinations. Reported-number mapping is reproducible, not a promise that human-chosen numbers are uniformly distributed.
 

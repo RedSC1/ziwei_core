@@ -1,5 +1,5 @@
 name: ziwei_core
-version: 1.0.0
+version: 1.1.0
 description: Pure Dart Ziwei charts, customizable rules, timelines and casting backed by ephemeris_lite.
 repository: https://github.com/RedSC1/ziwei_core
 issue_tracker: https://github.com/RedSC1/ziwei_core/issues
@@ -11,7 +11,7 @@ topics:
 environment:
   sdk: ^3.10.0
 dependencies:
-  ephemeris_lite: ^1.0.0
+  ephemeris_lite: ^1.1.0
 dev_dependencies:
   lints: ^6.0.0
   test: ^1.25.6

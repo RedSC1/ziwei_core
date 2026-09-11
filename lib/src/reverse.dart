@@ -52,14 +52,16 @@ class ZiweiTier1ReverseQuery {
 class ZiweiReverseCandidate {
   const ZiweiReverseCandidate(
     this.jdUT1,
-    this.virtualTime,
+    this.chartTime,
     this.lunarDate,
     this.hourBranch,
     this.ratHourSegment,
     this.chart,
   );
   final double jdUT1;
-  final CalendarDate virtualTime;
+  final CalendarDate chartTime;
+  @Deprecated('Use chartTime.')
+  CalendarDate get virtualTime => chartTime;
   final LunarCalendarDate lunarDate;
   final int hourBranch;
   final RatHourSegment ratHourSegment;
@@ -77,7 +79,7 @@ ZiweiFlowTarget _targetFromVirtual(CalendarDate v, ZiweiOptions o) {
   };
   return ZiweiFlowTarget(
     jd,
-    resolveZiweiVirtualTime(
+    resolveZiweiChartTime(
       JulianTime.fromUT1(jd).toZonedTime(o.utcOffsetMinutes.toInt()),
       o,
     ),
@@ -145,7 +147,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
     }
     if (target.jdUT1 < startJd - 1e-12 || target.jdUT1 > endJd + 1e-12) return;
     final chart = ZiweiChart.fromResolvedBirth(
-      resolveZiweiBirthFromInstant(target.jdUT1, target.virtualTime, options),
+      resolveZiweiBirthFromInstant(target.jdUT1, target.chartTime, options),
     );
     final placementAnchors = chart.anchors.toJson()
       ..remove('solarTerm')
@@ -168,10 +170,10 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
     results.add(
       ZiweiReverseCandidate(
         target.jdUT1,
-        target.virtualTime,
+        target.chartTime,
         chart.facts.lunarDate,
         h,
-        _segment(target.virtualTime, options.ratHourMode, h),
+        _segment(target.chartTime, options.ratHourMode, h),
         chart,
       ),
     );
@@ -297,8 +299,8 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
                 );
               }
 
-              if (_virtualToUt1(boundary(lo), options) > endJd ||
-                  _virtualToUt1(boundary(hi), options) <= startJd) {
+              if (chartTimeToUt1(boundary(lo), options) > endJd ||
+                  chartTimeToUt1(boundary(hi), options) <= startJd) {
                 continue;
               }
               // A representative outside the interval may still describe an
@@ -307,7 +309,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
                 final jd = target.jdUT1.clamp(startJd, endJd);
                 target = ZiweiFlowTarget(
                   jd,
-                  resolveZiweiVirtualTime(
+                  resolveZiweiChartTime(
                     JulianTime.fromUT1(
                       jd,
                     ).toZonedTime(options.utcOffsetMinutes.toInt()),
@@ -324,7 +326,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
   } else {
     var target = ZiweiFlowTarget(
       startJd,
-      resolveZiweiVirtualTime(start, options),
+      resolveZiweiChartTime(start, options),
     );
     final ceiling =
         maxCandidatesToExamine ??
@@ -335,7 +337,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
       inspect(target, ceiling, insideHourProbe: insideHourProbe);
       // Search every segment boundary; interactive stepping intentionally
       // preserves the minute offset and is not suitable for interval scans.
-      final v = target.virtualTime;
+      final v = target.chartTime;
       final nextHour =
           options.ratHourMode != RatHourMode.nextDay && v.hour == 23
           ? 24
@@ -357,7 +359,7 @@ List<ZiweiReverseCandidate> reverseLookupZiweiTier1({
       if (nextJie <= next.jdUT1) {
         next = ZiweiFlowTarget(
           nextJie,
-          resolveZiweiVirtualTime(
+          resolveZiweiChartTime(
             JulianTime.fromUT1(
               nextJie,
             ).toZonedTime(options.utcOffsetMinutes.toInt()),

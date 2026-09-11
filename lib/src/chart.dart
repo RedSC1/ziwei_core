@@ -237,6 +237,54 @@ class ZiweiChart extends ZiweiPlate {
   }
   factory ZiweiChart.fromZonedTime(ZonedTime birth, ZiweiOptions options) =>
       ZiweiChart._(resolveZiweiBirth(birth, options));
+  factory ZiweiChart.fromSolarDay(
+    CalendarDate solarDay,
+    ZiweiOptions options, {
+    required int hour,
+    int minute = 0,
+    double second = 0,
+  }) => ZiweiChart.fromZonedTime(
+    ZonedTime(
+      year: solarDay.year,
+      month: solarDay.month,
+      day: solarDay.day,
+      hour: hour,
+      minute: minute,
+      second: second,
+      offsetMinutes: options.utcOffsetMinutes.toInt(),
+    ),
+    options,
+  );
+  factory ZiweiChart.fromLunarDay(
+    LunarDate lunarDay,
+    ZiweiOptions options, {
+    required int hour,
+    int minute = 0,
+    double second = 0,
+  }) {
+    final solarDay = lunarToSolar(lunarDay, options: options.calendarOptions);
+    return ZiweiChart._(
+      resolveZiweiBirth(
+        ZonedTime(
+          year: solarDay.year,
+          month: solarDay.month,
+          day: solarDay.day,
+          hour: hour,
+          minute: minute,
+          second: second,
+          offsetMinutes: options.utcOffsetMinutes.toInt(),
+        ),
+        options,
+      ),
+      lunarInput: _freeze({
+        ...lunarDay.toJson(),
+        'hour': hour,
+        'minute': minute,
+        'second': second,
+      }),
+    );
+  }
+  @Deprecated('Use fromLunarDay with a required birth hour.')
   factory ZiweiChart.fromLunar(
     LunarDate lunar,
     ZiweiOptions options, {
@@ -331,7 +379,8 @@ class ZiweiChart extends ZiweiPlate {
       'yearNumbering': 'astronomical',
       'jdUT1': facts.jdUT1,
       'clockTime': birthClockTime?.toJson(),
-      'virtualTime': facts.virtualTime.toJson(),
+      'chartTime': facts.chartTime.toJson(),
+      'virtualTime': facts.chartTime.toJson(),
       'clockMode': [
         'civil',
         'mean-solar',
@@ -371,7 +420,8 @@ Map<String, Object> _lunarJson(LunarCalendarDate v) => {
 };
 Map<String, Object> _factsJson(ResolvedZiweiBirth v) => {
   'jdUT1': v.jdUT1,
-  'virtualTime': v.virtualTime.toJson(),
+  'chartTime': v.chartTime.toJson(),
+  'virtualTime': v.chartTime.toJson(),
   'gender': v.options.gender.index,
   'lunarDate': _lunarJson(v.lunarDate),
   'solarTermPillars': v.solarTermPillars.toJson(),

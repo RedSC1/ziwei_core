@@ -10,7 +10,7 @@
 
 出生盘所用民用日期范围跟随内核，为天文纪年 −6000～10000 年；年 `0` 表示公元前 1 年。该范围表示接口可计算的目标区间，不代表所有年代具有相同精度；历史历法和 ΔT 的限制以 `ephemeris_lite` 文档为准。无生日起盘不依赖民用日期范围。
 
-当前稳定版本：`1.0.0`。
+当前稳定版本：`1.1.0`。
 
 ## 功能
 
@@ -27,7 +27,7 @@
 
 ```yaml
 dependencies:
-  ziwei_core: ^1.0.0
+  ziwei_core: ^1.1.0
 ```
 
 运行 `dart pub get`，Flutter 项目使用 `flutter pub get`。
@@ -48,6 +48,12 @@ final chart = ZiweiChart.fromZonedTime(
   ),
   options,
 );
+final lunarChart = ZiweiChart.fromLunarDay(
+  const LunarDate(year: 2003, month: 2, day: 11),
+  options,
+  hour: 14,
+  minute: 15,
+);
 final life = chart.getPalace(Palace.life);
 final ziwei = chart.getStarPosition(requireStarId('ziwei'));
 final snapshot = chart.toJson();
@@ -55,7 +61,9 @@ final snapshot = chart.toJson();
 
 `eventAccuracy` 控制底层定气定朔求解，不是给紫微安星算法增设精度档位。默认 `mid`，子时默认 `RatHourMode.nextDay`，闰月默认十五日后按下月处理。
 
-平/真太阳时用 `clockMode` 与 `longitudeDeg` 配置；原始出生时刻与用于排盘的虚拟时钟分开保存。`clockMode` 默认 `ZiweiClockMode.civil`；旧版入口默认启用真太阳时，迁移旧调用时应显式选择 `ZiweiClockMode.trueSolar` 并填写经度。
+平/真太阳时用 `clockMode` 与 `longitudeDeg` 配置；原始出生钟表、物理瞬间与排盘钟面分开保存。`chart.facts.chartTime` 是实际用于排盘的民用／平太阳／真太阳钟面，旧名 `virtualTime` 暂作兼容别名。`clockMode` 默认 `ZiweiClockMode.civil`；旧版入口默认启用真太阳时，迁移旧调用时应显式选择 `ZiweiClockMode.trueSolar` 并填写经度。
+
+`fromSolarDay`／`fromLunarDay` 要求另传 `hour`，因为日期对象只表示一天；农历转换和排盘使用同一份 `ZiweiOptions`。命盘、时间线和流运管理器会继续复用这份历法、时区、太阳时与边界设置。低层函数允许为比较另传设置，但边界附近可能与原盘口径不一致。
 
 ## 修改与复原
 

@@ -1,3 +1,10 @@
+## 1.1.0
+
+- 增加 `ZiweiChart.fromSolarDay()` 与 `ZiweiChart.fromLunarDay()`，要求显式传入出生时辰，并让农历转换与排盘共用历法及时区选项。
+- 以 `chartTime` 作为出生盘、流运目标和反查候选的正式排盘钟面字段；旧 `virtualTime` 及相关函数保留为弃用别名。
+- 补充中英文 README、构造示例、时间模型和跨历法设置使用说明。
+- 将 `ephemeris_lite` 依赖升级至 `^1.1.0`。
+
 ## 1.0.0
 
 - 首个重写后的稳定版本；公共 API 与 `1.0.0-beta.1` 保持一致。

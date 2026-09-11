@@ -53,7 +53,16 @@ ZiweiModifyInput edit(Map v) => ZiweiModifyInput(
 );
 void same(dynamic actual, dynamic expected, [String path = '']) {
   if (actual is Map && expected is Map) {
-    expect(actual.keys.toSet(), expected.keys.toSet(), reason: path);
+    final actualKeys = actual.keys.toSet();
+    // Old frozen JS fixtures predate the additive chartTime alias. The
+    // compatibility virtualTime value is compared below; dedicated behavior
+    // tests verify that the two current fields remain equal.
+    if (!expected.containsKey('chartTime') &&
+        actual.containsKey('chartTime') &&
+        actual.containsKey('virtualTime')) {
+      actualKeys.remove('chartTime');
+    }
+    expect(actualKeys, expected.keys.toSet(), reason: path);
     for (final k in expected.keys) {
       same(actual[k], expected[k], '$path.$k');
     }
@@ -224,7 +233,7 @@ void main() {
           );
       final birth = ResolvedZiweiBirth(
             clockTime: null,
-            virtualTime: const CalendarDate(year: 2000, month: 1, day: 1),
+            chartTime: const CalendarDate(year: 2000, month: 1, day: 1),
             jdUT1: 0,
             lunarDate: eph.LunarCalendarDate(
               year: 1984 + y,

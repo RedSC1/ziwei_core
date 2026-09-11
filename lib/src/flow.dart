@@ -290,7 +290,7 @@ RatHourSegment _segment(CalendarDate v, RatHourMode mode, int branch) =>
 double _solarLogical(double jd, CalendarDate v, ZiweiOptions o) {
   final previous = _previousPillarJie(jd, o),
       jv = _jd(
-        resolveZiweiVirtualTime(
+        resolveZiweiChartTime(
           JulianTime.fromUT1(
             _pillarJieBoundary(previous, o),
           ).toZonedTime(o.utcOffsetMinutes.toInt()),
@@ -389,7 +389,7 @@ ResolvedZiweiFlow resolveZiweiFlow(
 }) => resolveZiweiFlowFromInstant(
   chart,
   target.toJulianTime().jdUT1,
-  resolveZiweiVirtualTime(target, chart.options),
+  resolveZiweiChartTime(target, chart.options),
   boundary: boundary,
 );
 ZiweiDynamicChart dynamicChartFromResolvedFlow(
@@ -433,11 +433,13 @@ ZiweiDynamicChart dynamicChartFromResolvedFlow(
 class ZiweiFlowTarget {
   const ZiweiFlowTarget(
     this.jdUT1,
-    this.virtualTime, {
+    this.chartTime, {
     this.ratHourSegment = RatHourSegment.none,
   });
   final double jdUT1;
-  final CalendarDate virtualTime;
+  final CalendarDate chartTime;
+  @Deprecated('Use chartTime.')
+  CalendarDate get virtualTime => chartTime;
   final RatHourSegment ratHourSegment;
 }
 
@@ -452,7 +454,7 @@ ZiweiFlowTarget stepZiweiFlowHourTarget(
   if (direction != 1 && direction != -1) {
     throw ArgumentError('direction must be ±1');
   }
-  final v = normalizeChartVirtualTime(current.virtualTime),
+  final v = normalizeChartVirtualTime(current.chartTime),
       split = mode != RatHourMode.nextDay,
       one =
           split &&
@@ -476,7 +478,7 @@ ZiweiFlowTarget stepZiweiFlowHourTarget(
   return ZiweiFlowTarget(
     options == null
         ? current.jdUT1 + step / 24
-        : _virtualToUt1(virtual, options),
+        : chartTimeToUt1(virtual, options),
     virtual,
     ratHourSegment: _segment(virtual, mode, ((virtual.hour + 1) ~/ 2) % 12),
   );
@@ -491,7 +493,7 @@ ZiweiFlowTarget stepZiweiFlowDayTarget(
   if (direction != 1 && direction != -1) {
     throw ArgumentError('direction must be ±1');
   }
-  final v = normalizeChartVirtualTime(current.virtualTime),
+  final v = normalizeChartVirtualTime(current.chartTime),
       date = calendarDateFromJulianDay(
         julianDay(year: v.year, month: v.month, day: v.day, hour: 12) +
             direction,
@@ -507,7 +509,7 @@ ZiweiFlowTarget stepZiweiFlowDayTarget(
   return ZiweiFlowTarget(
     options == null
         ? current.jdUT1 + direction
-        : _virtualToUt1(virtual, options),
+        : chartTimeToUt1(virtual, options),
     virtual,
     ratHourSegment: options == null
         ? current.ratHourSegment

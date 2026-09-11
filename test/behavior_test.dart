@@ -1123,10 +1123,19 @@ void main() {
   });
   test('lunar entry matches solar and preserves original lunar input', () {
     final solar = natal(), lunar = eph.solarToLunar(time(2000));
-    final c = ZiweiChart.fromLunar(lunar, defaultOptions, hour: 12);
+    final c = ZiweiChart.fromLunarDay(lunar, defaultOptions, hour: 12);
+    final fromSolarDay = ZiweiChart.fromSolarDay(
+      const CalendarDate(year: 2000, month: 1, day: 1),
+      defaultOptions,
+      hour: 12,
+    );
     expect(c.starPositions, solar.starPositions);
+    expect(fromSolarDay.starPositions, solar.starPositions);
     expect(c.anchors.toJson(), solar.anchors.toJson());
     expect(c.lunarInput!['month'], lunar.month);
+    expect(c.facts.chartTime.toJson(), c.facts.virtualTime.toJson());
+    final birthJson = c.toJson()['birth']! as Map<String, Object?>;
+    expect(birthJson['chartTime'], c.facts.chartTime.toJson());
   });
   test(
     'options and nested rule selections copy without mutating prior values',

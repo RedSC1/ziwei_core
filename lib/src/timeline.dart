@@ -421,7 +421,7 @@ class ZiweiTimelineProvider {
         )
         .toList();
     double logicalJd(double jd) {
-      final v = resolveZiweiVirtualTime(
+      final v = resolveZiweiChartTime(
         JulianTime.fromUT1(
           jd,
         ).toZonedTime(chart.options.utcOffsetMinutes.toInt()),

@@ -353,7 +353,7 @@ class ZiweiLimitManager {
     _install(flow, deepestLevel);
     _target = ZiweiFlowTarget(
       target.toJulianTime().jdUT1,
-      resolveZiweiVirtualTime(target, baseChart.options),
+      resolveZiweiChartTime(target, baseChart.options),
       ratHourSegment: flow.targetRatHourSegment,
     );
   }
@@ -371,7 +371,7 @@ class ZiweiLimitManager {
         flow = resolveZiweiFlowFromInstant(
           baseChart,
           next.jdUT1,
-          next.virtualTime,
+          next.chartTime,
         );
     _install(flow, FlowLevel.hour);
     _target = next;
